@@ -173,7 +173,7 @@ const App: React.FC = () => {
                         <ChartPieIcon className="w-5 h-5 text-white" />
                     </div>
                     <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-                        {t('app.title', lang)}<span className="text-indigo-600 dark:text-indigo-400">{t('app.titleSuffix', lang)}</span>
+                        {t('app.title', lang)} <span className="text-indigo-600 dark:text-indigo-400">{t('app.titleSuffix', lang)}</span>
                     </h1>
                 </div>
 
