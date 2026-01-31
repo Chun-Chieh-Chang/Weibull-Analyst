@@ -125,6 +125,7 @@ git push origin main
 
 ## 📝 相關文檔
 
+- [專案結構圖](./PROJECT_STRUCTURE.md) - MECE 分層架構與模塊說明
 - [開發紀錄](./DEVELOPMENT_LOG.md) - 詳細的開發歷程與技術決策
 - [專案狀態](./PROJECT_STATUS.md) - 當前進度與待辦事項
 
