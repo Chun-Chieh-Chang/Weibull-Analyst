@@ -194,7 +194,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as TabType)}
-                        className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2 border-b-2 transition-all
+                        className={`flex-1 py-3 text-sm font-bold uppercase tracking-wider flex items-center justify-center space-x-2 border-b-2 transition-all
                         ${activeTab === tab.id
                                 ? 'border-indigo-600 dark:border-indigo-500 text-indigo-700 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-900/20'
                                 : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}

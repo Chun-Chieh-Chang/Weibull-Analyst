@@ -305,7 +305,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                             <button
                                 key={type.id}
                                 onClick={() => setChartType(type.id as ChartType)}
-                                className={`px-4 py-1 text-xs font-bold rounded-md transition-all ${chartType === type.id
+                                className={`px-4 py-1.5 text-sm font-bold rounded-md transition-all ${chartType === type.id
                                     ? 'bg-white dark:bg-slate-600 shadow-sm text-indigo-600 dark:text-indigo-300'
                                     : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                     }`}
