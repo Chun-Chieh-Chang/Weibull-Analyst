@@ -4,6 +4,37 @@
 
 ---
 
+## 📅 2026-04-10 - 第三階段：PWA 技術實作與手機端優化
+
+### 📱 PWA 技術整合 (PWA Integration)
+#### 實施內容
+- **安裝與配置 `vite-plugin-pwa`**：
+  - 核心插件：`vite-plugin-pwa`
+  - 註冊模式：`autoUpdate` (自動更新 Service Worker)
+- **資產與清單文件 (Manifest & Assets)**：
+  - 建立 `public` 目錄並配置 PWA 必要圖示 (192x192, 512x512, Maskable, Apple Touch Icon)。
+  - 定義 `manifest.json`：包含應用名稱、主題色 (#0F172A)、啟動畫面與顯示模式 (standalone)。
+- **Service Worker 註冊**：
+  - 在 `src/index.tsx` 中使用 `virtual:pwa-register` 進行系統級註冊。
+- **SEO 與 Meta 優化**：
+  - 更新 `index.html` 以支援 Apple Mobile Web App。
+  - 設置 `theme-color` 以匹配應用 UI 色調。
+
+#### 技術決策
+- **選擇 `vite-plugin-pwa` 原因**：
+  - ✅ 自動化生成 Service Worker 與 Manifest。
+  - ✅ 支援離線瀏覽與資源預載 (Pre-caching)。
+  - ✅ 整合簡單，符合 Vite 生態系。
+- **UI/UX 考量**：
+  - 為了提供一致的「原生應用」感，將主題色設為深藍色 (#0F172A)，減少手機頂部狀態列的視覺突兀感。
+
+#### 副作用防禦 (Side Effect Defense)
+- **路徑檢查**：確保 Manifest 中的圖示路徑與 `base: '/Weibull-Analyst/'` 相容。
+- **離線測試**：配置 Workbox `globPatterns` 以確保所有關鍵資產 (JS, CSS, HTML, PNG) 均被快取。
+
+---
+
+
 ## 📅 2026-01-31 - 第二階段：自動化部署與文檔重構
 
 ### 🔧 部署自動化 (Deployment Automation)
