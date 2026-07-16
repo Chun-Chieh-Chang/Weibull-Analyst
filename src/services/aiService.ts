@@ -120,24 +120,33 @@ export const analyzeWithAI = async (
             }).generateContent(prompt);
             return response.response.text();
         } else if (provider === 'AGNES') {
-            const openai = new OpenAI({ apiKey, baseURL: 'https://apihub.agnes-ai.com/v1', dangerouslyAllowBrowser: true });
-            const response = await openai.chat.completions.create({
-                model: 'agnes-2.0-flash',
-                messages: [
-                    {
-                        role: "system",
-                        content: isZh
-                            ? "你是一位資深的可靠度工程專家，擅長使用繁體中文解釋韋伯分析結果。"
-                            : "You are a senior Reliability Engineer expert in explaining Weibull analysis results."
-                    },
-                    { role: "user", content: prompt }
-                ],
-                max_tokens: 800
+            const resp = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({
+                    model: 'agnes-2.0-flash',
+                    messages: [
+                        {
+                            role: "system",
+                            content: isZh
+                                ? "你是一位資深的可靠度工程專家，擅長使用繁體中文解釋韋伯分析結果。"
+                                : "You are a senior Reliability Engineer expert in explaining Weibull analysis results."
+                        },
+                        { role: "user", content: prompt }
+                    ],
+                    max_tokens: 800
+                })
             });
-            const content = response.choices?.[0]?.message?.content;
+            if (!resp.ok) {
+                const errBody = await resp.text().catch(() => '');
+                throw new Error(`API ${resp.status}: ${errBody}`);
+            }
+            const data = await resp.json();
+            const content = data.choices?.[0]?.message?.content;
             if (content) return content;
-            const refusal = (response.choices?.[0]?.message as any)?.refusal;
+            const refusal = data.choices?.[0]?.message?.refusal;
             if (refusal) throw new Error(isZh ? `模型拒絕回應: ${refusal}` : `Model refused: ${refusal}`);
+            console.warn('[AGNES] Raw response:', JSON.stringify(data, null, 2));
             throw new Error(isZh ? "API 回傳內容為空，請確認模型名稱或金鑰是否正確" : "Empty API response. Check model name or API key.");
         } else {
             const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
