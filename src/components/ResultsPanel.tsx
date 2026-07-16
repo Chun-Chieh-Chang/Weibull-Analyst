@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { WeibullResult, Language, Theme, AIProvider } from '../types';
+import { WeibullResult, Language, Theme, AIProvider, GeminiModel, OpenAIModel, ClaudeModel } from '../types';
 import { analyzeWithAI } from '../services/aiService';
 import TheoreticalGuide from './TheoreticalGuide';
 import { t } from '../utils/locales';
@@ -96,16 +96,21 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
     // AI Provider & API KEY Logic
     const [showKeyModal, setShowKeyModal] = useState(false);
     const [activeProvider, setActiveProvider] = useState<AIProvider>((localStorage.getItem('ai_provider') as AIProvider) || 'GEMINI');
+    const [geminiModel, setGeminiModel] = useState<GeminiModel>((localStorage.getItem('gemini_model') as GeminiModel) || 'gemini-2.5-flash');
+    const [openaiModel, setOpenaiModel] = useState<OpenAIModel>((localStorage.getItem('openai_model') as OpenAIModel) || 'gpt-4o-mini');
+    const [claudeModel, setClaudeModel] = useState<ClaudeModel>((localStorage.getItem('claude_model') as ClaudeModel) || 'claude-sonnet-4-6');
     const [apiKeyInput, setApiKeyInput] = useState('');
     const [geminiKey, setGeminiKey] = useState<string | null>(localStorage.getItem('gemini_api_key'));
     const [openaiKey, setOpenaiKey] = useState<string | null>(localStorage.getItem('openai_api_key'));
     const [agnesKey, setAgnesKey] = useState<string | null>(localStorage.getItem('agnes_api_key'));
+    const [claudeKey, setClaudeKey] = useState<string | null>(localStorage.getItem('claude_api_key'));
 
     useEffect(() => {
         if (activeProvider === 'GEMINI') setApiKeyInput(geminiKey || '');
         else if (activeProvider === 'OPENAI') setApiKeyInput(openaiKey || '');
-        else setApiKeyInput(agnesKey || '');
-    }, [activeProvider, geminiKey, openaiKey, agnesKey]);
+        else if (activeProvider === 'AGNES') setApiKeyInput(agnesKey || '');
+        else setApiKeyInput(claudeKey || '');
+    }, [activeProvider, geminiKey, openaiKey, agnesKey, claudeKey]);
 
     if (lang === 'zh') {
         label1 = "A 組";
@@ -114,7 +119,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
 
     const handleAIAnalyze = async (keyToUse?: string, providerToUse?: AIProvider) => {
         const prov = providerToUse || activeProvider;
-        const key = keyToUse || (prov === 'GEMINI' ? geminiKey : prov === 'AGNES' ? agnesKey : openaiKey);
+        const key = keyToUse || (prov === 'GEMINI' ? geminiKey : prov === 'AGNES' ? agnesKey : prov === 'CLAUDE' ? claudeKey : openaiKey);
 
         if (!key) {
             setShowKeyModal(true);
@@ -125,7 +130,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         setLoading(true);
         setError(null);
         try {
-            const text = await analyzeWithAI(result1, result2, isDualMode, lang, key, prov);
+            const text = await analyzeWithAI(result1, result2, isDualMode, lang, key, prov, geminiModel, openaiModel, claudeModel);
             handleSetAiAnalysis(text || "No analysis returned.");
         } catch (e: any) {
             setError(e.message || "An error occurred.");
@@ -146,6 +151,9 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
             } else if (activeProvider === 'AGNES') {
                 localStorage.setItem('agnes_api_key', key);
                 setAgnesKey(key);
+            } else if (activeProvider === 'CLAUDE') {
+                localStorage.setItem('claude_api_key', key);
+                setClaudeKey(key);
             } else {
                 localStorage.setItem('openai_api_key', key);
                 setOpenaiKey(key);
@@ -355,7 +363,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     <SparklesIcon className="w-4 h-4 mr-2" style={{ color: 'var(--accent)' }} />
                                     {t('results.ai.title', lang)}
                                 </h3>
-                                {(geminiKey || openaiKey || agnesKey) && (
+                                {(geminiKey || openaiKey || agnesKey || claudeKey) && (
                                     <button
                                         onClick={() => setShowKeyModal(true)}
                                         className="text-[10px] flex items-center gap-1 font-bold uppercase tracking-tighter transition-colors"
@@ -425,10 +433,67 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                         <option value="GEMINI">Google Gemini (Default)</option>
                                         <option value="OPENAI">OpenAI (ChatGPT)</option>
                                         <option value="AGNES">Agnes (agnes-2.0-flash)</option>
+                                        <option value="CLAUDE">Anthropic Claude</option>
                                     </select>
                                     <ChevronDownIcon className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" style={{ color: 'var(--text-secondary)' }} />
                                 </div>
                             </div>
+
+                            {/* Gemini Model Selector */}
+                            {activeProvider === 'GEMINI' && (
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Gemini Model</label>
+                                    <div className="relative group">
+                                        <select
+                                            value={geminiModel}
+                                            onChange={(e) => { setGeminiModel(e.target.value as GeminiModel); localStorage.setItem('gemini_model', e.target.value); }}
+                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold"
+                                            style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                        >
+                                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (穩定 Stable)</option>
+                                            <option value="gemini-3.5-flash">Gemini 3.5 Flash (最新 Latest)</option>
+                                        </select>
+                                        <ChevronDownIcon className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" style={{ color: 'var(--text-secondary)' }} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* OpenAI Model Selector */}
+                            {activeProvider === 'OPENAI' && (
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>OpenAI Model</label>
+                                    <div className="relative group">
+                                        <select
+                                            value={openaiModel}
+                                            onChange={(e) => { setOpenaiModel(e.target.value as OpenAIModel); localStorage.setItem('openai_model', e.target.value); }}
+                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold"
+                                            style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                        >
+                                            <option value="gpt-4o-mini">GPT-4o Mini (快速便宜 Fast & Cheap)</option>
+                                        </select>
+                                        <ChevronDownIcon className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" style={{ color: 'var(--text-secondary)' }} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Claude Model Selector */}
+                            {activeProvider === 'CLAUDE' && (
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Claude Model</label>
+                                    <div className="relative group">
+                                        <select
+                                            value={claudeModel}
+                                            onChange={(e) => { setClaudeModel(e.target.value as ClaudeModel); localStorage.setItem('claude_model', e.target.value); }}
+                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold"
+                                            style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                        >
+                                            <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (平衡 Balanced)</option>
+                                            <option value="claude-haiku-4-5">Claude Haiku 4.5 (快速便宜 Fast & Cheap)</option>
+                                        </select>
+                                        <ChevronDownIcon className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" style={{ color: 'var(--text-secondary)' }} />
+                                    </div>
+                                </div>
+                            )}
 
                             {/* API Key Input */}
                             <div>
@@ -461,7 +526,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     {lang === 'zh' ? "储存配置並分析" : "Save & Analyze"}
                                 </button>
                                 <a
-                                    href={activeProvider === 'GEMINI' ? "https://aistudio.google.com/app/apikey" : activeProvider === 'AGNES' ? "https://apihub.agnes-ai.com" : "https://platform.openai.com/api-keys"}
+                                    href={activeProvider === 'GEMINI' ? "https://aistudio.google.com/app/apikey" : activeProvider === 'AGNES' ? "https://apihub.agnes-ai.com" : activeProvider === 'CLAUDE' ? "https://console.anthropic.com/settings/keys" : "https://platform.openai.com/api-keys"}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="text-[10px] text-center font-bold transition-colors"

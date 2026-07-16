@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
-import { WeibullResult, Language, AIProvider } from "../types";
+import { WeibullResult, Language, AIProvider, GeminiModel, OpenAIModel, ClaudeModel } from "../types";
 
 export const analyzeWithAI = async (
     result1: WeibullResult | null,
@@ -8,7 +8,10 @@ export const analyzeWithAI = async (
     isDualMode: boolean,
     lang: Language,
     apiKey: string,
-    provider: AIProvider = 'GEMINI'
+    provider: AIProvider = 'GEMINI',
+    geminiModel: GeminiModel = 'gemini-2.5-flash',
+    openaiModel: OpenAIModel = 'gpt-4o-mini',
+    claudeModel: ClaudeModel = 'claude-sonnet-4-6'
 ) => {
     if (!apiKey) throw new Error("API Key is required.");
 
@@ -67,11 +70,14 @@ Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. B
     try {
         if (provider === 'GEMINI') {
             const ai = new GoogleGenAI({ apiKey });
-            const response = await ai.getGenerativeModel({
-                model: 'gemini-1.5-flash',
-                systemInstruction: "你是一位資深的可靠度工程專家。請務必使用繁體中文和 English 雙語回答，先中文後英文。You are a senior Reliability Engineer. Always respond bilingually in Traditional Chinese then English."
-            }).generateContent(prompt);
-            return response.response.text();
+            const response = await ai.models.generateContent({
+                model: geminiModel,
+                contents: prompt,
+                config: {
+                    systemInstruction: "你是一位資深的可靠度工程專家。請務必使用繁體中文和 English 雙語回答，先中文後英文。You are a senior Reliability Engineer. Always respond bilingually in Traditional Chinese then English."
+                }
+            });
+            return response.text;
         } else if (provider === 'AGNES') {
             const resp = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
                 method: 'POST',
@@ -101,10 +107,10 @@ Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. B
             throw new Error(isZh
                 ? `API 回傳異常，前500字元: ${snippet}`
                 : `Unexpected API response (first 500 chars): ${snippet}`);
-        } else {
+        } else if (provider === 'OPENAI') {
             const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
             const response = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: openaiModel,
                 messages: [
                     {
                         role: "system",
@@ -115,6 +121,32 @@ Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. B
                 max_tokens: 500
             });
             return response.choices[0].message.content;
+        } else if (provider === 'CLAUDE') {
+            const resp = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: claudeModel,
+                    max_tokens: 1024,
+                    system: "你是一位資深的可靠度工程專家。請務必使用繁體中文和 English 雙語回答，先中文後英文。You are a senior Reliability Engineer. Always respond bilingually in Traditional Chinese then English.",
+                    messages: [{ role: "user", content: prompt }]
+                })
+            });
+            if (!resp.ok) {
+                const errBody = await resp.text().catch(() => '');
+                throw new Error(`API ${resp.status}: ${errBody}`);
+            }
+            const data = await resp.json();
+            const content = data.content?.[0]?.text;
+            if (content) return content;
+            const snippet = JSON.stringify(data).slice(0, 500);
+            throw new Error(isZh
+                ? `API 回傳異常，前500字元: ${snippet}`
+                : `Unexpected API response (first 500 chars): ${snippet}`);
         }
     } catch (error: any) {
         console.error(`${provider} API Error:`, error);

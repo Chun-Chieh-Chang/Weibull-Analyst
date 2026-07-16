@@ -1,91 +1,71 @@
-# 專案狀態 - Weibull Analyst
+# Project Status — Weibull AI Analyst
 
-> **最後更新**：2026-01-31 21:45
-
----
-
-## 📊 整體進度：已完成基礎架構與自動化部署 ✅
+> **Last Updated**: 2026-07-16
 
 ---
 
-## 🎯 模塊狀態（基於 MECE 分類）
-
-### 1️⃣ 項目架構 (Project Architecture)
-| 項目 | 狀態 | 說明 |
-|------|------|------|
-| 目錄結構標準化 | ✅ 完成 | 已遵循 MECE 原則，代碼移至 `src/` |
-| TypeScript 配置 | ✅ 完成 | `tsconfig.json` 配置完整 |
-| Vite 配置優化 | ✅ 完成 | 已配置生產構建路徑 |
-
-### 2️⃣ 前端開發 (Frontend Development)
-| 項目 | 狀態 | 說明 |
-|------|------|------|
-| React 組件開發 | ✅ 完成 | 核心組件已完成 |
-| Tailwind CSS v4 整合 | ✅ 完成 | 使用官方 Vite 插件 |
-| 深色/淺色模式 | ✅ 完成 | 支援自定義主題切換 |
-| 響應式設計 | ✅ 完成 | 支援多種屏幕尺寸 |
-
-### 3️⃣ 業務邏輯 (Business Logic)
-| 項目 | 狀態 | 說明 |
-|------|------|------|
-| 威布爾分析引擎 | ✅ 完成 | 核心計算邏輯完整 |
-| AI 服務整合 | ✅ 完成 | 支援 Gemini 與 OpenAI |
-| 數據可視化 | ✅ 完成 | 使用 Recharts 繪製圖表 |
-
-### 4️⃣ CI/CD 與部署 (CI/CD & Deployment)
-| 項目 | 狀態 | 說明 |
-|------|------|------|
-| GitHub Actions 配置 | ✅ 完成 | 已配置 `.github/workflows/deploy.yml` |
-| 自動構建流程 | ✅ 完成 | 推送至 `main` 分支自動觸發 |
-| GitHub Pages 部署 | ✅ 完成 | 自動部署構建產物 |
-| 構建測試 | ✅ 通過 | `npm run build` 成功 |
-
-### 5️⃣ 文檔管理 (Documentation)
-| 項目 | 狀態 | 說明 |
-|------|------|------|
-| README.md | ✅ 完成 | 已更新為 GitHub Actions 版本 |
-| DEVELOPMENT_LOG.md | ✅ 完成 | 記錄完整開發歷程 |
-| PROJECT_STATUS.md | ✅ 完成 | 本文件 |
-| 代碼註釋 | 🟡 進行中 | 核心邏輯已註釋，持續優化 |
+## Overall Progress: Feature Complete ✅
 
 ---
 
-## 🔜 下一步規劃
+## Module Status (MECE Classification)
 
-### 🟡 短期目標（本週）
-- [ ] 添加單元測試（使用 Vitest）
-- [ ] 優化 AI 分析回應速度
-- [ ] 增加錯誤處理與用戶提示
+### 1. Project Architecture
+| Item | Status | Notes |
+|------|--------|-------|
+| Directory structure | ✅ Done | MECE-compliant: `src/components/`, `services/`, `utils/` |
+| TypeScript config | ✅ Done | Strict mode, alias `@/` |
+| Vite config | ✅ Done | PWA, Tailwind v4, path aliases |
 
-### 🔵 中期目標（本月）
-- [ ] 支援更多分佈類型（對數正態、指數分佈）
-- [ ] 導出分析報告功能（PDF/Excel）
-- [ ] 添加用戶使用教程
+### 2. Frontend Development
+| Item | Status | Notes |
+|------|--------|-------|
+| React 19 + TypeScript | ✅ Done | Functional components, hooks |
+| Tailwind CSS v4 | ✅ Done | `@tailwindcss/vite` plugin |
+| Dark/Light theme | ✅ Done | SkillsBuilder Color Master Palette via CSS variables |
+| Responsive layout | ✅ Done | Desktop 3-column, mobile bottom tab bar |
+| Chart (plotly.js) | ✅ Done | Probability, Reliability, PDF with R(0.95) markers |
+| Report generation | ✅ Done | Self-contained HTML with 3 chart captures, metrics, AI, data |
 
-### 🟣 長期目標（季度）
-- [ ] 多語言支援（英文、簡體中文）
-- [ ] 數據導入功能（CSV、Excel）
-- [ ] 雲端數據同步
+### 3. Business Logic
+| Item | Status | Notes |
+|------|--------|-------|
+| Weibull calculation engine | ✅ Done | Median rank regression with suspension support |
+| AI service integration | ✅ Done | Gemini, OpenAI, Agnes, Claude with model selection |
+| Dual mode comparison | ✅ Done | Side-by-side metrics and charts |
+
+### 4. AI Providers
+| Provider | Status | Models |
+|----------|--------|--------|
+| Google Gemini | ✅ Done | gemini-2.5-flash, gemini-3.5-flash |
+| OpenAI | ✅ Done | gpt-4o-mini |
+| Agnes | ✅ Done | agnes-2.0-flash (reasoning model, 8192 tokens) |
+| Anthropic Claude | ✅ Done | claude-sonnet-4-6, claude-haiku-4-5 |
+
+### 5. CI/CD & Deployment
+| Item | Status | Notes |
+|------|--------|-------|
+| GitHub Actions | ✅ Done | Build + deploy to Pages |
+| Automatic build | ✅ Done | Triggered on push to `main` |
+| PWA support | ✅ Done | Auto-update Service Worker, offline support |
+
+### 6. Documentation
+| Item | Status | Notes |
+|------|--------|-------|
+| README.md | ✅ Updated | Feature overview, tech stack, usage |
+| DEVELOPMENT_LOG.md | ✅ Updated | Full development timeline |
+| PROJECT_STATUS.md | ✅ Updated | This file |
 
 ---
 
-## 🚦 技術債務
+## Tech Debt & Known Issues
 
-| 債務項目 | 優先級 | 說明 |
-|---------|-------|------|
-| 性能優化 | 🟡 中 | 大數據集時圖表渲染可優化 |
-| 測試覆蓋率 | 🟡 中 | 當前缺少自動化測試 |
-| 代碼重構 | 🟢 低 | 部分組件可進一步拆分 |
-
----
-
-## 📈 品質指標
-
-- **TypeScript 覆蓋率**: 100%
-- **構建成功率**: 100%
-- **部署成功率**: 100%（GitHub Actions）
-- **代碼風格**: ESLint + Prettier（待配置）
+| Item | Priority | Notes |
+|------|----------|-------|
+| Missing unit tests | 🟡 Medium | Consider Vitest |
+| `virtual:pwa-register` TS error | 🟢 Low | Pre-existing, no runtime impact |
+| Grid size for data tables | 🟢 Low | Static `150` steps, adequate for current use |
 
 ---
 
-**本文件依據 MECE 原則組織，確保狀態分類互斥且完整。**
+*Maintained per MECE principle.*

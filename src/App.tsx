@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { WeibullResult, AnalysisMode, Language, Theme } from './types';
 import { parseInputData, calculateWeibull } from './services/weibullMath';
 import WeibullChart from './components/WeibullChart';
@@ -43,12 +43,6 @@ const App: React.FC = () => {
             document.documentElement.style.colorScheme = 'light';
         }
     }, [theme]);
-
-
-
-
-
-
     const [activeMobileView, setActiveMobileView] = useState<'INPUT' | 'CHART' | 'RESULTS'>('CHART');
 
     const handleCalculate = () => {
@@ -152,11 +146,11 @@ const App: React.FC = () => {
             return section;
         };
 
-        const name1 = mode === 'DUAL' ? (lang === 'zh' ? 'A 組數據 (Group A)' : 'Group A Data') : (lang === 'zh' ? '失效數據 (Failure Data)' : 'Failure Data');
+        const name1 = mode === 'DUAL' ? (lang === 'zh' ? 'A 蝯??(Group A)' : 'Group A Data') : (lang === 'zh' ? '憭望??豢? (Failure Data)' : 'Failure Data');
         content += generateGroupReport(name1, result1, text1);
 
         if (mode === 'DUAL') {
-            const name2 = lang === 'zh' ? 'B 組數據 (Group B)' : 'Group B Data';
+            const name2 = lang === 'zh' ? 'B 蝯??(Group B)' : 'Group B Data';
             content += generateGroupReport(name2, result2, text2);
         }
 
