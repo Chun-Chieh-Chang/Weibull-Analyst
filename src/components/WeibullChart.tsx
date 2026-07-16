@@ -302,82 +302,104 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const generateHTMLReport = async () => {
         if (!result1) return;
         const isDualMode = !!result1 && !!result2;
+        const bg = '#ffffff', gridC = 'rgba(0,0,0,0.06)', axisC = '#94a3b8';
 
-        // Capture current chart
-        const gd = plotRef.current?.querySelector('.js-plotly-plot');
-        let chartImage = '';
-        if (gd) {
-            try { chartImage = await Plotly.toImage(gd as HTMLElement, { format: 'png', width: 1200, height: 800, scale: 2 }); } catch { /* skip */ }
-        }
-
-        // Generate Reliability Plot off-screen
-        let reliabilityImage = '';
-        try {
-            const buildReliabilityTraces = (r: WeibullResult, color: string, label: string, isDark: boolean) => {
-                const pts = r.dataPoints;
-                const maxT = pts[pts.length - 1].time * 1.3;
-                const steps = 150;
-                const xVals = Array.from({ length: steps + 1 }, (_, i) => i * (maxT / steps));
-                const yVals = xVals.map(x => calculateMetrics(x, r.beta, r.eta).reliability);
-                const failTimes = pts.filter(p => p.status === 'F').map(p => p.time);
-                const failY = failTimes.map(t => calculateMetrics(t, r.beta, r.eta).reliability);
-                const bg = isDark ? '#0f172a' : '#ffffff';
-                const gridC = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-                const axisC = isDark ? '#475569' : '#94a3b8';
-                return {
-                    traces: [
-                        { x: xVals, y: yVals, mode: 'lines', name: label, line: { color, width: 2.5, shape: 'spline' as const }, fill: 'tozeroy', fillcolor: `${color}20` },
-                        { x: failTimes, y: failY, mode: 'markers', marker: { color: bg, line: { color, width: 2 }, size: 7 }, name: `${label} Failures`, hoverinfo: 'none' as const }
-                    ],
-                    layout: {
-                        paper_bgcolor: bg, plot_bgcolor: 'transparent',
-                        font: { family: 'Inter, sans-serif', size: 11, color: axisC },
-                        xaxis: { title: { text: 'Time-to-Failure (t)' }, gridcolor: gridC, linecolor: axisC, zeroline: false },
-                        yaxis: { title: { text: 'Reliability R(t)' }, range: [0, 1.05], gridcolor: gridC, linecolor: axisC, zeroline: false },
-                        margin: { l: 55, r: 30, t: 40, b: 55 }, showlegend: false
-                    }
-                };
+        const captureChart = async (type: ChartType): Promise<string> => {
+            const traces: any[] = [];
+            const addGroupTraces = (r: WeibullResult, clr: string, nm: string) => {
+                if (type === 'PROBABILITY') {
+                    const weibullTrans = (p: number) => Math.log(-Math.log(1 - p / 100));
+                    traces.push({
+                        x: r.linePoints.map(p => Math.exp(p.x)), y: r.linePoints.map(p => p.y),
+                        mode: 'lines', name: `${nm} fit`, line: { color: clr, width: 2 }, hoverinfo: 'none'
+                    });
+                    const failPts = r.dataPoints.filter(p => p.status === 'F');
+                    traces.push({
+                        x: failPts.map(p => p.time), y: failPts.map(p => weibullTrans(p.rank * 100)),
+                        mode: 'markers', name: nm, marker: { color: bg, line: { color: clr, width: 2 }, size: 8, symbol: 'circle' },
+                        hovertemplate: `<b>${nm}</b><br>Time: %{x:.2f}<br>Unreliability: %{customdata:.2f}%<extra></extra>`,
+                        customdata: failPts.map(p => p.rank * 100)
+                    });
+                } else {
+                    const pts = r.dataPoints;
+                    const maxT = pts[pts.length - 1].time * 1.3;
+                    const steps = 150;
+                    const xVals = Array.from({ length: steps + 1 }, (_, i) => i * (maxT / steps));
+                    const yVals = xVals.map(x => calculateMetrics(x, r.beta, r.eta)[type === 'RELIABILITY' ? 'reliability' : 'pdf']);
+                    traces.push({
+                        x: xVals, y: yVals, mode: 'lines', name: nm,
+                        line: { color: clr, width: 2.5, shape: 'spline' }, fill: 'tozeroy', fillcolor: `${clr}20`
+                    });
+                    const failTimes = pts.filter(p => p.status === 'F').map(p => p.time);
+                    const failY = failTimes.map(t => calculateMetrics(t, r.beta, r.eta)[type === 'RELIABILITY' ? 'reliability' : 'pdf']);
+                    traces.push({
+                        x: failTimes, y: failY, mode: 'markers',
+                        marker: { color: bg, line: { color: clr, width: 2 }, size: 7 }, name: `${nm} Failures`, hoverinfo: 'none'
+                    });
+                }
             };
-            const tempDiv = document.createElement('div');
-            tempDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1200px;height:800px';
-            document.body.appendChild(tempDiv);
-            const relTraces: any[] = [];
-            const relLayouts: any[] = [];
-            if (visibleGroups.g1 && result1) {
-                const g1 = buildReliabilityTraces(result1, colorA, name1, isDark);
-                relTraces.push(...g1.traces);
-                relLayouts.push(g1.layout);
+            if (result1) addGroupTraces(result1, colorA, name1);
+            if (result2) addGroupTraces(result2, colorB, name2);
+
+            const layout: any = {
+                paper_bgcolor: bg, plot_bgcolor: 'transparent',
+                font: { family: 'Inter, sans-serif', size: 11, color: axisC },
+                hovermode: 'closest', margin: { l: 55, r: 30, t: 40, b: 55 }, showlegend: false,
+                xaxis: { title: { text: 'Time-to-Failure (t)' }, gridcolor: gridC, linecolor: axisC, zeroline: false },
+                yaxis: { gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { weight: 700 } }
+            };
+            if (type === 'PROBABILITY') {
+                const probTicks = [0.1, 0.5, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
+                layout.yaxis.title = { text: 'Unreliability F(t) %' };
+                layout.yaxis.ticktext = probTicks.map(p => p < 1 ? p.toFixed(1) + '%' : p + '%');
+                layout.yaxis.tickvals = probTicks.map(p => Math.log(-Math.log(1 - p / 100)));
+                layout.xaxis.type = 'log';
+            } else if (type === 'RELIABILITY') {
+                layout.yaxis.title = { text: 'Reliability R(t)' };
+                layout.yaxis.range = [0, 1.05];
+            } else {
+                layout.yaxis.title = { text: 'Probability Density f(t)' };
             }
-            if (visibleGroups.g2 && result2) {
-                const g2 = buildReliabilityTraces(result2, colorB, name2, isDark);
-                relTraces.push(...g2.traces);
-                relLayouts.push(g2.layout);
-            }
-            if (relTraces.length > 0) {
-                const mergedLayout = { ...relLayouts[0], ...(relLayouts[1] ? { /* use first layout, twin axes not needed */ } : {}) };
-                await Plotly.newPlot(tempDiv, relTraces, mergedLayout, { responsive: false });
-                await new Promise(r => setTimeout(r, 200));
-                reliabilityImage = await Plotly.toImage(tempDiv, { format: 'png', width: 1200, height: 800, scale: 2 });
-                Plotly.purge(tempDiv);
-            }
-            document.body.removeChild(tempDiv);
-        } catch { /* reliability plot capture failed */ }
+
+            const div = document.createElement('div');
+            div.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1200px;height:800px';
+            document.body.appendChild(div);
+            await Plotly.newPlot(div, traces, layout, { responsive: false });
+            await new Promise(r => setTimeout(r, 200));
+            const url = await Plotly.toImage(div, { format: 'png', width: 1200, height: 800, scale: 2 });
+            Plotly.purge(div);
+            document.body.removeChild(div);
+            return url;
+        };
+
+        const [probImg, relImg, pdfImg] = await Promise.all([
+            captureChart('PROBABILITY').catch(() => ''),
+            captureChart('RELIABILITY').catch(() => ''),
+            captureChart('PDF').catch(() => '')
+        ]);
 
         const ts = new Date().toLocaleString('zh-TW', { dateStyle: 'long', timeStyle: 'short' });
         const n1 = name1, n2 = name2;
         const r1 = result1, r2 = result2;
         const getFM = (b: number) => b < 0.9 ? 'Infant Mortality 早夭期' : b <= 1.1 ? 'Random Failures 隨機失效' : 'Wear-out 耗損期';
         const getFMShort = (b: number) => b < 0.9 ? 'infant' : b <= 1.1 ? 'random' : 'wear';
-        const rows1 = r1.dataPoints.map(p =>
-            `<tr><td>${p.id + 1}</td><td>${p.time.toFixed(2)}</td><td>${p.status}</td><td>${p.status === 'F' ? (p.rank * 100).toFixed(2) + '%' : '-'}</td></tr>`
-        ).join('');
-        const rows2 = r2 ? r2.dataPoints.map(p =>
-            `<tr><td>${p.id + 1}</td><td>${p.time.toFixed(2)}</td><td>${p.status}</td><td>${p.status === 'F' ? (p.rank * 100).toFixed(2) + '%' : '-'}</td></tr>`
-        ).join('') : '';
+
+        const buildDataRows = (r: WeibullResult) => {
+            const weibullTrans = (p: number) => Math.log(-Math.log(1 - p / 100));
+            return r.dataPoints.map(p => {
+                const rankStr = p.status === 'F' ? (p.rank * 100).toFixed(4) + '%' : '-';
+                const xStr = p.x.toFixed(4);
+                const yStr = p.status === 'F' ? p.y.toFixed(4) : '-';
+                return `<tr><td>${p.id + 1}</td><td>${p.time.toFixed(2)}</td><td>${p.status}</td><td>${rankStr}</td><td class="mono">${xStr}</td><td class="mono">${yStr}</td></tr>`;
+            }).join('');
+        };
+        const rows1 = buildDataRows(r1);
+        const rows2 = r2 ? buildDataRows(r2) : '';
+
         const aiHtml = aiAnalysis ? `<div class="section"><h2>AI 分析 &bull; AI Analysis</h2><div class="ai-box">${aiAnalysis.replace(/\n/g, '<br>')}</div></div>` : '';
         const modeLabel = isDualMode ? '雙組比較 Comparative' : '單組分析 Single';
-        const metricCard = (label: string, enLabel: string, value: string, sub: string, fm?: number) =>
-            `<div class="metric-card"><div class="label">${label}<br>${enLabel}</div><div class="value">${value}</div><div class="sub">${fm !== undefined ? sub + ' <span class="tag tag-' + getFMShort(fm) + '">' + getFM(fm) + '</span>' : sub}</div></div>`;
+        const metricCard = (lbl: string, enLbl: string, val: string, sub: string, fm?: number) =>
+            `<div class="metric-card"><div class="label">${lbl}<br>${enLbl}</div><div class="value">${val}</div><div class="sub">${fm !== undefined ? sub : sub}</div></div>`;
 
         const reportHTML = `<!DOCTYPE html>
 <html lang="zh-TW">
@@ -390,22 +412,23 @@ h1{font-size:26px;font-weight:800;color:#0f172a;margin-bottom:2px}
 .sub{color:#64748b;font-size:13px;margin-bottom:32px}
 .section{margin-bottom:36px}
 .section h2{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#475569;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#f1f5f9;color:#475569;font-weight:700;text-align:left;padding:9px 12px;border-bottom:2px solid #cbd5e1;white-space:nowrap}
-td{padding:7px 12px;border-bottom:1px solid #e2e8f0}
+.chart-grid{display:grid;grid-template-columns:1fr;gap:28px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f1f5f9;color:#475569;font-weight:700;text-align:left;padding:8px 10px;border-bottom:2px solid #cbd5e1;white-space:nowrap}
+td{padding:6px 10px;border-bottom:1px solid #e2e8f0}
 tr:hover td{background:#f8fafc}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
-.metric-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.metric-card .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#64748b;margin-bottom:4px;line-height:1.4}
-.metric-card .value{font-size:26px;font-weight:800;color:#0f172a;font-family:'SF Mono',Consolas,'Noto Sans TC',monospace}
+.mono{font-family:'SF Mono',Consolas,monospace;font-size:11px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.metric-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.metric-card .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#64748b;margin-bottom:3px;line-height:1.4}
+.metric-card .value{font-size:24px;font-weight:800;color:#0f172a;font-family:'SF Mono',Consolas,'Noto Sans TC',monospace}
 .metric-card .sub{font-size:12px;color:#64748b;margin-top:2px;line-height:1.4}
 .chart-img{width:100%;border-radius:10px;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,.06)}
 .ai-box{background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:20px;font-size:14px;line-height:1.7;color:#1e293b}
-.tag{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;padding:2px 7px;border-radius:4px;margin-left:6px;white-space:nowrap}
-.tag-wear{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
-.tag-random{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
-.tag-infant{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+.summary-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;font-size:13px;line-height:1.8}
+.summary-box strong{color:#0f172a}.summary-box .val{font-family:'SF Mono',Consolas,monospace;font-weight:700;color:#475569}
 .dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.table-wrap{overflow-x:auto}
 @media(max-width:768px){.dual-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -413,44 +436,58 @@ tr:hover td{background:#f8fafc}
 <h1>韋伯分析報告 &bull; Weibull Analysis Report</h1>
 <p class="sub">產生時間 Generated: ${ts} &nbsp;|&nbsp; 分析模式 Mode: ${modeLabel}</p>
 
-${chartImage ? `<div class="section"><h2>分析圖表 &bull; Analysis Plot</h2><img class="chart-img" src="${chartImage}" alt="Analysis Plot"></div>` : ''}
-
-${reliabilityImage ? `<div class="section"><h2>可靠度曲線 &bull; Reliability Curve</h2><img class="chart-img" src="${reliabilityImage}" alt="Reliability Curve"></div>` : ''}
-
-${isDualMode && r1 && r2 ? `
-<div class="dual-grid">
-<div class="section"><h2>${n1} 指標 &bull; Metrics</h2><div class="metrics">
-${metricCard('形狀參數', 'Shape Parameter β', r1.beta.toFixed(4), 'Characteristic Life 特徵壽命', r1.beta)}
-${metricCard('尺度參數', 'Scale Parameter η', r1.eta.toFixed(4), 'Characteristic Life 特徵壽命')}
-${metricCard('平均壽命', 'MTTF', r1.mttf.toFixed(4), 'Mean Time To Failure')}
-${metricCard('適配度', 'R²', r1.rSquared.toFixed(4), r1.rSquared >= 0.9 ? 'Good Fit 適配良好' : 'Poor Fit 適配偏低')}
+<div class="section"><h2>圖表 &bull; Charts</h2><div class="chart-grid">
+${probImg ? `<img class="chart-img" src="${probImg}" alt="Probability Plot"><p style="text-align:center;font-size:11px;color:#94a3b8;margin-top:-16px">機率圖 Probability Plot</p>` : ''}
+${relImg ? `<img class="chart-img" src="${relImg}" alt="Reliability Curve"><p style="text-align:center;font-size:11px;color:#94a3b8;margin-top:-16px">可靠度曲線 Reliability Curve</p>` : ''}
+${pdfImg ? `<img class="chart-img" src="${pdfImg}" alt="Probability Density"><p style="text-align:center;font-size:11px;color:#94a3b8;margin-top:-16px">機率密度 Probability Density</p>` : ''}
 </div></div>
-<div class="section"><h2>${n2} 指標 &bull; Metrics</h2><div class="metrics">
-${metricCard('形狀參數', 'Shape Parameter β', r2.beta.toFixed(4), '', r2.beta)}
-${metricCard('尺度參數', 'Scale Parameter η', r2.eta.toFixed(4), 'Characteristic Life 特徵壽命')}
+
+<div class="section"><h2>指標 &bull; Metrics</h2>
+${isDualMode && r1 && r2 ? `<div class="dual-grid"><div><h3 style="font-size:13px;font-weight:700;color:#4f46e5;margin-bottom:10px">${n1}</h3><div class="metrics">
+${metricCard('形狀參數', 'Shape β', r1.beta.toFixed(4), '', r1.beta)}
+${metricCard('尺度參數', 'Scale η', r1.eta.toFixed(4), '特徵壽命 Char. Life')}
+${metricCard('平均壽命', 'MTTF', r1.mttf.toFixed(4), 'Mean Time To Failure')}
+${metricCard('適配度', 'R²', r1.rSquared.toFixed(4), r1.rSquared >= 0.9 ? '適配良好 Good Fit' : '適配偏低 Poor Fit')}
+</div></div><div><h3 style="font-size:13px;font-weight:700;color:#e11d48;margin-bottom:10px">${n2}</h3><div class="metrics">
+${metricCard('形狀參數', 'Shape β', r2.beta.toFixed(4), '', r2.beta)}
+${metricCard('尺度參數', 'Scale η', r2.eta.toFixed(4), '特徵壽命 Char. Life')}
 ${metricCard('平均壽命', 'MTTF', r2.mttf.toFixed(4), 'Mean Time To Failure')}
-${metricCard('適配度', 'R²', r2.rSquared.toFixed(4), r2.rSquared >= 0.9 ? 'Good Fit 適配良好' : 'Poor Fit 適配偏低')}
-</div></div>
-</div>
-` : r1 ? `
-<div class="section"><h2>指標 &bull; Metrics</h2><div class="metrics">
-${metricCard('形狀參數', 'Shape Parameter β', r1.beta.toFixed(4), '', r1.beta)}
-${metricCard('尺度參數', 'Scale Parameter η', r1.eta.toFixed(4), 'Characteristic Life 特徵壽命')}
+${metricCard('適配度', 'R²', r2.rSquared.toFixed(4), r2.rSquared >= 0.9 ? '適配良好 Good Fit' : '適配偏低 Poor Fit')}
+</div></div></div>` : r1 ? `<div class="metrics">
+${metricCard('形狀參數', 'Shape β', r1.beta.toFixed(4), '', r1.beta)}
+${metricCard('尺度參數', 'Scale η', r1.eta.toFixed(4), '特徵壽命 Char. Life')}
 ${metricCard('平均壽命', 'MTTF', r1.mttf.toFixed(4), 'Mean Time To Failure')}
-${metricCard('適配度', 'R²', r1.rSquared.toFixed(4), r1.rSquared >= 0.9 ? 'Good Fit 適配良好' : 'Poor Fit 適配偏低')}
-</div></div>
-` : ''}
+${metricCard('適配度', 'R²', r1.rSquared.toFixed(4), r1.rSquared >= 0.9 ? '適配良好 Good Fit' : '適配偏低 Poor Fit')}
+</div>` : ''}
+</div>
+
+<div class="section"><h2>摘要統計 &bull; Summary Statistics</h2>
+${isDualMode && r1 && r2 ? `<div class="dual-grid"><div class="summary-box"><strong>${n1}</strong><br>
+樣本數 Sample Size (N): <span class="val">${r1.dataPoints.length}</span><br>
+失效 Failures (F): <span class="val">${r1.dataPoints.filter(p => p.status === 'F').length}</span><br>
+右設限 Suspensions (S): <span class="val">${r1.dataPoints.filter(p => p.status === 'S').length}</span><br>
+失效模式 Failure Mode: <span class="val">${getFM(r1.beta)}</span><br>
+適配 Goodness of Fit (R²): <span class="val">${r1.rSquared.toFixed(4)}</span>
+</div><div class="summary-box"><strong>${n2}</strong><br>
+樣本數 Sample Size (N): <span class="val">${r2.dataPoints.length}</span><br>
+失效 Failures (F): <span class="val">${r2.dataPoints.filter(p => p.status === 'F').length}</span><br>
+右設限 Suspensions (S): <span class="val">${r2.dataPoints.filter(p => p.status === 'S').length}</span><br>
+失效模式 Failure Mode: <span class="val">${getFM(r2.beta)}</span><br>
+適配 Goodness of Fit (R²): <span class="val">${r2.rSquared.toFixed(4)}</span>
+</div></div>` : r1 ? `<div class="summary-box">
+樣本數 Sample Size (N): <span class="val">${r1.dataPoints.length}</span><br>
+失效 Failures (F): <span class="val">${r1.dataPoints.filter(p => p.status === 'F').length}</span><br>
+右設限 Suspensions (S): <span class="val">${r1.dataPoints.filter(p => p.status === 'S').length}</span><br>
+失效模式 Failure Mode: <span class="val">${getFM(r1.beta)}</span><br>
+適配 Goodness of Fit (R²): <span class="val">${r1.rSquared.toFixed(4)}</span>
+</div>` : ''}
+</div>
 
 ${aiHtml}
 
-${isDualMode ? `
-<div class="dual-grid">
-<div class="section"><h2>${n1} 原始數據 &bull; Raw Data</h2><table><thead><tr><th>#</th><th>時間 Time</th><th>狀態 Status</th><th>中位秩 Median Rank</th></tr></thead><tbody>${rows1}</tbody></table></div>
-<div class="section"><h2>${n2} 原始數據 &bull; Raw Data</h2><table><thead><tr><th>#</th><th>時間 Time</th><th>狀態 Status</th><th>中位秩 Median Rank</th></tr></thead><tbody>${rows2}</tbody></table></div>
+<div class="section"><h2>原始數據 &bull; Raw Data</h2>
+${isDualMode && r1 && r2 ? `<div class="dual-grid"><div class="table-wrap"><table><thead><tr><th>#</th><th>時間<br>Time</th><th>狀態<br>Status</th><th>中位秩<br>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows1}</tbody></table></div><div class="table-wrap"><table><thead><tr><th>#</th><th>時間<br>Time</th><th>狀態<br>Status</th><th>中位秩<br>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows2}</tbody></table></div></div>` : `<div class="table-wrap"><table><thead><tr><th>#</th><th>時間 Time</th><th>狀態 Status</th><th>中位秩 Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows1}</tbody></table></div>`}
 </div>
-` : `
-<div class="section"><h2>原始數據 &bull; Raw Data</h2><table><thead><tr><th>#</th><th>時間 Time</th><th>狀態 Status</th><th>中位秩 Median Rank</th></tr></thead><tbody>${rows1}</tbody></table></div>
-`}
 
 <div class="section" style="margin-top:40px;padding-top:20px;border-top:2px solid #e2e8f0;font-size:12px;color:#94a3b8;text-align:center">
 Weibull Analyst &mdash; 由 Weibull-Analyst 產生 Generated &mdash; ${ts}
