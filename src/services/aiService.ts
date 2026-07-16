@@ -119,6 +119,22 @@ export const analyzeWithAI = async (
                     : "You are a senior Reliability Engineer expert in explaining Weibull analysis results."
             }).generateContent(prompt);
             return response.response.text();
+        } else if (provider === 'AGNES') {
+            const openai = new OpenAI({ apiKey, baseURL: 'https://apihub.agnes-ai.com/v1', dangerouslyAllowBrowser: true });
+            const response = await openai.chat.completions.create({
+                model: 'agnes-2.0-flash',
+                messages: [
+                    {
+                        role: "system",
+                        content: isZh
+                            ? "你是一位資深的可靠度工程專家，擅長使用繁體中文解釋韋伯分析結果。"
+                            : "You are a senior Reliability Engineer expert in explaining Weibull analysis results."
+                    },
+                    { role: "user", content: prompt }
+                ],
+                max_tokens: 500
+            });
+            return response.choices[0].message.content;
         } else {
             const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
             const response = await openai.chat.completions.create({

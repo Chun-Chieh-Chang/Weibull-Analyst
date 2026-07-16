@@ -25,4 +25,4 @@ export type AnalysisMode = 'SINGLE' | 'DUAL';
 export type ChartType = 'PROBABILITY' | 'PDF' | 'RELIABILITY';
 export type Language = 'en' | 'zh';
 export type Theme = 'light' | 'dark';
-export type AIProvider = 'GEMINI' | 'OPENAI';
+export type AIProvider = 'GEMINI' | 'OPENAI' | 'AGNES';

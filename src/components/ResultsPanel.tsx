@@ -89,11 +89,13 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
     const [apiKeyInput, setApiKeyInput] = useState('');
     const [geminiKey, setGeminiKey] = useState<string | null>(localStorage.getItem('gemini_api_key'));
     const [openaiKey, setOpenaiKey] = useState<string | null>(localStorage.getItem('openai_api_key'));
+    const [agnesKey, setAgnesKey] = useState<string | null>(localStorage.getItem('agnes_api_key'));
 
     useEffect(() => {
         if (activeProvider === 'GEMINI') setApiKeyInput(geminiKey || '');
-        else setApiKeyInput(openaiKey || '');
-    }, [activeProvider, geminiKey, openaiKey]);
+        else if (activeProvider === 'OPENAI') setApiKeyInput(openaiKey || '');
+        else setApiKeyInput(agnesKey || '');
+    }, [activeProvider, geminiKey, openaiKey, agnesKey]);
 
     if (lang === 'zh') {
         label1 = "A 組";
@@ -102,7 +104,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
 
     const handleAIAnalyze = async (keyToUse?: string, providerToUse?: AIProvider) => {
         const prov = providerToUse || activeProvider;
-        const key = keyToUse || (prov === 'GEMINI' ? geminiKey : openaiKey);
+        const key = keyToUse || (prov === 'GEMINI' ? geminiKey : prov === 'AGNES' ? agnesKey : openaiKey);
 
         if (!key) {
             setShowKeyModal(true);
@@ -131,6 +133,9 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
             if (activeProvider === 'GEMINI') {
                 localStorage.setItem('gemini_api_key', key);
                 setGeminiKey(key);
+            } else if (activeProvider === 'AGNES') {
+                localStorage.setItem('agnes_api_key', key);
+                setAgnesKey(key);
             } else {
                 localStorage.setItem('openai_api_key', key);
                 setOpenaiKey(key);
@@ -401,6 +406,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     >
                                         <option value="GEMINI">Google Gemini (Default)</option>
                                         <option value="OPENAI">OpenAI (ChatGPT)</option>
+                                        <option value="AGNES">Agnes (agnes-2.0-flash)</option>
                                     </select>
                                     <ChevronDownIcon className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-indigo-500 transition-colors" />
                                 </div>
@@ -435,7 +441,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     {lang === 'zh' ? "储存配置並分析" : "Save & Analyze"}
                                 </button>
                                 <a
-                                    href={activeProvider === 'GEMINI' ? "https://aistudio.google.com/app/apikey" : "https://platform.openai.com/api-keys"}
+                                    href={activeProvider === 'GEMINI' ? "https://aistudio.google.com/app/apikey" : activeProvider === 'AGNES' ? "https://apihub.agnes-ai.com" : "https://platform.openai.com/api-keys"}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="text-[10px] text-center text-indigo-500 hover:underline font-bold"
