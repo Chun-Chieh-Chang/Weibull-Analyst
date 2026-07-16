@@ -134,7 +134,7 @@ export const analyzeWithAI = async (
                         },
                         { role: "user", content: prompt }
                     ],
-                    max_tokens: 800
+                    max_tokens: 8192
                 })
             });
             if (!resp.ok) {
