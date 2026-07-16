@@ -341,6 +341,22 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             if (result1) addGroupTraces(result1, colorA, name1);
             if (result2) addGroupTraces(result2, colorB, name2);
 
+            // R(0.95) reference markers for Reliability chart
+            if (type === 'RELIABILITY') {
+                const addR095 = (r: WeibullResult, clr: string, nm: string) => {
+                    const t_095 = r.eta * Math.pow(-Math.log(0.95), 1 / r.beta);
+                    traces.push({
+                        x: [t_095], y: [0.95], mode: 'markers+text',
+                        marker: { color: bg, size: 12, line: { color: clr, width: 2.5 }, symbol: 'circle' },
+                        text: `R(0.95) @ t=${t_095.toFixed(2)}`,
+                        textfont: { color: clr, size: 10, weight: 'bold' }, textposition: 'top center',
+                        showlegend: false, hoverinfo: 'none'
+                    });
+                };
+                if (result1) addR095(result1, colorA, name1);
+                if (result2) addR095(result2, colorB, name2);
+            }
+
             const layout: any = {
                 paper_bgcolor: bg, plot_bgcolor: 'transparent',
                 font: { family: 'Inter, sans-serif', size: 11, color: axisC },
@@ -357,6 +373,16 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             } else if (type === 'RELIABILITY') {
                 layout.yaxis.title = { text: 'Reliability R(t)' };
                 layout.yaxis.range = [0, 1.05];
+                layout.shapes = [];
+                const addRefLine = (r: WeibullResult, clr: string) => {
+                    const t_095 = r.eta * Math.pow(-Math.log(0.95), 1 / r.beta);
+                    layout.shapes.push(
+                        { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.95, x1: t_095, y1: 0.95, line: { color: `${clr}80`, width: 1.5, dash: 'dash' } },
+                        { type: 'line', xref: 'x', yref: 'y', x0: t_095, y0: 0, x1: t_095, y1: 0.95, line: { color: `${clr}80`, width: 1.5, dash: 'dash' } }
+                    );
+                };
+                if (result1) addRefLine(result1, colorA);
+                if (result2) addRefLine(result2, colorB);
             } else {
                 layout.yaxis.title = { text: 'Probability Density f(t)' };
             }
