@@ -37,9 +37,10 @@ As a Senior Reliability Engineer, provide a comparative analysis:
 3. Conclusion: Which group is more reliable?
 4. Suggest a reason for the difference (e.g., material change, manufacturing defect).
 
-IMPORTANT: You MUST respond BILINGUALLY. Write each point first in Traditional Chinese (繁體中文) then in English. Format with Markdown, keep each language part concise (under 150 words each).
 Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. Beta) or Unicode (e.g. R²).
-`;
+
+**CRITICAL: You MUST respond in BOTH languages.** First paragraph in Traditional Chinese (繁體中文), second paragraph in English. Each point must have both languages. Example format:
+- **Beta 解讀 Beta Interpretation:** (Chinese text...) (English text...)`;
     } else if (result1) {
         prompt = `
 I have performed a Weibull Analysis on failure data.
@@ -55,9 +56,10 @@ Provide a technical analysis:
 3. Comment on fit quality (R²).
 4. One actionable recommendation.
 
-IMPORTANT: You MUST respond BILINGUALLY. Write each point first in Traditional Chinese (繁體中文) then in English. Format with Markdown, keep each language part concise (under 150 words each).
 Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. Beta) or Unicode (e.g. R²).
-`;
+
+**CRITICAL: You MUST respond in BOTH languages.** First paragraph in Traditional Chinese (繁體中文), second paragraph in English. Each point must have both languages. Example format:
+- **Beta 解讀 Beta Interpretation:** (Chinese text...) (English text...)`;
     } else {
         throw new Error("No results to analyze.");
     }
