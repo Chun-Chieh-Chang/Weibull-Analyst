@@ -146,8 +146,10 @@ export const analyzeWithAI = async (
             if (content) return content;
             const refusal = data.choices?.[0]?.message?.refusal;
             if (refusal) throw new Error(isZh ? `模型拒絕回應: ${refusal}` : `Model refused: ${refusal}`);
-            console.warn('[AGNES] Raw response:', JSON.stringify(data, null, 2));
-            throw new Error(isZh ? "API 回傳內容為空，請確認模型名稱或金鑰是否正確" : "Empty API response. Check model name or API key.");
+            const snippet = JSON.stringify(data).slice(0, 500);
+            throw new Error(isZh
+                ? `API 回傳異常，前500字元: ${snippet}`
+                : `Unexpected API response (first 500 chars): ${snippet}`);
         } else {
             const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
             const response = await openai.chat.completions.create({
