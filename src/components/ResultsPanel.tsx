@@ -26,6 +26,7 @@ interface ResultsPanelProps {
     onTogglePoint?: (groupIndex: 1 | 2, pointId: number, currentStatus: 'F' | 'S') => void;
     lang: Language;
     theme: Theme;
+    onAiAnalysisChange?: (text: string | null) => void;
 }
 
 const MetricCard = ({
@@ -76,10 +77,15 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
     label2 = "Group B",
     onTogglePoint,
     lang,
-    theme
+    theme,
+    onAiAnalysisChange
 }) => {
     const [activeTab, setActiveTab] = useState<TabType>('INSIGHTS');
     const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+    const handleSetAiAnalysis = (text: string | null) => {
+        setAiAnalysis(text);
+        onAiAnalysisChange?.(text);
+    };
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -116,7 +122,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         setError(null);
         try {
             const text = await analyzeWithAI(result1, result2, isDualMode, lang, key, prov);
-            setAiAnalysis(text || "No analysis returned.");
+            handleSetAiAnalysis(text || "No analysis returned.");
         } catch (e: any) {
             setError(e.message || "An error occurred.");
             if (e.message?.includes("API Key") || e.message?.includes("401")) {
@@ -368,7 +374,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     <div className="prose prose-xs dark:prose-invert max-w-none bg-white dark:bg-black/20 p-4 rounded-lg border border-indigo-50 dark:border-white/5 text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
                                         <div dangerouslySetInnerHTML={{ __html: formatAIResponse(aiAnalysis) }} />
                                     </div>
-                                    <button onClick={() => setAiAnalysis(null)} className="mt-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 block w-full text-center transition-colors">
+                                    <button onClick={() => handleSetAiAnalysis(null)} className="mt-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 block w-full text-center transition-colors">
                                         {t('results.ai.reset', lang)}
                                     </button>
                                 </div>

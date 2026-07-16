@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Plot from 'react-plotly.js';
+import Plotly from 'plotly.js-dist-min';
 import {
     XMarkIcon,
     ArrowPathIcon,
     MagnifyingGlassPlusIcon,
-    HandRaisedIcon
+    HandRaisedIcon,
+    DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { WeibullResult, ChartType, Language, Theme } from '../types';
 import { t } from '../utils/locales';
@@ -16,6 +18,7 @@ interface WeibullChartProps {
     label2?: string;
     lang: Language;
     theme: Theme;
+    aiAnalysis?: string | null;
 }
 
 const calculateMetrics = (t: number, beta: number, eta: number) => {
@@ -35,8 +38,10 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     label1 = "Group A",
     label2 = "Group B",
     lang,
-    theme
+    theme,
+    aiAnalysis
 }) => {
+    const plotRef = useRef<HTMLDivElement>(null);
     const [chartType, setChartType] = useState<ChartType>('PROBABILITY');
     const [modalData, setModalData] = useState<{ time: number } | null>(null);
     const [visibleGroups, setVisibleGroups] = useState<{ g1: boolean, g2: boolean }>({ g1: true, g2: true });
@@ -294,6 +299,116 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         return layout;
     }, [chartType, interactionMode, gridColor, axisColor, axisTextColor, plotBgColor, result1, result2, visibleGroups, colorA, colorB]);
 
+    const generateHTMLReport = async () => {
+        if (!result1) return;
+        const isDualMode = !!result1 && !!result2;
+        const gd = plotRef.current?.querySelector('.js-plotly-plot');
+        let chartImage = '';
+        if (gd) {
+            try {
+                chartImage = await Plotly.toImage(gd as HTMLElement, { format: 'png', width: 1200, height: 800, scale: 2 });
+            } catch { /* image capture failed, proceed without it */ }
+        }
+        const isZh = lang === 'zh';
+        const ts = new Date().toLocaleString(isZh ? 'zh-TW' : 'en-US', { dateStyle: 'long', timeStyle: 'short' });
+        const n1 = name1, n2 = name2;
+        const r1 = result1, r2 = result2;
+        const getFM = (b: number) => b < 0.9 ? 'Infant Mortality' : b <= 1.1 ? 'Random Failures' : 'Wear-out';
+        const rows1 = r1.dataPoints.map(p =>
+            `<tr><td>${p.id + 1}</td><td>${p.time.toFixed(2)}</td><td>${p.status}</td><td>${p.status === 'F' ? (p.rank * 100).toFixed(2) + '%' : '-'}</td></tr>`
+        ).join('');
+        const rows2 = r2 ? r2.dataPoints.map(p =>
+            `<tr><td>${p.id + 1}</td><td>${p.time.toFixed(2)}</td><td>${p.status}</td><td>${p.status === 'F' ? (p.rank * 100).toFixed(2) + '%' : '-'}</td></tr>`
+        ).join('') : '';
+        const aiHtml = aiAnalysis ? `<div class="section"><h2>AI Analysis</h2><div class="ai-box">${aiAnalysis.replace(/\n/g, '<br>')}</div></div>` : '';
+        const reportHTML = `<!DOCTYPE html>
+<html lang="${isZh ? 'zh-TW' : 'en'}">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weibull Analysis Report</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1e293b;background:#f8fafc;padding:40px;max-width:1100px;margin:auto}
+h1{font-size:28px;font-weight:800;color:#0f172a;margin-bottom:4px}
+.sub{color:#64748b;font-size:14px;margin-bottom:32px}
+.section{margin-bottom:36px}
+.section h2{font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#475569;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:#f1f5f9;color:#475569;font-weight:700;text-align:left;padding:10px 12px;border-bottom:2px solid #cbd5e1}
+td{padding:8px 12px;border-bottom:1px solid #e2e8f0}
+tr:hover td{background:#f8fafc}
+.mono{font-family:'SF Mono',Consolas,monospace}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.metric-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.metric-card .label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:4px}
+.metric-card .value{font-size:28px;font-weight:800;color:#0f172a;font-family:'SF Mono',Consolas,monospace}
+.metric-card .sub{font-size:13px;color:#64748b;margin-top:2px}
+.chart-img{width:100%;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.ai-box{background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:20px;font-size:14px;line-height:1.7;color:#1e293b}
+.tag{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:4px;margin-left:8px}
+.tag-wear{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.tag-random{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
+.tag-infant{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:768px){.dual-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<h1>Weibull Analysis Report</h1>
+<p class="sub">Generated: ${ts} &nbsp;|&nbsp; ${isZh ? '模式' : 'Mode'}: ${isDualMode ? (isZh ? '雙組比較' : 'Comparative') : (isZh ? '單組分析' : 'Single')}</p>
+
+${chartImage ? `<div class="section"><h2>${isZh ? '可靠度圖表' : 'Reliability Chart'}</h2><img class="chart-img" src="${chartImage}" alt="Chart"></div>` : ''}
+
+${isDualMode && r1 && r2 ? `
+<div class="dual-grid">
+<div class="section"><h2>${n1} ${isZh ? '指標' : 'Metrics'}</h2><div class="metrics">
+<div class="metric-card"><div class="label">Beta β</div><div class="value">${r1.beta.toFixed(4)}</div><div class="sub">${getFM(r1.beta)} <span class="tag tag-${r1.beta < 0.9 ? 'infant' : r1.beta <= 1.1 ? 'random' : 'wear'}">${getFM(r1.beta)}</span></div></div>
+<div class="metric-card"><div class="label">Eta η</div><div class="value">${r1.eta.toFixed(4)}</div><div class="sub">${isZh ? '特徵壽命' : 'Characteristic Life'}</div></div>
+<div class="metric-card"><div class="label">MTTF</div><div class="value">${r1.mttf.toFixed(4)}</div><div class="sub">${isZh ? '平均壽命' : 'Mean Time To Failure'}</div></div>
+<div class="metric-card"><div class="label">R²</div><div class="value">${r1.rSquared.toFixed(4)}</div><div class="sub">${r1.rSquared >= 0.9 ? (isZh ? '適配良好' : 'Good Fit') : (isZh ? '適配偏低' : 'Poor Fit')}</div></div>
+</div></div>
+<div class="section"><h2>${n2} ${isZh ? '指標' : 'Metrics'}</h2><div class="metrics">
+<div class="metric-card"><div class="label">Beta β</div><div class="value">${r2.beta.toFixed(4)}</div><div class="sub">${getFM(r2.beta)} <span class="tag tag-${r2.beta < 0.9 ? 'infant' : r2.beta <= 1.1 ? 'random' : 'wear'}">${getFM(r2.beta)}</span></div></div>
+<div class="metric-card"><div class="label">Eta η</div><div class="value">${r2.eta.toFixed(4)}</div><div class="sub">${isZh ? '特徵壽命' : 'Characteristic Life'}</div></div>
+<div class="metric-card"><div class="label">MTTF</div><div class="value">${r2.mttf.toFixed(4)}</div><div class="sub">${isZh ? '平均壽命' : 'Mean Time To Failure'}</div></div>
+<div class="metric-card"><div class="label">R²</div><div class="value">${r2.rSquared.toFixed(4)}</div><div class="sub">${r2.rSquared >= 0.9 ? (isZh ? '適配良好' : 'Good Fit') : (isZh ? '適配偏低' : 'Poor Fit')}</div></div>
+</div></div>
+</div>
+` : r1 ? `
+<div class="section"><h2>${isZh ? '指標' : 'Metrics'}</h2><div class="metrics">
+<div class="metric-card"><div class="label">Beta β</div><div class="value">${r1.beta.toFixed(4)}</div><div class="sub">${getFM(r1.beta)} <span class="tag tag-${r1.beta < 0.9 ? 'infant' : r1.beta <= 1.1 ? 'random' : 'wear'}">${getFM(r1.beta)}</span></div></div>
+<div class="metric-card"><div class="label">Eta η</div><div class="value">${r1.eta.toFixed(4)}</div><div class="sub">${isZh ? '特徵壽命' : 'Characteristic Life'}</div></div>
+<div class="metric-card"><div class="label">MTTF</div><div class="value">${r1.mttf.toFixed(4)}</div><div class="sub">${isZh ? '平均壽命' : 'Mean Time To Failure'}</div></div>
+<div class="metric-card"><div class="label">R²</div><div class="value">${r1.rSquared.toFixed(4)}</div><div class="sub">${r1.rSquared >= 0.9 ? (isZh ? '適配良好' : 'Good Fit') : (isZh ? '適配偏低' : 'Poor Fit')}</div></div>
+</div></div>
+` : ''}
+
+${aiHtml}
+
+${isDualMode ? `
+<div class="dual-grid">
+<div class="section"><h2>${n1} ${isZh ? '原始數據' : 'Raw Data'}</h2><table><thead><tr><th>#</th><th>Time</th><th>Status</th><th>Median Rank</th></tr></thead><tbody>${rows1}</tbody></table></div>
+<div class="section"><h2>${n2} ${isZh ? '原始數據' : 'Raw Data'}</h2><table><thead><tr><th>#</th><th>Time</th><th>Status</th><th>Median Rank</th></tr></thead><tbody>${rows2}</tbody></table></div>
+</div>
+` : `
+<div class="section"><h2>${isZh ? '原始數據' : 'Raw Data'}</h2><table><thead><tr><th>#</th><th>Time</th><th>Status</th><th>Median Rank</th></tr></thead><tbody>${rows1}</tbody></table></div>
+`}
+
+<div class="section" style="margin-top:40px;padding-top:20px;border-top:2px solid #e2e8f0;font-size:12px;color:#94a3b8;text-align:center">
+Weibull Analyst &mdash; Generated by Weibull-Analyst &mdash; ${ts}
+</div>
+</body>
+</html>`;
+        const blob = new Blob([reportHTML], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Weibull_Report_${new Date().toISOString().slice(0, 10)}.html`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     const CustomLegend = () => (
         <div className="absolute top-4 left-0 right-0 flex justify-center items-center space-x-12 z-10 pointer-events-none select-none">
             {visibleGroups.g1 && result1 && (
@@ -392,10 +507,20 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                         <ArrowPathIcon className="w-3.5 h-3.5" />
                         <span>Interactive Plotly</span>
                     </button>
+
+                    <button
+                        onClick={generateHTMLReport}
+                        disabled={!result1}
+                        className="flex items-center space-x-1.5 text-xs font-bold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title={lang === 'zh' ? '生成 HTML 報告' : 'Generate HTML Report'}
+                    >
+                        <DocumentTextIcon className="w-3.5 h-3.5" />
+                        <span>Report</span>
+                    </button>
                 </div>
             </div>
 
-            <div className="flex-1 w-full relative transition-colors duration-200 overflow-hidden">
+            <div ref={plotRef} className="flex-1 w-full relative transition-colors duration-200 overflow-hidden">
                 <CustomLegend />
                 <Plot
                     data={plotData}

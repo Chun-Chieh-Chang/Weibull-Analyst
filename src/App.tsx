@@ -26,6 +26,7 @@ const App: React.FC = () => {
 
     const [result1, setResult1] = useState<WeibullResult | null>(null);
     const [result2, setResult2] = useState<WeibullResult | null>(null);
+    const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
 
     useEffect(() => {
         handleCalculate();
@@ -349,6 +350,7 @@ const App: React.FC = () => {
                             result2={result2}
                             lang={lang}
                             theme={theme}
+                            aiAnalysis={aiAnalysis}
                         />
                     </div>
                 </main>
@@ -363,6 +365,7 @@ const App: React.FC = () => {
                             onTogglePoint={handleTogglePoint}
                             lang={lang}
                             theme={theme}
+                            onAiAnalysisChange={setAiAnalysis}
                         />
                     </div>
                 </aside>
