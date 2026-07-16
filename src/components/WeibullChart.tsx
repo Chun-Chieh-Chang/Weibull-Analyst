@@ -407,29 +407,31 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 <title>Weibull Analysis Report 韋伯分析報告</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#1e293b;background:#f8fafc;padding:40px;max-width:1100px;margin:auto}
-h1{font-size:26px;font-weight:800;color:#0f172a;margin-bottom:2px}
-.sub{color:#64748b;font-size:13px;margin-bottom:32px}
-.section{margin-bottom:36px}
-.section h2{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#475569;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px}
-.chart-grid{display:grid;grid-template-columns:1fr;gap:28px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#1e293b;background:#f8fafc;padding:32px;max-width:1200px;margin:auto}
+h1{font-size:24px;font-weight:800;color:#0f172a;margin-bottom:2px}
+.sub{color:#64748b;font-size:13px;margin-bottom:28px}
+.section{margin-bottom:32px}
+.section h2{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#475569;border-bottom:2px solid #e2e8f0;padding-bottom:6px;margin-bottom:14px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.chart-cell{display:flex;flex-direction:column;align-items:center}
+.chart-caption{font-size:11px;color:#94a3b8;margin-top:6px;white-space:nowrap}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#f1f5f9;color:#475569;font-weight:700;text-align:left;padding:8px 10px;border-bottom:2px solid #cbd5e1;white-space:nowrap}
-td{padding:6px 10px;border-bottom:1px solid #e2e8f0}
+th{background:#f1f5f9;color:#475569;font-weight:700;text-align:left;padding:7px 10px;border-bottom:2px solid #cbd5e1;white-space:nowrap}
+td{padding:5px 10px;border-bottom:1px solid #e2e8f0}
 tr:hover td{background:#f8fafc}
 .mono{font-family:'SF Mono',Consolas,monospace;font-size:11px}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-.metric-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.metric-card .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#64748b;margin-bottom:3px;line-height:1.4}
-.metric-card .value{font-size:24px;font-weight:800;color:#0f172a;font-family:'SF Mono',Consolas,'Noto Sans TC',monospace}
-.metric-card .sub{font-size:12px;color:#64748b;margin-top:2px;line-height:1.4}
-.chart-img{width:100%;border-radius:10px;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,.06)}
-.ai-box{background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:20px;font-size:14px;line-height:1.7;color:#1e293b}
-.summary-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;font-size:13px;line-height:1.8}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.metric-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.metric-card .label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#64748b;margin-bottom:2px;line-height:1.3}
+.metric-card .value{font-size:20px;font-weight:800;color:#0f172a;font-family:'SF Mono',Consolas,'Noto Sans TC',monospace}
+.metric-card .sub{font-size:11px;color:#64748b;margin-top:2px;line-height:1.3}
+.chart-img{width:100%;border-radius:8px;border:1px solid #e2e8f0;box-shadow:0 3px 10px rgba(0,0,0,.05)}
+.ai-box{background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:16px;font-size:13px;line-height:1.6;color:#1e293b}
+.summary-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:12px;line-height:1.7}
 .summary-box strong{color:#0f172a}.summary-box .val{font-family:'SF Mono',Consolas,monospace;font-weight:700;color:#475569}
-.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .table-wrap{overflow-x:auto}
-@media(max-width:768px){.dual-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
+@media print{body{padding:20px}}@media(max-width:768px){.chart-grid{grid-template-columns:1fr}.dual-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -437,9 +439,9 @@ tr:hover td{background:#f8fafc}
 <p class="sub">產生時間 Generated: ${ts} &nbsp;|&nbsp; 分析模式 Mode: ${modeLabel}</p>
 
 <div class="section"><h2>圖表 &bull; Charts</h2><div class="chart-grid">
-${probImg ? `<img class="chart-img" src="${probImg}" alt="Probability Plot"><p style="text-align:center;font-size:11px;color:#94a3b8;margin-top:-16px">機率圖 Probability Plot</p>` : ''}
-${relImg ? `<img class="chart-img" src="${relImg}" alt="Reliability Curve"><p style="text-align:center;font-size:11px;color:#94a3b8;margin-top:-16px">可靠度曲線 Reliability Curve</p>` : ''}
-${pdfImg ? `<img class="chart-img" src="${pdfImg}" alt="Probability Density"><p style="text-align:center;font-size:11px;color:#94a3b8;margin-top:-16px">機率密度 Probability Density</p>` : ''}
+${probImg ? `<div class="chart-cell"><img class="chart-img" src="${probImg}" alt="Probability Plot"><span class="chart-caption">機率圖 Probability Plot</span></div>` : ''}
+${relImg ? `<div class="chart-cell"><img class="chart-img" src="${relImg}" alt="Reliability Curve"><span class="chart-caption">可靠度曲線 Reliability Curve</span></div>` : ''}
+${pdfImg ? `<div class="chart-cell"><img class="chart-img" src="${pdfImg}" alt="Probability Density"><span class="chart-caption">機率密度 Probability Density</span></div>` : ''}
 </div></div>
 
 <div class="section"><h2>指標 &bull; Metrics</h2>
