@@ -201,6 +201,38 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             }
         }
 
+        // R(0.95) coordinate markers for Reliability chart
+        if (chartType === 'RELIABILITY') {
+            if (visibleGroups.g1 && result1) {
+                const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
+                traces.push({
+                    x: [t_095],
+                    y: [0.95],
+                    mode: 'markers+text',
+                    marker: { color: 'white', size: 14, line: { color: colorA, width: 2.5 }, symbol: 'circle' },
+                    text: `R(0.95) @ t=${t_095.toFixed(2)}`,
+                    textfont: { color: colorA, size: 11, weight: 'bold' },
+                    textposition: 'top center',
+                    showlegend: false,
+                    hoverinfo: 'none'
+                });
+            }
+            if (visibleGroups.g2 && result2) {
+                const t_095 = result2.eta * Math.pow(-Math.log(0.95), 1 / result2.beta);
+                traces.push({
+                    x: [t_095],
+                    y: [0.95],
+                    mode: 'markers+text',
+                    marker: { color: 'white', size: 14, line: { color: colorB, width: 2.5 }, symbol: 'circle' },
+                    text: `R(0.95) @ t=${t_095.toFixed(2)}`,
+                    textfont: { color: colorB, size: 11, weight: 'bold' },
+                    textposition: 'top center',
+                    showlegend: false,
+                    hoverinfo: 'none'
+                });
+            }
+        }
+
         return traces;
     }, [chartType, result1, result2, visibleGroups, colorA, colorB, bgColor, name1, name2]);
 
@@ -240,8 +272,27 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             if (chartType === 'RELIABILITY') layout.yaxis.range = [0, 1.05];
         }
 
+        // R(0.95) dashed reference lines for Reliability chart
+        layout.shapes = [];
+        if (chartType === 'RELIABILITY') {
+            if (visibleGroups.g1 && result1) {
+                const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
+                layout.shapes.push(
+                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.95, x1: t_095, y1: 0.95, line: { color: `${colorA}80`, width: 1.5, dash: 'dash' } },
+                    { type: 'line', xref: 'x', yref: 'y', x0: t_095, y0: 0, x1: t_095, y1: 0.95, line: { color: `${colorA}80`, width: 1.5, dash: 'dash' } }
+                );
+            }
+            if (visibleGroups.g2 && result2) {
+                const t_095 = result2.eta * Math.pow(-Math.log(0.95), 1 / result2.beta);
+                layout.shapes.push(
+                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.95, x1: t_095, y1: 0.95, line: { color: `${colorB}80`, width: 1.5, dash: 'dash' } },
+                    { type: 'line', xref: 'x', yref: 'y', x0: t_095, y0: 0, x1: t_095, y1: 0.95, line: { color: `${colorB}80`, width: 1.5, dash: 'dash' } }
+                );
+            }
+        }
+
         return layout;
-    }, [chartType, interactionMode, gridColor, axisColor, axisTextColor, plotBgColor]);
+    }, [chartType, interactionMode, gridColor, axisColor, axisTextColor, plotBgColor, result1, result2, visibleGroups, colorA, colorB]);
 
     const CustomLegend = () => (
         <div className="absolute top-4 left-0 right-0 flex justify-center items-center space-x-12 z-10 pointer-events-none select-none">
