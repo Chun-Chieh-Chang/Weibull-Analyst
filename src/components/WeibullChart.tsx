@@ -47,12 +47,12 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const [visibleGroups, setVisibleGroups] = useState<{ g1: boolean, g2: boolean }>({ g1: true, g2: true });
     const [interactionMode, setInteractionMode] = useState<'ZOOM' | 'PAN'>('ZOOM');
 
-    // Theme colors
+    // Theme colors (mirrors CSS variables from index.css)
     const isDark = theme === 'dark';
-    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+    const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
     const axisColor = isDark ? '#475569' : '#94a3b8';
-    const axisTextColor = isDark ? '#94a3b8' : '#64748b';
-    const bgColor = isDark ? '#020617' : '#ffffff';
+    const axisTextColor = isDark ? '#94A3B8' : '#6B7280';
+    const bgColor = isDark ? '#0F172A' : '#ffffff';
     const plotBgColor = 'transparent';
 
     const colorA = isDark ? '#38bdf8' : '#4f46e5';
@@ -302,7 +302,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const generateHTMLReport = async () => {
         if (!result1) return;
         const isDualMode = !!result1 && !!result2;
-        const bg = '#ffffff', gridC = 'rgba(0,0,0,0.06)', axisC = '#94a3b8';
+        const bg = '#ffffff', gridC = 'rgba(0,0,0,0.1)', axisC = '#475569';
 
         const captureChart = async (type: ChartType): Promise<string> => {
             const traces: any[] = [];
@@ -311,12 +311,12 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     const weibullTrans = (p: number) => Math.log(-Math.log(1 - p / 100));
                     traces.push({
                         x: r.linePoints.map(p => Math.exp(p.x)), y: r.linePoints.map(p => p.y),
-                        mode: 'lines', name: `${nm} fit`, line: { color: clr, width: 2 }, hoverinfo: 'none'
+                        mode: 'lines', name: `${nm} fit`, line: { color: clr, width: 3 }, hoverinfo: 'none'
                     });
                     const failPts = r.dataPoints.filter(p => p.status === 'F');
                     traces.push({
                         x: failPts.map(p => p.time), y: failPts.map(p => weibullTrans(p.rank * 100)),
-                        mode: 'markers', name: nm, marker: { color: bg, line: { color: clr, width: 2 }, size: 8, symbol: 'circle' },
+                        mode: 'markers', name: nm, marker: { color: bg, line: { color: clr, width: 3 }, size: 11, symbol: 'circle' },
                         hovertemplate: `<b>${nm}</b><br>Time: %{x:.2f}<br>Unreliability: %{customdata:.2f}%<extra></extra>`,
                         customdata: failPts.map(p => p.rank * 100)
                     });
@@ -328,13 +328,13 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     const yVals = xVals.map(x => calculateMetrics(x, r.beta, r.eta)[type === 'RELIABILITY' ? 'reliability' : 'pdf']);
                     traces.push({
                         x: xVals, y: yVals, mode: 'lines', name: nm,
-                        line: { color: clr, width: 2.5, shape: 'spline' }, fill: 'tozeroy', fillcolor: `${clr}20`
+                        line: { color: clr, width: 3.5, shape: 'spline' }, fill: 'tozeroy', fillcolor: `${clr}25`
                     });
                     const failTimes = pts.filter(p => p.status === 'F').map(p => p.time);
                     const failY = failTimes.map(t => calculateMetrics(t, r.beta, r.eta)[type === 'RELIABILITY' ? 'reliability' : 'pdf']);
                     traces.push({
                         x: failTimes, y: failY, mode: 'markers',
-                        marker: { color: bg, line: { color: clr, width: 2 }, size: 7 }, name: `${nm} Failures`, hoverinfo: 'none'
+                        marker: { color: bg, line: { color: clr, width: 3 }, size: 10 }, name: `${nm} Failures`, hoverinfo: 'none'
                     });
                 }
             };
@@ -349,7 +349,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                         x: [t_095], y: [0.95], mode: 'markers+text',
                         marker: { color: bg, size: 12, line: { color: clr, width: 2.5 }, symbol: 'circle' },
                         text: `R(0.95) @ t=${t_095.toFixed(2)}`,
-                        textfont: { color: clr, size: 10, weight: 'bold' }, textposition: 'top center',
+                        textfont: { color: clr, size: 15, weight: 'bold' }, textposition: 'top center',
                         showlegend: false, hoverinfo: 'none'
                     });
                 };
@@ -359,10 +359,10 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 
             const layout: any = {
                 paper_bgcolor: bg, plot_bgcolor: 'transparent',
-                font: { family: 'Inter, sans-serif', size: 11, color: axisC },
-                hovermode: 'closest', margin: { l: 55, r: 30, t: 40, b: 55 }, showlegend: false,
-                xaxis: { title: { text: 'Time-to-Failure (t)' }, gridcolor: gridC, linecolor: axisC, zeroline: false },
-                yaxis: { gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { weight: 700 } }
+                font: { family: 'Inter, sans-serif', size: 18, color: axisC },
+                hovermode: 'closest', margin: { l: 70, r: 45, t: 55, b: 70 }, showlegend: false,
+                xaxis: { title: { text: 'Time-to-Failure (t)', font: { size: 19, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 15, weight: 700 } },
+                yaxis: { title: { font: { size: 19, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 15, weight: 700 } }
             };
             if (type === 'PROBABILITY') {
                 const probTicks = [0.1, 0.5, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
@@ -388,11 +388,11 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             }
 
             const div = document.createElement('div');
-            div.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1200px;height:800px';
+            div.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:900px;height:600px';
             document.body.appendChild(div);
             await Plotly.newPlot(div, traces, layout, { responsive: false });
             await new Promise(r => setTimeout(r, 200));
-            const url = await Plotly.toImage(div, { format: 'png', width: 1200, height: 800, scale: 2 });
+            const url = await Plotly.toImage(div, { format: 'png', width: 900, height: 600, scale: 2 });
             Plotly.purge(div);
             document.body.removeChild(div);
             return url;
@@ -422,7 +422,9 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         const rows1 = buildDataRows(r1);
         const rows2 = r2 ? buildDataRows(r2) : '';
 
-        const aiHtml = aiAnalysis ? `<div class="section"><h2>AI 分析 &bull; AI Analysis</h2><div class="ai-box">${aiAnalysis.replace(/\n/g, '<br>')}</div></div>` : '';
+        const colorizeText = (txt: string) =>
+            txt.replace(/([\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+)/g, '<span class="zh">$1</span>');
+        const aiHtml = aiAnalysis ? `<div class="section"><h2>AI 分析 &bull; AI Analysis</h2><div class="ai-box">${colorizeText(aiAnalysis.replace(/\n/g, '<br>'))}</div></div>` : '';
         const modeLabel = isDualMode ? '雙組比較 Comparative' : '單組分析 Single';
         const metricCard = (lbl: string, enLbl: string, val: string, sub: string, fm?: number) =>
             `<div class="metric-card"><div class="label">${lbl}<br>${enLbl}</div><div class="value">${val}</div><div class="sub">${fm !== undefined ? sub : sub}</div></div>`;
@@ -433,92 +435,99 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 <title>Weibull Analysis Report 韋伯分析報告</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#1e293b;background:#f8fafc;padding:32px;max-width:1200px;margin:auto}
-h1{font-size:24px;font-weight:800;color:#0f172a;margin-bottom:2px}
-.sub{color:#64748b;font-size:13px;margin-bottom:28px}
-.section{margin-bottom:32px}
-.section h2{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#475569;border-bottom:2px solid #e2e8f0;padding-bottom:6px;margin-bottom:14px}
-.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.chart-cell{display:flex;flex-direction:column;align-items:center}
-.chart-caption{font-size:11px;color:#94a3b8;margin-top:6px;white-space:nowrap}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#f1f5f9;color:#475569;font-weight:700;text-align:left;padding:7px 10px;border-bottom:2px solid #cbd5e1;white-space:nowrap}
-td{padding:5px 10px;border-bottom:1px solid #e2e8f0}
-tr:hover td{background:#f8fafc}
-.mono{font-family:'SF Mono',Consolas,monospace;font-size:11px}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-.metric-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.metric-card .label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#64748b;margin-bottom:2px;line-height:1.3}
-.metric-card .value{font-size:20px;font-weight:800;color:#0f172a;font-family:'SF Mono',Consolas,'Noto Sans TC',monospace}
-.metric-card .sub{font-size:11px;color:#64748b;margin-top:2px;line-height:1.3}
-.chart-img{width:100%;border-radius:8px;border:1px solid #e2e8f0;box-shadow:0 3px 10px rgba(0,0,0,.05)}
-.ai-box{background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:16px;font-size:13px;line-height:1.6;color:#1e293b}
-.summary-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:12px;line-height:1.7}
-.summary-box strong{color:#0f172a}.summary-box .val{font-family:'SF Mono',Consolas,monospace;font-weight:700;color:#475569}
-.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.table-wrap{overflow-x:auto}
-@media print{body{padding:20px}}@media(max-width:768px){.chart-grid{grid-template-columns:1fr}.dual-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#111827;background:#F9FAFB;padding:16px 20px;max-width:100%;margin:0;-webkit-font-smoothing:antialiased}
+h1{font-size:24px;font-weight:800;color:#111827;margin-bottom:2px;letter-spacing:-.02em}
+.sub{color:#6B7280;font-size:13px;margin-bottom:20px}
+.section{margin-bottom:24px}
+.section h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6B7280;border-bottom:1.5px solid #E5E7EB;padding-bottom:5px;margin-bottom:12px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.chart-cell{display:flex;flex-direction:column}
+.chart-caption{font-size:13px;font-weight:600;color:#6B7280;margin-top:6px;letter-spacing:.02em;text-align:center}
+.chart-img{width:100%;border-radius:8px;border:1px solid #E5E7EB;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#F3F4F6;color:#6B7280;font-weight:700;text-align:left;padding:6px 10px;border-bottom:1.5px solid #D1D5DB;white-space:nowrap;text-transform:uppercase;letter-spacing:.03em;font-size:13px}
+td{padding:5px 10px;border-bottom:1px solid #E5E7EB;color:#374151}
+tbody tr:nth-child(even){background:#F9FAFB}
+.mono{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-size:13px;font-weight:600;color:#6B7280}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.metric-card{background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:10px 12px}
+.metric-card .label{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#6B7280;margin-bottom:3px;line-height:1.3}
+.metric-card .value{font-size:20px;font-weight:800;color:#111827;font-family:'SF Mono',Consolas,'Noto Sans TC',monospace;letter-spacing:-.02em}
+.metric-card .sub{font-size:13px;font-weight:500;color:#6B7280;margin-top:3px;line-height:1.3}
+.ai-box{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;color:#374151}
+.ai-box .zh{color:#1D4ED8;font-weight:500}
+.summary-box{background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.7}
+.summary-box strong{color:#111827;font-size:14px}
+.summary-box .val{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-weight:700;color:#3B82F6}
+.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.table-wrap{overflow-x:auto;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden}
+.table-wrap table{border:none}
+.section-footer{margin-top:20px;padding-top:16px;border-top:1.5px solid #E5E7EB;font-size:13px;color:#9CA3AF;text-align:center;letter-spacing:.02em}
+/* dense horizontal layout: rows merge into columns where possible */
+.info-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.info-row .left,.info-row .right{min-width:0}
+.info-row.full{grid-template-columns:1fr}
+@media(max-width:900px){body{padding:12px}.chart-grid{grid-template-columns:1fr;gap:10px}.metrics{grid-template-columns:repeat(2,1fr)}.info-row{grid-template-columns:1fr}.dual-grid{grid-template-columns:1fr;gap:10px}}
 </style>
 </head>
 <body>
 <h1>韋伯分析報告 &bull; Weibull Analysis Report</h1>
 <p class="sub">產生時間 Generated: ${ts} &nbsp;|&nbsp; 分析模式 Mode: ${modeLabel}</p>
 
+<!-- Charts: 3-up dense -->
 <div class="section"><h2>圖表 &bull; Charts</h2><div class="chart-grid">
 ${probImg ? `<div class="chart-cell"><img class="chart-img" src="${probImg}" alt="Probability Plot"><span class="chart-caption">機率圖 Probability Plot</span></div>` : ''}
 ${relImg ? `<div class="chart-cell"><img class="chart-img" src="${relImg}" alt="Reliability Curve"><span class="chart-caption">可靠度曲線 Reliability Curve</span></div>` : ''}
 ${pdfImg ? `<div class="chart-cell"><img class="chart-img" src="${pdfImg}" alt="Probability Density"><span class="chart-caption">機率密度 Probability Density</span></div>` : ''}
 </div></div>
 
+<!-- Metrics + Summary side-by-side -->
+<div class="info-row">
+<div class="left">
 <div class="section"><h2>指標 &bull; Metrics</h2>
-${isDualMode && r1 && r2 ? `<div class="dual-grid"><div><h3 style="font-size:13px;font-weight:700;color:#4f46e5;margin-bottom:10px">${n1}</h3><div class="metrics">
-${metricCard('形狀參數', 'Shape β', r1.beta.toFixed(4), '', r1.beta)}
-${metricCard('尺度參數', 'Scale η', r1.eta.toFixed(4), '特徵壽命 Char. Life')}
-${metricCard('平均壽命', 'MTTF', r1.mttf.toFixed(4), 'Mean Time To Failure')}
-${metricCard('適配度', 'R²', r1.rSquared.toFixed(4), r1.rSquared >= 0.9 ? '適配良好 Good Fit' : '適配偏低 Poor Fit')}
-</div></div><div><h3 style="font-size:13px;font-weight:700;color:#e11d48;margin-bottom:10px">${n2}</h3><div class="metrics">
-${metricCard('形狀參數', 'Shape β', r2.beta.toFixed(4), '', r2.beta)}
-${metricCard('尺度參數', 'Scale η', r2.eta.toFixed(4), '特徵壽命 Char. Life')}
-${metricCard('平均壽命', 'MTTF', r2.mttf.toFixed(4), 'Mean Time To Failure')}
-${metricCard('適配度', 'R²', r2.rSquared.toFixed(4), r2.rSquared >= 0.9 ? '適配良好 Good Fit' : '適配偏低 Poor Fit')}
-</div></div></div>` : r1 ? `<div class="metrics">
+${isDualMode && r1 && r2 ? `<div style="margin-bottom:12px"><div style="display:flex;gap:16px;margin-bottom:8px"><span style="font-size:12px;font-weight:700;color:#3B82F6">${n1}</span><span style="font-size:12px;font-weight:700;color:#EF4444">${n2}</span></div><div class="metrics" style="grid-template-columns:repeat(4,1fr)">
+${metricCard('形狀 Shape β', '', r1.beta.toFixed(4) + ' / ' + r2.beta.toFixed(4), '', (r1.beta + r2.beta) / 2)}
+${metricCard('尺度 Scale η', '', r1.eta.toFixed(2) + ' / ' + r2.eta.toFixed(2), '特徵壽命 Char. Life')}
+${metricCard('平均 MTTF', '', r1.mttf.toFixed(2) + ' / ' + r2.mttf.toFixed(2), 'Mean Time To Failure')}
+${metricCard('適配 R²', '', r1.rSquared.toFixed(4) + ' / ' + r2.rSquared.toFixed(4), r1.rSquared >= 0.9 && r2.rSquared >= 0.9 ? '良好 Good Fit' : '偏低 Poor Fit')}
+</div></div>` : r1 ? `<div class="metrics">
 ${metricCard('形狀參數', 'Shape β', r1.beta.toFixed(4), '', r1.beta)}
 ${metricCard('尺度參數', 'Scale η', r1.eta.toFixed(4), '特徵壽命 Char. Life')}
 ${metricCard('平均壽命', 'MTTF', r1.mttf.toFixed(4), 'Mean Time To Failure')}
 ${metricCard('適配度', 'R²', r1.rSquared.toFixed(4), r1.rSquared >= 0.9 ? '適配良好 Good Fit' : '適配偏低 Poor Fit')}
 </div>` : ''}
 </div>
-
-<div class="section"><h2>摘要統計 &bull; Summary Statistics</h2>
-${isDualMode && r1 && r2 ? `<div class="dual-grid"><div class="summary-box"><strong>${n1}</strong><br>
-樣本數 Sample Size (N): <span class="val">${r1.dataPoints.length}</span><br>
-失效 Failures (F): <span class="val">${r1.dataPoints.filter(p => p.status === 'F').length}</span><br>
-右設限 Suspensions (S): <span class="val">${r1.dataPoints.filter(p => p.status === 'S').length}</span><br>
-失效模式 Failure Mode: <span class="val">${getFM(r1.beta)}</span><br>
-適配 Goodness of Fit (R²): <span class="val">${r1.rSquared.toFixed(4)}</span>
-</div><div class="summary-box"><strong>${n2}</strong><br>
-樣本數 Sample Size (N): <span class="val">${r2.dataPoints.length}</span><br>
-失效 Failures (F): <span class="val">${r2.dataPoints.filter(p => p.status === 'F').length}</span><br>
-右設限 Suspensions (S): <span class="val">${r2.dataPoints.filter(p => p.status === 'S').length}</span><br>
-失效模式 Failure Mode: <span class="val">${getFM(r2.beta)}</span><br>
-適配 Goodness of Fit (R²): <span class="val">${r2.rSquared.toFixed(4)}</span>
-</div></div>` : r1 ? `<div class="summary-box">
-樣本數 Sample Size (N): <span class="val">${r1.dataPoints.length}</span><br>
-失效 Failures (F): <span class="val">${r1.dataPoints.filter(p => p.status === 'F').length}</span><br>
-右設限 Suspensions (S): <span class="val">${r1.dataPoints.filter(p => p.status === 'S').length}</span><br>
-失效模式 Failure Mode: <span class="val">${getFM(r1.beta)}</span><br>
-適配 Goodness of Fit (R²): <span class="val">${r1.rSquared.toFixed(4)}</span>
+</div>
+<div class="right">
+<div class="section"><h2>摘要 &bull; Summary</h2>
+${isDualMode && r1 && r2 ? `<div class="dual-grid" style="gap:10px"><div class="summary-box"><strong>${n1}<br></strong>
+N: <span class="val">${r1.dataPoints.length}</span> &nbsp; F: <span class="val">${r1.dataPoints.filter(p => p.status === 'F').length}</span> &nbsp; S: <span class="val">${r1.dataPoints.filter(p => p.status === 'S').length}</span><br>
+失效模式: <span class="val">${getFM(r1.beta)}</span> &nbsp; R²: <span class="val">${r1.rSquared.toFixed(4)}</span>
+</div><div class="summary-box"><strong>${n2}<br></strong>
+N: <span class="val">${r2.dataPoints.length}</span> &nbsp; F: <span class="val">${r2.dataPoints.filter(p => p.status === 'F').length}</span> &nbsp; S: <span class="val">${r2.dataPoints.filter(p => p.status === 'S').length}</span><br>
+失效模式: <span class="val">${getFM(r2.beta)}</span> &nbsp; R²: <span class="val">${r2.rSquared.toFixed(4)}</span>
+</div></div>` : r1 ? `<div class="summary-box"><strong>${n1}<br></strong>
+N: <span class="val">${r1.dataPoints.length}</span> &nbsp; F: <span class="val">${r1.dataPoints.filter(p => p.status === 'F').length}</span> &nbsp; S: <span class="val">${r1.dataPoints.filter(p => p.status === 'S').length}</span><br>
+失效模式: <span class="val">${getFM(r1.beta)}</span> &nbsp; R²: <span class="val">${r1.rSquared.toFixed(4)}</span>
 </div>` : ''}
 </div>
+</div>
+</div>
 
-${aiHtml}
-
+<!-- AI Analysis + Raw Data side-by-side -->
+<div class="info-row${!aiAnalysis ? ' full' : ''}">
+${aiAnalysis ? `<div class="left">
+<div class="section"><h2>AI 分析 &bull; AI Analysis</h2><div class="ai-box">${aiAnalysis.replace(/\n/g, '<br>')}</div></div>
+</div>` : ''}
+<div class="${aiAnalysis ? 'right' : 'left'}">
 <div class="section"><h2>原始數據 &bull; Raw Data</h2>
-${isDualMode && r1 && r2 ? `<div class="dual-grid"><div class="table-wrap"><table><thead><tr><th>#</th><th>時間<br>Time</th><th>狀態<br>Status</th><th>中位秩<br>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows1}</tbody></table></div><div class="table-wrap"><table><thead><tr><th>#</th><th>時間<br>Time</th><th>狀態<br>Status</th><th>中位秩<br>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows2}</tbody></table></div></div>` : `<div class="table-wrap"><table><thead><tr><th>#</th><th>時間 Time</th><th>狀態 Status</th><th>中位秩 Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows1}</tbody></table></div>`}
+${isDualMode && r1 && r2 ? `<div class="dual-grid" style="gap:10px"><div class="table-wrap"><table><thead><tr><th>#</th><th>Time</th><th>St</th><th>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows1}</tbody></table></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Time</th><th>St</th><th>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows2}</tbody></table></div></div>` : `<div class="table-wrap"><table><thead><tr><th>#</th><th>Time</th><th>Status</th><th>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows1}</tbody></table></div>`}
+</div>
+</div>
 </div>
 
-<div class="section" style="margin-top:40px;padding-top:20px;border-top:2px solid #e2e8f0;font-size:12px;color:#94a3b8;text-align:center">
-Weibull Analyst &mdash; 由 Weibull-Analyst 產生 Generated &mdash; ${ts}
+<div class="section-footer">
+本報告由凱益品管部產出 This Report is Generated by Mouldex QC Department
 </div>
 </body>
 </html>`;
@@ -536,19 +545,19 @@ Weibull Analyst &mdash; 由 Weibull-Analyst 產生 Generated &mdash; ${ts}
     const CustomLegend = () => (
         <div className="absolute top-4 left-0 right-0 flex justify-center items-center space-x-12 z-10 pointer-events-none select-none">
             {visibleGroups.g1 && result1 && (
-                <div className="flex items-center space-x-3 bg-white/50 dark:bg-slate-800/30 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-200 dark:border-white/5 shadow-sm">
+                <div className="flex items-center space-x-3 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--bg-surface) 60%, transparent)', border: '1px solid var(--border)' }}>
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colorA }}></div>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{name1}</span>
-                    <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full bg-slate-200/50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600">
+                    <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{name1}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-tighter px-2 py-0.5 rounded-full" style={{ color: 'var(--text-secondary)', border: '1px solid color-mix(in srgb, var(--border) 60%, transparent)' }}>
                         {getFailureModeBadge(result1.beta)}
                     </span>
                 </div>
             )}
             {visibleGroups.g2 && result2 && (
-                <div className="flex items-center space-x-3 bg-white/50 dark:bg-slate-800/30 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-200 dark:border-white/5 shadow-sm">
+                <div className="flex items-center space-x-3 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--bg-surface) 60%, transparent)', border: '1px solid var(--border)' }}>
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colorB }}></div>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{name2}</span>
-                    <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full bg-slate-200/50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600">
+                    <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{name2}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-tighter px-2 py-0.5 rounded-full" style={{ color: 'var(--text-secondary)', border: '1px solid color-mix(in srgb, var(--border) 60%, transparent)' }}>
                         {getFailureModeBadge(result2.beta)}
                     </span>
                 </div>
@@ -557,19 +566,19 @@ Weibull Analyst &mdash; 由 Weibull-Analyst 產生 Generated &mdash; ${ts}
     );
 
     const StatRow = ({ label, val1, val2, unit = '' }: { label: string, val1: number, val2?: number, unit?: string }) => (
-        <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-700 last:border-0">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">{label}</span>
+        <div className="flex justify-between items-center py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
             <div className="flex space-x-6">
-                <span className={`font-mono font-semibold ${theme === 'dark' ? 'text-sky-400' : 'text-indigo-600'}`}>{val1.toExponential(3)} {unit}</span>
-                {val2 !== undefined && <span className={`font-mono font-semibold ${theme === 'dark' ? 'text-yellow-400' : 'text-rose-600'}`}>{val2.toExponential(3)} {unit}</span>}
+                <span className="font-mono font-semibold" style={{ color: 'var(--accent)' }}>{val1.toExponential(3)} {unit}</span>
+                {val2 !== undefined && <span className="font-mono font-semibold" style={{ color: 'var(--error)' }}>{val2.toExponential(3)} {unit}</span>}
             </div>
         </div>
     );
 
     if (!result1) return (
-        <div className="w-full h-full bg-white dark:bg-slate-800 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 space-y-4">
-            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                <svg className="w-8 h-8 text-slate-300 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="w-full h-full flex flex-col items-center justify-center space-y-4" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center opacity-40" style={{ backgroundColor: 'color-mix(in srgb, var(--text-secondary) 15%, transparent)' }}>
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                 </svg>
             </div>
@@ -578,15 +587,15 @@ Weibull Analyst &mdash; 由 Weibull-Analyst 產生 Generated &mdash; ${ts}
     );
 
     return (
-        <div className="w-full flex flex-col h-full relative bg-white dark:bg-slate-950 transition-colors duration-300">
+        <div className="w-full flex flex-col h-full relative transition-colors duration-300" style={{ backgroundColor: 'var(--bg-surface)' }}>
             {/* Integrated Toolbar */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/5 bg-white dark:bg-slate-900 z-20 transition-colors duration-200">
+            <div className="flex items-center justify-between px-6 py-4 z-20 transition-colors duration-200" style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-surface)' }}>
                 <div className="flex items-center space-x-8">
-                    <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight shrink-0">
+                    <h3 className="text-lg font-bold tracking-tight shrink-0" style={{ color: 'var(--text-primary)' }}>
                         {chartType === 'PROBABILITY' ? 'Probability Plot' : (chartType === 'RELIABILITY' ? 'Reliability Curve' : 'Probability Density')}
                     </h3>
 
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div className="flex p-1 rounded-lg border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
                         {[
                             { id: 'PROBABILITY', label: 'Probability' },
                             { id: 'RELIABILITY', label: 'Reliability' },
@@ -596,9 +605,10 @@ Weibull Analyst &mdash; 由 Weibull-Analyst 產生 Generated &mdash; ${ts}
                                 key={type.id}
                                 onClick={() => setChartType(type.id as ChartType)}
                                 className={`px-4 py-1.5 text-sm font-bold rounded-md transition-all ${chartType === type.id
-                                    ? 'bg-white dark:bg-slate-600 shadow-sm text-indigo-600 dark:text-indigo-300'
-                                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                    ? 'shadow-sm'
+                                    : ''
                                     }`}
+                                style={chartType === type.id ? { backgroundColor: 'var(--bg-surface)', color: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
                             >
                                 {type.label}
                             </button>
@@ -607,35 +617,33 @@ Weibull Analyst &mdash; 由 Weibull-Analyst 產生 Generated &mdash; ${ts}
                 </div>
 
                 <div className="flex items-center space-x-4">
-                    <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center rounded-lg p-1 border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
                         <button
                             onClick={() => setInteractionMode('ZOOM')}
-                            className={`p-1.5 rounded-md transition-all ${interactionMode === 'ZOOM' ? 'bg-white dark:bg-slate-600 shadow-sm text-indigo-600 dark:text-indigo-300' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`p-1.5 rounded-md transition-all ${interactionMode === 'ZOOM' ? 'shadow-sm' : ''}`}
+                            style={interactionMode === 'ZOOM' ? { backgroundColor: 'var(--bg-surface)', color: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
                         >
                             <MagnifyingGlassPlusIcon className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => setInteractionMode('PAN')}
-                            className={`p-1.5 rounded-md transition-all ${interactionMode === 'PAN' ? 'bg-white dark:bg-slate-600 shadow-sm text-indigo-600 dark:text-indigo-300' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`p-1.5 rounded-md transition-all ${interactionMode === 'PAN' ? 'shadow-sm' : ''}`}
+                            style={interactionMode === 'PAN' ? { backgroundColor: 'var(--bg-surface)', color: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
                         >
                             <HandRaisedIcon className="w-4 h-4" />
                         </button>
                     </div>
 
-                    <button
-                        onClick={() => {
-                            setInteractionMode('ZOOM');
-                        }}
-                        className="flex items-center space-x-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    >
+                    <div className="flex items-center space-x-1 text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
                         <ArrowPathIcon className="w-3.5 h-3.5" />
                         <span>Interactive Plotly</span>
-                    </button>
+                    </div>
 
                     <button
                         onClick={generateHTMLReport}
                         disabled={!result1}
-                        className="flex items-center space-x-1.5 text-xs font-bold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="flex items-center space-x-1.5 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        style={{ color: 'var(--accent)' }}
                         title={lang === 'zh' ? '生成 HTML 報告' : 'Generate HTML Report'}
                     >
                         <DocumentTextIcon className="w-3.5 h-3.5" />
@@ -664,24 +672,24 @@ Weibull Analyst &mdash; 由 Weibull-Analyst 產生 Generated &mdash; ${ts}
                 />
             </div>
 
-            <div className="flex-none px-4 py-2 text-xs text-slate-400 dark:text-slate-500 text-right bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+            <div className="flex-none px-4 py-1.5 text-[9px] text-right uppercase tracking-widest font-bold" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
                 Developed by Wesley Chang @ Mouldex, Jan-2026. All rights reserved.
             </div>
 
             {modalData && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-white/10 dark:bg-slate-900/30 backdrop-blur-[2px]">
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 animate-scaleIn" style={{ backgroundColor: 'color-mix(in srgb, #0F172A 50%, transparent)' }}>
                     <div className="absolute inset-0" onClick={() => setModalData(null)}></div>
-                    <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700 p-6 w-full max-w-lg animate-fadeIn">
-                        <button onClick={() => setModalData(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><XMarkIcon className="w-5 h-5" /></button>
-                        <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">Point Statistics</h4>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">At Time t = <span className="font-mono text-slate-800 dark:text-slate-200">{modalData.time.toFixed(2)}</span></p>
+                    <div className="relative rounded-xl shadow-2xl p-6 w-full max-w-lg animate-slideUp" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <button onClick={() => setModalData(null)} className="absolute top-4 right-4 p-1 rounded-full transition-colors" style={{ color: 'var(--text-secondary)' }}><XMarkIcon className="w-5 h-5" /></button>
+                        <h4 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Point Statistics</h4>
+                        <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>At Time t = <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{modalData.time.toFixed(2)}</span></p>
 
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-slate-700 pb-3">
+                            <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest pb-3" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
                                 <span>Metric</span>
                                 <div className="flex space-x-10">
-                                    <span className={theme === 'dark' ? 'text-sky-400' : 'text-indigo-600'}>{name1}</span>
-                                    {result2 && <span className={theme === 'dark' ? 'text-yellow-400' : 'text-rose-600'}>{name2}</span>}
+                                    <span style={{ color: 'var(--accent)' }}>{name1}</span>
+                                    {result2 && <span style={{ color: 'var(--error)' }}>{name2}</span>}
                                 </div>
                             </div>
                             {(() => {

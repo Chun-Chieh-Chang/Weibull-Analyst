@@ -176,80 +176,84 @@ const App: React.FC = () => {
 
 
     return (
-        <div className="h-full flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden transition-colors duration-300">
+        <div className="h-full flex flex-col font-sans overflow-hidden transition-colors" style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}>
             {/* 1. Header (Slim, Responsive) */}
-            <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 flex-none z-30 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between transition-colors duration-200">
+            <header className="flex-none z-30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between transition-colors" style={{ backgroundColor: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-between px-4 py-2 sm:py-0 h-12 sm:h-14">
-                    <div className="flex items-center space-x-2">
-                        <div className="bg-indigo-600 p-1 rounded-md sm:p-1.5 shadow-sm">
+                    <div className="flex items-center space-x-2.5">
+                        <div className="bg-indigo-600 p-1.5 rounded-lg shadow-sm">
                             <ChartPieIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
-                        <h1 className="text-sm sm:text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight whitespace-nowrap">
+                        <h1 className="text-sm sm:text-lg font-bold tracking-tight whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
                             {t('app.title', lang)} <span className="text-indigo-600 dark:text-indigo-400">{t('app.titleSuffix', lang)}</span>
                         </h1>
                     </div>
                     
                     {/* Mobile Quick Actions */}
                     <div className="flex sm:hidden items-center space-x-2">
-                        <button onClick={toggleTheme} className="p-2 text-slate-500">
+                        <button onClick={toggleTheme} className="p-2" style={{ color: 'var(--text-secondary)' }}>
                             {theme === 'light' ? <MoonIcon className="w-5 h-5" /> : <SunIcon className="w-5 h-5 text-amber-400" />}
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end px-4 py-2 sm:py-0 space-x-2 sm:space-x-3 bg-slate-50/50 sm:bg-transparent dark:bg-white/5 sm:dark:bg-transparent border-t sm:border-t-0 border-slate-100 dark:border-white/5">
+                <div className="flex items-center justify-between sm:justify-end px-4 py-2 sm:py-0 space-x-2 sm:space-x-3 sm:bg-transparent border-t sm:border-t-0" style={{ backgroundColor: 'var(--bg-sidebar)', borderColor: 'var(--border)' }}>
                     {/* Mode Toggle */}
-                    <div className="flex bg-white dark:bg-slate-800 sm:bg-slate-100 sm:dark:bg-slate-700 p-0.5 sm:p-1 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm sm:shadow-none">
+                    <div className="flex p-0.5 rounded-lg border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
                         <button
                             onClick={() => { setMode('SINGLE'); setResult2(null); }}
-                            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all ${mode === 'SINGLE'
-                                ? 'bg-indigo-600 text-white sm:bg-white sm:dark:bg-slate-600 sm:shadow sm:text-indigo-700 sm:dark:text-indigo-300'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                            className={`px-3 sm:px-4 py-1.5 text-[10px] sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all ${mode === 'SINGLE'
+                                ? 'bg-indigo-600 text-white shadow-sm'
+                                : 'hover:opacity-70 transition-opacity'
                                 }`}
+                            style={mode !== 'SINGLE' ? { color: 'var(--text-secondary)' } : {}}
                         >
                             {t('app.single', lang)}
                         </button>
                         <button
                             onClick={() => setMode('DUAL')}
-                            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all ${mode === 'DUAL'
-                                ? 'bg-indigo-600 text-white sm:bg-white sm:dark:bg-slate-600 sm:shadow sm:text-indigo-700 sm:dark:text-indigo-300'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                            className={`px-3 sm:px-4 py-1.5 text-[10px] sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all ${mode === 'DUAL'
+                                ? 'bg-indigo-600 text-white shadow-sm'
+                                : 'hover:opacity-70 transition-opacity'
                                 }`}
+                            style={mode !== 'DUAL' ? { color: 'var(--text-secondary)' } : {}}
                         >
                             {t('app.compare', lang)}
                         </button>
                     </div>
 
-                    <div className="hidden sm:block h-4 w-px bg-slate-200 dark:bg-slate-600"></div>
+                    <div className="hidden sm:block h-4 w-px" style={{ backgroundColor: 'var(--border)' }}></div>
 
                     {/* Language & Theme (Desktop) */}
                     <div className="flex items-center space-x-1">
                         <button
                             onClick={toggleLanguage}
-                            className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-1"
+                            className="p-2 rounded-md transition-colors flex items-center space-x-1 hover:opacity-70"
+                            style={{ color: 'var(--text-secondary)' }}
                             title="Switch Language"
                         >
-                            <LanguageIcon className="w-5 h-5 sm:w-5 sm:h-5 " />
+                            <LanguageIcon className="w-5 h-5" />
                             <span className="text-xs sm:text-sm font-bold">{lang.toUpperCase()}</span>
                         </button>
 
                         <button
                             onClick={toggleTheme}
-                            className="hidden sm:flex text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            className="hidden sm:flex p-1.5 rounded-md transition-colors hover:opacity-70"
+                            style={{ color: 'var(--text-secondary)' }}
                             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
                         >
                             {theme === 'light' ? <MoonIcon className="w-5 h-5" /> : <SunIcon className="w-5 h-5" />}
                         </button>
                     </div>
 
-                    <div className="h-4 w-px bg-slate-200 dark:bg-slate-600"></div>
+                    <div className="h-4 w-px" style={{ backgroundColor: 'var(--border)' }}></div>
 
                     {/* Action Buttons */}
                     <div className="flex items-center">
-                        <button onClick={handleExport} className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-2 sm:p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title={t('app.export', lang)}>
+                        <button onClick={handleExport} className="p-2 sm:p-1.5 rounded-md transition-colors hover:opacity-70" style={{ color: 'var(--text-secondary)' }} title={t('app.export', lang)}>
                             <ArrowDownTrayIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={handleClear} className="text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 p-2 sm:p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title={t('app.clear', lang)}>
+                        <button onClick={handleClear} className="p-2 sm:p-1.5 rounded-md transition-colors hover:opacity-70" style={{ color: 'var(--text-secondary)' }} title={t('app.clear', lang)}>
                             <TrashIcon className="w-5 h-5" />
                         </button>
                     </div>
@@ -260,7 +264,7 @@ const App: React.FC = () => {
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
                 
                 {/* Mobile Tab Switcher (Floating Bottom) */}
-                <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-full shadow-2xl flex items-center p-1.5 z-50 transition-all duration-300">
+                <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 backdrop-blur-xl rounded-full shadow-2xl flex items-center p-1 z-50 transition-all duration-300" style={{ backgroundColor: 'color-mix(in srgb, var(--bg-surface) 90%, transparent)', border: '1px solid var(--border)' }}>
                     {[
                         { id: 'INPUT', label: 'Data', icon: ArrowPathIcon },
                         { id: 'CHART', label: 'Plot', icon: ChartPieIcon },
@@ -269,11 +273,12 @@ const App: React.FC = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveMobileView(tab.id as any)}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
                                 activeMobileView === tab.id 
-                                ? 'bg-indigo-600 text-white shadow-lg' 
-                                : 'text-slate-500 dark:text-slate-400'
+                                ? 'text-white shadow-lg' 
+                                : ''
                             }`}
+                            style={activeMobileView === tab.id ? { backgroundColor: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
                         >
                             <tab.icon className="w-4 h-4" />
                             <span className={activeMobileView === tab.id ? 'block' : 'hidden'}>{tab.label}</span>
@@ -282,59 +287,66 @@ const App: React.FC = () => {
                 </div>
 
                 {/* LEFT COLUMN: Data Input */}
-                <aside className={`${activeMobileView === 'INPUT' ? 'flex' : 'hidden'} lg:flex w-full lg:w-72 flex-none bg-slate-50 dark:bg-slate-900 lg:border-r border-slate-200 dark:border-white/10 flex flex-col z-20 transition-all duration-300`}>
+                <aside className={`${activeMobileView === 'INPUT' ? 'flex' : 'hidden'} lg:flex w-full lg:w-72 flex-none flex-col z-20 transition-all duration-300`} style={{ backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid var(--border)' }}>
                     <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 pb-24 lg:pb-4">
                         {/* Format Info Box */}
-                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-md border border-indigo-100 dark:border-indigo-800 flex gap-3">
-                            <InformationCircleIcon className="w-6 h-6 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
-                            <p className="text-[11px] sm:text-xs text-indigo-700 dark:text-indigo-300 leading-normal font-medium">
+                        <div className="p-3 rounded-lg flex gap-3 animate-fadeIn" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
+                            <InformationCircleIcon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} />
+                            <p className="text-[11px] sm:text-xs leading-normal font-medium" style={{ color: 'color-mix(in srgb, var(--accent) 70%, var(--text-primary))' }}>
                                 {t('input.formatInfo', lang)}
                             </p>
                         </div>
 
                         {/* Input Group 1 */}
-                        <div className="flex flex-col h-[200px] sm:h-[45%] lg:min-h-[250px]">
+                        <div className="flex flex-col min-h-[180px] flex-1">
                             <div className="flex justify-between items-center mb-2">
-                                <label className={`text-xs sm:text-sm font-black uppercase tracking-wider ${mode === 'DUAL' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                                <label className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${mode === 'DUAL' ? '' : ''}`} style={{ color: mode === 'DUAL' ? 'var(--accent)' : 'var(--text-secondary)' }}>
                                     {mode === 'DUAL' ? t('input.groupA', lang) : t('input.failureData', lang)}
                                 </label>
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--text-secondary) 10%, transparent)' }}>
                                     N={parseInputData(text1).length}
                                 </span>
                             </div>
                             <textarea
-                                className="flex-1 w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl resize-none font-mono text-base outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:text-slate-200 transition-all leading-normal shadow-inner"
+                                className="flex-1 w-full p-3 rounded-xl resize-none font-mono text-[14px] outline-none transition-all leading-relaxed"
+                                style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                                 placeholder={t('input.placeholderSingle', lang)}
                                 value={text1}
                                 onChange={(e) => setText1(e.target.value)}
+                                onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                                onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                             />
                         </div>
 
                         {/* Input Group 2 */}
                         {mode === 'DUAL' && (
-                            <div className="flex flex-col h-[200px] sm:h-[45%] lg:min-h-[250px] animate-fadeIn">
+                            <div className="flex flex-col min-h-[180px] flex-1 animate-slideUp">
                                 <div className="flex justify-between items-center mb-2">
-                                    <label className="text-xs sm:text-sm font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                                    <label className="text-xs sm:text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--error)' }}>
                                         {t('input.groupB', lang)}
                                     </label>
-                                    <span className="text-[10px] text-rose-400 dark:text-rose-300 font-black bg-rose-50 dark:bg-rose-900/20 px-2 py-0.5 rounded">
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--text-secondary) 10%, transparent)' }}>
                                         N={parseInputData(text2).length}
                                     </span>
                                 </div>
                                 <textarea
-                                    className="flex-1 w-full p-3 bg-white dark:bg-slate-950 border border-rose-100 dark:border-rose-900/40 rounded-xl resize-none font-mono text-base outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-400 dark:text-slate-200 transition-all leading-normal shadow-inner"
+                                    className="flex-1 w-full p-3 rounded-xl resize-none font-mono text-[14px] outline-none transition-all leading-relaxed"
+                                    style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                                     placeholder={t('input.placeholderDual', lang)}
                                     value={text2}
                                     onChange={(e) => setText2(e.target.value)}
+                                    onFocus={(e) => e.target.style.borderColor = 'var(--error)'}
+                                    onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                                 />
                             </div>
                         )}
                     </div>
 
-                    <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-100 lg:bg-slate-50 dark:bg-slate-900 sticky bottom-0 z-30 pb-24 lg:pb-4">
+                    <div className="p-4 sticky bottom-0 z-30 pb-24 lg:pb-4" style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-sidebar)' }}>
                         <button
                             onClick={handleCalculate}
-                            className="w-full bg-slate-800 dark:bg-indigo-600 hover:bg-slate-700 dark:hover:bg-indigo-500 text-white text-sm font-black py-4 rounded-xl shadow-xl dark:shadow-indigo-500/20 transition-all flex items-center justify-center space-x-2 active:scale-95"
+                            className="w-full text-white text-sm font-bold py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 active:scale-[0.97] shadow-lg"
+                            style={{ backgroundColor: 'var(--accent)' }}
                         >
                             <ArrowPathIcon className="w-5 h-5" />
                             <span>{t('input.calculate', lang)}</span>
@@ -343,7 +355,7 @@ const App: React.FC = () => {
                 </aside>
 
                 {/* CENTER COLUMN: Chart (Main Stage) */}
-                <main className={`${activeMobileView === 'CHART' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 bg-white dark:bg-slate-950 relative transition-all duration-300`}>
+                <main className={`${activeMobileView === 'CHART' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 relative transition-all duration-300`} style={{ backgroundColor: 'var(--bg-surface)' }}>
                     <div className="absolute inset-0 flex flex-col pt-4 lg:pt-0">
                         <WeibullChart
                             result1={result1}
@@ -356,7 +368,7 @@ const App: React.FC = () => {
                 </main>
 
                 {/* RIGHT COLUMN: Analysis & Theory Sidebar */}
-                <aside className={`${activeMobileView === 'RESULTS' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[450px] flex-none bg-white dark:bg-slate-900 lg:border-l border-slate-200 dark:border-white/10 flex flex-col z-20 shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] transition-all duration-300`}>
+                <aside className={`${activeMobileView === 'RESULTS' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[450px] flex-none flex flex-col z-20 transition-all duration-300`} style={{ backgroundColor: 'var(--bg-surface)', borderLeft: '1px solid var(--border)' }}>
                     <div className="flex-1 overflow-hidden relative pb-24 lg:pb-0">
                         <ResultsPanel
                             result1={result1}
@@ -373,7 +385,7 @@ const App: React.FC = () => {
             </div>
             
             {/* Footer (Desktop Only) */}
-            <div className="hidden sm:block flex-none px-4 py-2 text-[10px] text-slate-400 dark:text-slate-500 text-right bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 uppercase tracking-widest font-black">
+            <div className="hidden sm:block flex-none px-4 py-1.5 text-[9px] text-right uppercase tracking-widest font-bold" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
                 Developed by Wesley Chang @ Mouldex, Jan-2026. All rights reserved.
             </div>
         </div>
