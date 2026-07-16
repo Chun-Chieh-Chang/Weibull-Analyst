@@ -132,9 +132,13 @@ export const analyzeWithAI = async (
                     },
                     { role: "user", content: prompt }
                 ],
-                max_tokens: 500
+                max_tokens: 800
             });
-            return response.choices[0].message.content;
+            const content = response.choices?.[0]?.message?.content;
+            if (content) return content;
+            const refusal = (response.choices?.[0]?.message as any)?.refusal;
+            if (refusal) throw new Error(isZh ? `模型拒絕回應: ${refusal}` : `Model refused: ${refusal}`);
+            throw new Error(isZh ? "API 回傳內容為空，請確認模型名稱或金鑰是否正確" : "Empty API response. Check model name or API key.");
         } else {
             const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
             const response = await openai.chat.completions.create({

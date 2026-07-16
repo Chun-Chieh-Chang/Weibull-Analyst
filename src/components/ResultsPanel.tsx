@@ -339,7 +339,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     <SparklesIcon className="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400" />
                                     {t('results.ai.title', lang)}
                                 </h3>
-                                {(geminiKey || openaiKey) && (
+                                {(geminiKey || openaiKey || agnesKey) && (
                                     <button
                                         onClick={() => setShowKeyModal(true)}
                                         className="text-[10px] text-indigo-500 hover:text-indigo-600 flex items-center gap-1 font-bold uppercase tracking-tighter"
