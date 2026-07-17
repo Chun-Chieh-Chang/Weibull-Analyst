@@ -826,11 +826,12 @@ try{px=xa._offset+xa.d2p(d.dataX);py=ya._offset+ya.d2p(d.dataY)}catch(e){continu
 if(!isFinite(px)||!isFinite(py))continue;
 var o=offsets[d.id]||{x:0,y:0},bx=px+12,by=py-12;
 el.dataset.baseX=bx;el.dataset.baseY=by;el.style.left=(bx+o.x)+'px';el.style.top=(by+o.y)+'px';}}}
+function showFallback(id){var fb=document.getElementById(id+'-fallback');if(fb)fb.style.display='block';var cont=document.getElementById(id+'-chart');if(cont)cont.style.display='none';}
 function initChart(id){var fb=document.getElementById(id+'-fallback');if(fb)fb.style.display='none';
 var cont=document.getElementById(id+'-chart');if(!cont||!charts[id])return;
-Plotly.newPlot(cont,charts[id].data,charts[id].layout,{responsive:true,displayModeBar:false,displaylogo:false}).then(function(g){gds[id]=g;posAll();g.on('plotly_relayout',posAll);}).catch(function(){if(fb)fb.style.display='block';});}
-var pending=ids.length;function tryInit(){if(typeof Plotly==='undefined')return;ids.forEach(initChart);}
-if(typeof Plotly!=='undefined'){tryInit()}else{var s=document.createElement('script');s.src='https://cdn.plot.ly/plotly-latest.min.js';s.onload=tryInit;s.onerror=function(){ids.forEach(function(id){var fb=document.getElementById(id+'-fallback');if(fb)fb.style.display='block';});};document.head.appendChild(s);}
+Plotly.newPlot(cont,charts[id].data,charts[id].layout,{responsive:true,displayModeBar:false,displaylogo:false}).then(function(g){gds[id]=g;posAll();g.on('plotly_relayout',posAll);}).catch(function(){showFallback(id);});}
+function tryInit(){if(typeof Plotly==='undefined')return;ids.forEach(initChart);}
+if(typeof Plotly!=='undefined'){tryInit()}else{var s=document.createElement('script');s.src='https://cdn.plot.ly/plotly-latest.min.js';s.onload=tryInit;s.onerror=function(){ids.forEach(showFallback);};document.head.appendChild(s);}
 document.addEventListener('mousedown',function(e){var el=e.target.closest('.chart-label');if(!el)return;e.preventDefault();var id=el.id.replace('ol-','');
 drag={id:id,startMX:e.clientX,startMY:e.clientY,baseLeft:parseFloat(el.style.left)||0,baseTop:parseFloat(el.style.top)||0};});
 document.addEventListener('mousemove',function(e){if(!drag)return;var el=document.getElementById('ol-'+drag.id);if(!el)return;
