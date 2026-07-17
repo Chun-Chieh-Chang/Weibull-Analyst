@@ -595,13 +595,22 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             let result: {url: string, traces?: any[], layout?: any, labels?: any[]} = { url };
 
             if (type === 'RELIABILITY' && returnData) {
-                // Strip text from marker traces for interactive chart
+                // Scale markers/line widths for interactive chart (image capture uses large sizes for 900px@2x)
+                const sf = (n: number) => Math.max(4, Math.round(n * 0.7));
+                const sw = (n: number) => Math.max(1, Math.round(n * 0.7));
                 const cleanTraces = traces.map((t: any) => {
-                    if (t.mode === 'markers+text') {
-                        const { text, textfont, textposition, ...rest } = t;
-                        return { ...rest, mode: 'markers' };
+                    const c: any = {};
+                    for (const k in t) { if (k !== 'text' && k !== 'textfont' && k !== 'textposition') c[k] = t[k]; }
+                    if (t.mode === 'markers+text') c.mode = 'markers';
+                    if (c.marker) {
+                        c.marker = { ...c.marker };
+                        if (typeof c.marker.size === 'number') c.marker.size = sf(c.marker.size);
+                        if (c.marker.line && typeof c.marker.line.width === 'number') {
+                            c.marker.line = { ...c.marker.line, width: sw(c.marker.line.width) };
+                        }
                     }
-                    return t;
+                    if (c.line && typeof c.line.width === 'number') c.line = { ...c.line, width: sw(c.line.width) };
+                    return c;
                 });
                 const labels: any[] = [];
                 const rEta = Math.exp(-1);
