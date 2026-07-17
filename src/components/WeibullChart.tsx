@@ -733,8 +733,8 @@ tbody tr:nth-child(even){background:#F9FAFB}
 .info-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 .info-row .left,.info-row .right{min-width:0}
 .info-row.full{grid-template-columns:1fr}
-.chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid #E5E7EB;overflow:hidden;min-height:420px;background:#fff}
-.chart-wrap .plot{position:absolute;inset:0;pointer-events:auto}
+.chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid #E5E7EB;min-height:420px;background:#fff}
+.chart-wrap .plot{position:absolute;inset:0;pointer-events:auto;border-radius:8px;overflow:hidden}
 .chart-wrap .fallback{width:100%;display:block}
 .chart-label{position:absolute;padding:2px 6px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap;cursor:grab;user-select:none;z-index:10;pointer-events:auto;background:rgba(255,255,255,0.92);box-shadow:0 1px 3px rgba(0,0,0,0.12)}
 @media(max-width:900px){body{padding:12px}.chart-grid{grid-template-columns:1fr;gap:10px}.metrics{grid-template-columns:repeat(2,1fr)}.info-row{grid-template-columns:1fr}.dual-grid{grid-template-columns:1fr;gap:10px}}
