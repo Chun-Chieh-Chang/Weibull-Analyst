@@ -113,7 +113,7 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
 
       <Section title={isZh ? "3. 適配度 (R²)" : "3. Goodness of Fit (R²)"}>
         <p>
-          <strong className="text-slate-800 dark:text-slate-200">{isZh ? "R-Squared (決定係數)" : "R-Squared (Coefficient of Determination)"}</strong> {isZh ? "衡量數據點在機率圖上的線性程度。" : "measures the linearity of the data points on the probability plot."}
+          <strong className="text-slate-800">{isZh ? "R-Squared (決定係數)" : "R-Squared (Coefficient of Determination)"}</strong> {isZh ? "衡量數據點在機率圖上的線性程度。" : "measures the linearity of the data points on the probability plot."}
         </p>
         <ul className="list-disc list-inside pl-1 space-y-1 mt-2">
           <li><span className="font-bold" style={{ color: 'var(--success)' }}>&gt; 0.95</span>: {isZh ? "適配極佳。數據緊密遵循韋伯模型。" : "Excellent fit. The data closely follows the Weibull model."}</li>

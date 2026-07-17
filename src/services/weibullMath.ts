@@ -164,25 +164,3 @@ export const calculateWeibull = (
     linePoints: [lineStart, lineEnd],
   };
 };
-
-// Generate points for the Probability Density Function curve
-export const generatePDFPoints = (beta: number, eta: number, maxTime: number) => {
-  if (beta <= 0 || eta <= 0) return [];
-  
-  const points = [];
-  const steps = 100;
-  // Start slightly above 0 to avoid division by zero errors in math
-  const stepSize = maxTime / steps;
-  
-  for (let i = 0; i <= steps; i++) {
-    const t = i * stepSize;
-    if (t === 0) {
-       points.push({ x: 0, y: 0 }); 
-       continue;
-    }
-    // Weibull PDF: (beta/eta) * (t/eta)^(beta-1) * exp(-(t/eta)^beta)
-    const pdf = (beta / eta) * Math.pow(t / eta, beta - 1) * Math.exp(-Math.pow(t / eta, beta));
-    points.push({ x: t, y: pdf });
-  }
-  return points;
-};

@@ -4,6 +4,21 @@
 
 ---
 
+## 📅 2026-07-17 — Phase 7: Final Codebase Refactor & Dark Mode Purge
+
+### Overview
+Complete removal of all dark mode remnants, dead code audit, garbled text fix, MECE cleanup, git baseline.
+
+### Changes
+- **Purged dark mode**: Removed `Theme` type, all `dark:` Tailwind classes across ResultsPanel.tsx and TheoreticalGuide.tsx; strict light-only theme
+- **Removed dead code**: `generatePDFPoints()` unused export from weibullMath.ts
+- **Fixed garbled Chinese**: Restored `App.tsx` lines 136/140 corrupted Chinese strings to `'A 組數據 (Group A)'`, `'B 組數據 (Group B)'`, `'失效數據 (Failure Data)'`
+- **Cleaned artifacts**: Removed `.vite/` auto-generated cache directory, added to `.gitignore`
+- **Documentation sync**: Updated DEVELOPMENT_LOG.md and PROJECT_STATUS.md to reflect current feature set
+- **Build verification**: Confirmed `npm run build` passes with zero errors
+
+---
+
 ## 📅 2026-07-16 — Phase 6: Codebase Cleanup & Doc Sync
 
 ### Overview

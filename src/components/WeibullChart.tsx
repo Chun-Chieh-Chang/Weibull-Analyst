@@ -215,9 +215,9 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     y: [0.95],
                     mode: 'markers+text',
                     marker: { color: 'white', size: 14, line: { color: colorA, width: 2.5 }, symbol: 'circle' },
-                    text: `R(0.95) @ t=${t_095.toFixed(2)}`,
-                    textfont: { color: colorA, size: 11, weight: 'bold' },
-                    textposition: 'top center',
+                    text: `R=0.95 @ t=${t_095.toFixed(2)}`,
+                    textfont: { color: colorA, size: 13, weight: 'bold' },
+                    textposition: 'middle right',
                     showlegend: false,
                     hoverinfo: 'none'
                 });
@@ -229,9 +229,40 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     y: [0.95],
                     mode: 'markers+text',
                     marker: { color: 'white', size: 14, line: { color: colorB, width: 2.5 }, symbol: 'circle' },
-                    text: `R(0.95) @ t=${t_095.toFixed(2)}`,
-                    textfont: { color: colorB, size: 11, weight: 'bold' },
-                    textposition: 'top center',
+                    text: `R=0.95 @ t=${t_095.toFixed(2)}`,
+                    textfont: { color: colorB, size: 13, weight: 'bold' },
+                    textposition: 'middle right',
+                    showlegend: false,
+                    hoverinfo: 'none'
+                });
+            }
+
+            // Eta (Characteristic Life) coordinate markers: R(η) = e⁻¹ ≈ 0.368
+            const rEta = Math.exp(-1);
+            if (visibleGroups.g1 && result1) {
+                const eta = result1.eta;
+                traces.push({
+                    x: [eta],
+                    y: [rEta],
+                    mode: 'markers+text',
+                    marker: { color: 'white', size: 14, line: { color: colorA, width: 2.5 }, symbol: 'diamond' },
+                    text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${eta.toFixed(2)}`,
+                    textfont: { color: colorA, size: 13, weight: 'bold' },
+                    textposition: 'middle right',
+                    showlegend: false,
+                    hoverinfo: 'none'
+                });
+            }
+            if (visibleGroups.g2 && result2) {
+                const eta = result2.eta;
+                traces.push({
+                    x: [eta],
+                    y: [rEta],
+                    mode: 'markers+text',
+                    marker: { color: 'white', size: 14, line: { color: colorB, width: 2.5 }, symbol: 'diamond' },
+                    text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${eta.toFixed(2)}`,
+                    textfont: { color: colorB, size: 13, weight: 'bold' },
+                    textposition: 'middle right',
                     showlegend: false,
                     hoverinfo: 'none'
                 });
@@ -248,11 +279,11 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             margin: { l: 60, r: 40, t: 60, b: 60 },
             paper_bgcolor: plotBgColor,
             plot_bgcolor: plotBgColor,
-            font: { family: 'Inter, sans-serif', size: 12, color: axisTextColor },
+            font: { family: 'Inter, sans-serif', size: 13, color: axisTextColor },
             hovermode: 'closest',
             dragmode: interactionMode === 'ZOOM' ? 'zoom' : 'pan',
             xaxis: {
-                title: { text: 'Time-to-Failure (t)', font: { size: 12, weight: 800 } },
+                title: { text: 'Time-to-Failure (t)', font: { size: 13, weight: 800 } },
                 gridcolor: gridColor,
                 linecolor: axisColor,
                 tickfont: { color: axisTextColor, weight: 700 },
@@ -269,16 +300,17 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 
         if (chartType === 'PROBABILITY') {
             const probTicks = [0.1, 0.5, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
-            layout.yaxis.title = { text: 'Unreliability F(t) %', font: { size: 12, weight: 800 } };
+            layout.yaxis.title = { text: 'Unreliability F(t) %', font: { size: 13, weight: 800 } };
             layout.yaxis.ticktext = probTicks.map(p => p < 1 ? p.toFixed(1) + '%' : p + '%');
             layout.yaxis.tickvals = probTicks.map(p => Math.log(-Math.log(1 - p / 100)));
         } else {
-            layout.yaxis.title = { text: chartType === 'RELIABILITY' ? 'Reliability R(t)' : 'Probability Density f(t)', font: { size: 12, weight: 800 } };
+            layout.yaxis.title = { text: chartType === 'RELIABILITY' ? 'Reliability R(t)' : 'Probability Density f(t)', font: { size: 13, weight: 800 } };
             if (chartType === 'RELIABILITY') layout.yaxis.range = [0, 1.05];
         }
 
         // R(0.95) dashed reference lines for Reliability chart
         layout.shapes = [];
+        layout.annotations = [];
         if (chartType === 'RELIABILITY') {
             if (visibleGroups.g1 && result1) {
                 const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
@@ -293,6 +325,46 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.95, x1: t_095, y1: 0.95, line: { color: `${colorB}80`, width: 1.5, dash: 'dash' } },
                     { type: 'line', xref: 'x', yref: 'y', x0: t_095, y0: 0, x1: t_095, y1: 0.95, line: { color: `${colorB}80`, width: 1.5, dash: 'dash' } }
                 );
+            }
+
+            // Eta reference lines
+            const rEta = Math.exp(-1);
+            if (visibleGroups.g1 && result1) {
+                const eta = result1.eta;
+                layout.shapes.push(
+                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: rEta, x1: eta, y1: rEta, line: { color: `${colorA}80`, width: 1.5, dash: 'dot' } },
+                    { type: 'line', xref: 'x', yref: 'y', x0: eta, y0: 0, x1: eta, y1: rEta, line: { color: `${colorA}80`, width: 1.5, dash: 'dot' } }
+                );
+            }
+            if (visibleGroups.g2 && result2) {
+                const eta = result2.eta;
+                layout.shapes.push(
+                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: rEta, x1: eta, y1: rEta, line: { color: `${colorB}80`, width: 1.5, dash: 'dot' } },
+                    { type: 'line', xref: 'x', yref: 'y', x0: eta, y0: 0, x1: eta, y1: rEta, line: { color: `${colorB}80`, width: 1.5, dash: 'dot' } }
+                );
+            }
+
+            // Weibull formula annotation with actual values
+            const formulaLines: string[] = [];
+            if (result1) {
+                formulaLines.push(`${name1}: R(t) = e<sup>-(t/${result1.eta.toFixed(2)})<sup>${result1.beta.toFixed(4)}</sup></sup>`);
+            }
+            if (result2) {
+                formulaLines.push(`${name2}: R(t) = e<sup>-(t/${result2.eta.toFixed(2)})<sup>${result2.beta.toFixed(4)}</sup></sup>`);
+            }
+            if (formulaLines.length > 0) {
+                layout.annotations.push({
+                    text: formulaLines.join('<br>'),
+                    xref: 'paper', yref: 'paper',
+                    x: 0.98, y: 0.98,
+                    showarrow: false,
+                    font: { size: 18, color: axisTextColor, weight: 'bold' },
+                    align: 'left',
+                    bgcolor: 'rgba(255,255,255,0.85)',
+                    bordercolor: axisColor,
+                    borderwidth: 1,
+                    borderpad: 6
+                });
             }
         }
 
@@ -347,22 +419,36 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     const t_095 = r.eta * Math.pow(-Math.log(0.95), 1 / r.beta);
                     traces.push({
                         x: [t_095], y: [0.95], mode: 'markers+text',
-                        marker: { color: bg, size: 12, line: { color: clr, width: 2.5 }, symbol: 'circle' },
-                        text: `R(0.95) @ t=${t_095.toFixed(2)}`,
-                        textfont: { color: clr, size: 15, weight: 'bold' }, textposition: 'top center',
+                        marker: { color: bg, size: 16, line: { color: clr, width: 2.5 }, symbol: 'circle' },
+                        text: `R=0.95 @ t=${t_095.toFixed(2)}`,
+                        textfont: { color: clr, size: 22, weight: 'bold' }, textposition: 'middle right',
                         showlegend: false, hoverinfo: 'none'
                     });
                 };
                 if (result1) addR095(result1, colorA, name1);
                 if (result2) addR095(result2, colorB, name2);
+
+                // Eta markers
+                const rEta = Math.exp(-1);
+                const addEtaMarker = (r: WeibullResult, clr: string) => {
+                    traces.push({
+                        x: [r.eta], y: [rEta], mode: 'markers+text',
+                        marker: { color: bg, size: 16, line: { color: clr, width: 2.5 }, symbol: 'diamond' },
+                        text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${r.eta.toFixed(2)}`,
+                        textfont: { color: clr, size: 22, weight: 'bold' }, textposition: 'middle right',
+                        showlegend: false, hoverinfo: 'none'
+                    });
+                };
+                if (result1) addEtaMarker(result1, colorA);
+                if (result2) addEtaMarker(result2, colorB);
             }
 
             const layout: any = {
                 paper_bgcolor: bg, plot_bgcolor: 'transparent',
-                font: { family: 'Inter, sans-serif', size: 18, color: axisC },
-                hovermode: 'closest', margin: { l: 70, r: 45, t: 55, b: 70 }, showlegend: false,
-                xaxis: { title: { text: 'Time-to-Failure (t)', font: { size: 19, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 15, weight: 700 } },
-                yaxis: { title: { font: { size: 19, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 15, weight: 700 } }
+                font: { family: 'Inter, sans-serif', size: 21, color: axisC },
+                hovermode: 'closest', margin: { l: 80, r: 55, t: 65, b: 80 }, showlegend: false,
+                xaxis: { title: { text: 'Time-to-Failure (t)', font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 } },
+                yaxis: { title: { font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 } }
             };
             if (type === 'PROBABILITY') {
                 const probTicks = [0.1, 0.5, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
@@ -374,15 +460,45 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 layout.yaxis.title = { text: 'Reliability R(t)' };
                 layout.yaxis.range = [0, 1.05];
                 layout.shapes = [];
+                layout.annotations = [];
                 const addRefLine = (r: WeibullResult, clr: string) => {
                     const t_095 = r.eta * Math.pow(-Math.log(0.95), 1 / r.beta);
                     layout.shapes.push(
                         { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.95, x1: t_095, y1: 0.95, line: { color: `${clr}80`, width: 1.5, dash: 'dash' } },
                         { type: 'line', xref: 'x', yref: 'y', x0: t_095, y0: 0, x1: t_095, y1: 0.95, line: { color: `${clr}80`, width: 1.5, dash: 'dash' } }
                     );
+                    // Eta reference lines
+                    const rEta = Math.exp(-1);
+                    layout.shapes.push(
+                        { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: rEta, x1: r.eta, y1: rEta, line: { color: `${clr}80`, width: 1.5, dash: 'dot' } },
+                        { type: 'line', xref: 'x', yref: 'y', x0: r.eta, y0: 0, x1: r.eta, y1: rEta, line: { color: `${clr}80`, width: 1.5, dash: 'dot' } }
+                    );
                 };
                 if (result1) addRefLine(result1, colorA);
                 if (result2) addRefLine(result2, colorB);
+
+                // Formula annotation
+                const formulaLines: string[] = [];
+                if (result1) {
+                    formulaLines.push(`${name1}: R(t) = e<sup>-(t/${result1.eta.toFixed(2)})<sup>${result1.beta.toFixed(4)}</sup></sup>`);
+                }
+                if (result2) {
+                    formulaLines.push(`${name2}: R(t) = e<sup>-(t/${result2.eta.toFixed(2)})<sup>${result2.beta.toFixed(4)}</sup></sup>`);
+                }
+                if (formulaLines.length > 0) {
+                    layout.annotations.push({
+                        text: formulaLines.join('<br>'),
+                        xref: 'paper', yref: 'paper',
+                    x: 0.98, y: 0.98,
+                        showarrow: false,
+                        font: { size: 28, color: axisC, weight: 'bold' },
+                        align: 'left',
+                        bgcolor: 'rgba(255,255,255,0.85)',
+                        bordercolor: '#475569',
+                        borderwidth: 1,
+                        borderpad: 6
+                    });
+                }
             } else {
                 layout.yaxis.title = { text: 'Probability Density f(t)' };
             }
@@ -517,7 +633,7 @@ N: <span class="val">${r1.dataPoints.length}</span> &nbsp; F: <span class="val">
 <!-- AI Analysis + Raw Data side-by-side -->
 <div class="info-row${!aiAnalysis ? ' full' : ''}">
 ${aiAnalysis ? `<div class="left">
-<div class="section"><h2>AI 分析 &bull; AI Analysis</h2><div class="ai-box">${aiAnalysis.replace(/\n/g, '<br>')}</div></div>
+<div class="section"><h2>AI 分析 &bull; AI Analysis</h2><div class="ai-box">${colorizeText(aiAnalysis.replace(/\n/g, '<br>'))}</div></div>
 </div>` : ''}
 <div class="${aiAnalysis ? 'right' : 'left'}">
 <div class="section"><h2>原始數據 &bull; Raw Data</h2>

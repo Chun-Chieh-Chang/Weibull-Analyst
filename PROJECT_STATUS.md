@@ -1,6 +1,6 @@
 # Project Status — Weibull AI Analyst
 
-> **Last Updated**: 2026-07-16
+> **Last Updated**: 2026-07-17
 
 ---
 
@@ -22,9 +22,9 @@
 |------|--------|-------|
 | React 19 + TypeScript | ✅ Done | Functional components, hooks |
 | Tailwind CSS v4 | ✅ Done | `@tailwindcss/vite` plugin |
-| Dark/Light theme | ✅ Done | SkillsBuilder Color Master Palette via CSS variables |
+| Light-only theme | ✅ Done | SkillsBuilder Color Master Palette; dark mode fully removed |
 | Responsive layout | ✅ Done | Desktop 3-column, mobile bottom tab bar |
-| Chart (plotly.js) | ✅ Done | Probability, Reliability, PDF with R(0.95) markers |
+| Chart (plotly.js) | ✅ Done | Probability, Reliability, PDF with R=0.95 markers, Eta η markers at R(η)=e⁻¹≈0.368 |
 | Report generation | ✅ Done | Self-contained HTML with 3 chart captures, metrics, AI, data |
 
 ### 3. Business Logic
@@ -53,7 +53,7 @@
 | Item | Status | Notes |
 |------|--------|-------|
 | README.md | ✅ Updated | Feature overview, tech stack, usage |
-| DEVELOPMENT_LOG.md | ✅ Updated | Full development timeline |
+| DEVELOPMENT_LOG.md | ✅ Updated | Full development timeline (7 phases) |
 | PROJECT_STATUS.md | ✅ Updated | This file |
 
 ---
@@ -64,7 +64,7 @@
 |------|----------|-------|
 | Missing unit tests | 🟡 Medium | Consider Vitest |
 | `virtual:pwa-register` TS error | 🟢 Low | Pre-existing, no runtime impact |
-| Grid size for data tables | 🟢 Low | Static `150` steps, adequate for current use |
+| Draggable label feature — reverted | 🔴 Low | Caused infinite re-render crash on button click; reverted via git checkout, uncommitted improvements re-applied manually |
 
 ---
 

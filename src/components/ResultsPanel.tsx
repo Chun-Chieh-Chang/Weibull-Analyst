@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { WeibullResult, Language, Theme, AIProvider, GeminiModel, OpenAIModel, ClaudeModel } from '../types';
+import { WeibullResult, Language, AIProvider, GeminiModel, OpenAIModel, ClaudeModel } from '../types';
 import { analyzeWithAI } from '../services/aiService';
 import TheoreticalGuide from './TheoreticalGuide';
 import { t } from '../utils/locales';
@@ -25,7 +25,6 @@ interface ResultsPanelProps {
     label2?: string;
     onTogglePoint?: (groupIndex: 1 | 2, pointId: number, currentStatus: 'F' | 'S') => void;
     lang: Language;
-    theme: Theme;
     onAiAnalysisChange?: (text: string | null) => void;
 }
 
@@ -45,7 +44,7 @@ const MetricCard = ({
     tooltip?: string
 }) => (
     <div className={`relative group p-4 rounded-xl border flex flex-col transition-all duration-200 ${warning
-        ? 'border-amber-200 dark:border-amber-900/40'
+        ? 'border-amber-200'
         : 'hover:shadow-lg'}`}
         style={warning
             ? { backgroundColor: 'color-mix(in srgb, #F59E0B 8%, transparent)', borderColor: 'color-mix(in srgb, #F59E0B 30%, transparent)' }
@@ -67,7 +66,7 @@ const MetricCard = ({
             )}
         </div>
         <div className={`text-2xl font-black tracking-tight ${colorClass}`} style={{ color: warning ? undefined : 'var(--text-primary)' }}>{value}</div>
-        {subtext && <div className={`text-sm mt-1 font-medium ${warning ? 'text-amber-600 dark:text-amber-300' : ''}`} style={{ color: warning ? undefined : 'var(--text-secondary)' }}>{subtext}</div>}
+        {subtext && <div className={`text-sm mt-1 font-medium ${warning ? 'text-amber-600' : ''}`} style={{ color: warning ? undefined : 'var(--text-secondary)' }}>{subtext}</div>}
     </div>
 );
 
@@ -81,7 +80,6 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
     label2 = "Group B",
     onTogglePoint,
     lang,
-    theme,
     onAiAnalysisChange
 }) => {
     const [activeTab, setActiveTab] = useState<TabType>('INSIGHTS');
@@ -178,6 +176,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         clean = clean.replace(/\\approx/gi, '≈');
         clean = clean.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         clean = clean.replace(/\n/g, '<br/>');
+        clean = clean.replace(/([\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+)/g, '<span style="color:#1D4ED8;font-weight:500">$1</span>');
         return clean;
     };
 
@@ -324,10 +323,10 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                     <div className="h-full overflow-y-auto p-4 space-y-6">
                         {!isDualMode ? (
                             <div className="space-y-3">
-                                <MetricCard label={t('results.metrics.shape', lang)} value={result1.beta.toFixed(3)} subtext={getFailureModeLabel(result1.beta)} colorClass="text-indigo-600 dark:text-sky-400" />
-                                <MetricCard label={t('results.metrics.scale', lang)} value={result1.eta.toFixed(2)} subtext={t('results.metrics.charLife', lang)} colorClass="text-emerald-600 dark:text-emerald-400" />
-                                <MetricCard label={t('results.metrics.mttf', lang)} value={result1.mttf.toFixed(2)} subtext={t('results.metrics.mttfSub', lang)} colorClass="text-blue-600 dark:text-blue-400" />
-                                <MetricCard label={t('results.metrics.r2', lang)} value={result1.rSquared.toFixed(4)} subtext={isLowR2 ? t('results.metrics.poorFit', lang) : t('results.metrics.excellentFit', lang)} colorClass={isLowR2 ? "text-amber-600 dark:text-amber-400" : "text-purple-600 dark:text-purple-400"} warning={isLowR2} tooltip={t('results.metrics.r2Tooltip', lang)} />
+                                <MetricCard label={t('results.metrics.shape', lang)} value={result1.beta.toFixed(3)} subtext={getFailureModeLabel(result1.beta)} colorClass="text-indigo-600" />
+                                <MetricCard label={t('results.metrics.scale', lang)} value={result1.eta.toFixed(2)} subtext={t('results.metrics.charLife', lang)} colorClass="text-emerald-600" />
+                                <MetricCard label={t('results.metrics.mttf', lang)} value={result1.mttf.toFixed(2)} subtext={t('results.metrics.mttfSub', lang)} colorClass="text-blue-600" />
+                                <MetricCard label={t('results.metrics.r2', lang)} value={result1.rSquared.toFixed(4)} subtext={isLowR2 ? t('results.metrics.poorFit', lang) : t('results.metrics.excellentFit', lang)} colorClass={isLowR2 ? "text-amber-600" : "text-purple-600"} warning={isLowR2} tooltip={t('results.metrics.r2Tooltip', lang)} />
                             </div>
                         ) : (
                             <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>

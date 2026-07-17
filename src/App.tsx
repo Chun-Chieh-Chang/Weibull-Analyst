@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { WeibullResult, AnalysisMode, Language, Theme } from './types';
+import { WeibullResult, AnalysisMode, Language } from './types';
 import { parseInputData, calculateWeibull } from './services/weibullMath';
 import WeibullChart from './components/WeibullChart';
 import ResultsPanel from './components/ResultsPanel';
@@ -9,8 +9,6 @@ import {
     ArrowPathIcon,
     ArrowDownTrayIcon,
     TrashIcon,
-    SunIcon,
-    MoonIcon,
     LanguageIcon,
     InformationCircleIcon
 } from '@heroicons/react/24/outline';
@@ -18,7 +16,6 @@ import {
 const App: React.FC = () => {
     const [mode, setMode] = useState<AnalysisMode>('SINGLE');
     const [lang, setLang] = useState<Language>('en');
-    const [theme, setTheme] = useState<Theme>('dark');
 
     // Default Data
     const [text1, setText1] = useState<string>('100\n120\n135\n150\n210\n240\n300\n350\n400');
@@ -33,16 +30,6 @@ const App: React.FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Theme Effect
-    useEffect(() => {
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-            document.documentElement.style.colorScheme = 'dark';
-        } else {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.style.colorScheme = 'light';
-        }
-    }, [theme]);
     const [activeMobileView, setActiveMobileView] = useState<'INPUT' | 'CHART' | 'RESULTS'>('CHART');
 
     const handleCalculate = () => {
@@ -146,11 +133,11 @@ const App: React.FC = () => {
             return section;
         };
 
-        const name1 = mode === 'DUAL' ? (lang === 'zh' ? 'A 蝯??(Group A)' : 'Group A Data') : (lang === 'zh' ? '憭望??豢? (Failure Data)' : 'Failure Data');
+        const name1 = mode === 'DUAL' ? (lang === 'zh' ? 'A 組數據 (Group A)' : 'Group A Data') : (lang === 'zh' ? '失效數據 (Failure Data)' : 'Failure Data');
         content += generateGroupReport(name1, result1, text1);
 
         if (mode === 'DUAL') {
-            const name2 = lang === 'zh' ? 'B 蝯??(Group B)' : 'Group B Data';
+            const name2 = lang === 'zh' ? 'B 組數據 (Group B)' : 'Group B Data';
             content += generateGroupReport(name2, result2, text2);
         }
 
@@ -166,8 +153,6 @@ const App: React.FC = () => {
     };
 
     const toggleLanguage = () => setLang(prev => prev === 'en' ? 'zh' : 'en');
-    const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-
 
     return (
         <div className="h-full flex flex-col font-sans overflow-hidden transition-colors" style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}>
@@ -179,15 +164,8 @@ const App: React.FC = () => {
                             <ChartPieIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                         <h1 className="text-sm sm:text-lg font-bold tracking-tight whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
-                            {t('app.title', lang)} <span className="text-indigo-600 dark:text-indigo-400">{t('app.titleSuffix', lang)}</span>
+                            {t('app.title', lang)} <span className="text-indigo-600">{t('app.titleSuffix', lang)}</span>
                         </h1>
-                    </div>
-                    
-                    {/* Mobile Quick Actions */}
-                    <div className="flex sm:hidden items-center space-x-2">
-                        <button onClick={toggleTheme} className="p-2" style={{ color: 'var(--text-secondary)' }}>
-                            {theme === 'light' ? <MoonIcon className="w-5 h-5" /> : <SunIcon className="w-5 h-5 text-amber-400" />}
-                        </button>
                     </div>
                 </div>
 
@@ -218,7 +196,7 @@ const App: React.FC = () => {
 
                     <div className="hidden sm:block h-4 w-px" style={{ backgroundColor: 'var(--border)' }}></div>
 
-                    {/* Language & Theme (Desktop) */}
+                    {/* Language */}
                     <div className="flex items-center space-x-1">
                         <button
                             onClick={toggleLanguage}
@@ -228,15 +206,6 @@ const App: React.FC = () => {
                         >
                             <LanguageIcon className="w-5 h-5" />
                             <span className="text-xs sm:text-sm font-bold">{lang.toUpperCase()}</span>
-                        </button>
-
-                        <button
-                            onClick={toggleTheme}
-                            className="hidden sm:flex p-1.5 rounded-md transition-colors hover:opacity-70"
-                            style={{ color: 'var(--text-secondary)' }}
-                            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-                        >
-                            {theme === 'light' ? <MoonIcon className="w-5 h-5" /> : <SunIcon className="w-5 h-5" />}
                         </button>
                     </div>
 
@@ -355,7 +324,6 @@ const App: React.FC = () => {
                             result1={result1}
                             result2={result2}
                             lang={lang}
-                            theme={theme}
                             aiAnalysis={aiAnalysis}
                         />
                     </div>
@@ -370,7 +338,6 @@ const App: React.FC = () => {
                             isDualMode={mode === 'DUAL'}
                             onTogglePoint={handleTogglePoint}
                             lang={lang}
-                            theme={theme}
                             onAiAnalysisChange={setAiAnalysis}
                         />
                     </div>
