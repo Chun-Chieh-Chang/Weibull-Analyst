@@ -460,7 +460,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         const isDualMode = !!result1 && !!result2;
         const bg = '#ffffff', gridC = 'rgba(0,0,0,0.1)', axisC = '#475569';
 
-        const captureChart = async (type: ChartType): Promise<string> => {
+        const captureChart = async (type: ChartType, returnData?: boolean): Promise<{url: string, traces?: any[], layout?: any, labels?: {id: string, dataX: number, dataY: number, text: string, color: string}[]}> => {
             const traces: any[] = [];
             const addGroupTraces = (r: WeibullResult, clr: string, nm: string) => {
                 if (type === 'PROBABILITY') {
@@ -551,7 +551,6 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                         { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.95, x1: t_095, y1: 0.95, line: { color: `${clr}80`, width: 1.5, dash: 'dash' } },
                         { type: 'line', xref: 'x', yref: 'y', x0: t_095, y0: 0, x1: t_095, y1: 0.95, line: { color: `${clr}80`, width: 1.5, dash: 'dash' } }
                     );
-                    // Eta reference lines
                     const rEta = Math.exp(-1);
                     layout.shapes.push(
                         { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: rEta, x1: r.eta, y1: rEta, line: { color: `${clr}80`, width: 1.5, dash: 'dot' } },
@@ -561,7 +560,6 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 if (result1) addRefLine(result1, colorA);
                 if (result2) addRefLine(result2, colorB);
 
-                // Formula annotation
                 const formulaLines: string[] = [];
                 if (result1) {
                     formulaLines.push(`${name1}: R(t) = e<sup>-(t/${result1.eta.toFixed(2)})<sup>${result1.beta.toFixed(4)}</sup></sup>`);
@@ -593,16 +591,49 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             await Plotly.newPlot(div, traces, layout, { responsive: false });
             await new Promise(r => setTimeout(r, 200));
             const url = await Plotly.toImage(div, { format: 'png', width: 900, height: 600, scale: 2 });
+
+            let result: {url: string, traces?: any[], layout?: any, labels?: any[]} = { url };
+
+            if (type === 'RELIABILITY' && returnData) {
+                // Strip text from marker traces for interactive chart
+                const cleanTraces = traces.map((t: any) => {
+                    if (t.mode === 'markers+text') {
+                        const { text, textfont, textposition, ...rest } = t;
+                        return { ...rest, mode: 'markers' };
+                    }
+                    return t;
+                });
+                const labels: any[] = [];
+                const rEta = Math.exp(-1);
+                if (result1) {
+                    const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
+                    labels.push({ id: 'r095-1', dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: colorA });
+                    labels.push({ id: 'eta-1', dataX: result1.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${result1.eta.toFixed(2)}`, color: colorA });
+                }
+                if (result2) {
+                    const t_095 = result2.eta * Math.pow(-Math.log(0.95), 1 / result2.beta);
+                    labels.push({ id: 'r095-2', dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: colorB });
+                    labels.push({ id: 'eta-2', dataX: result2.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${result2.eta.toFixed(2)}`, color: colorB });
+                }
+                result = { url, traces: cleanTraces, layout, labels };
+            }
+
             Plotly.purge(div);
             document.body.removeChild(div);
-            return url;
+            return result;
         };
 
-        const [probImg, relImg, pdfImg] = await Promise.all([
-            captureChart('PROBABILITY').catch(() => ''),
-            captureChart('RELIABILITY').catch(() => ''),
-            captureChart('PDF').catch(() => '')
+        const [probResult, relResult, pdfResult] = await Promise.all([
+            captureChart('PROBABILITY').catch(() => ({ url: '' })),
+            captureChart('RELIABILITY', true).catch(() => ({ url: '', traces: [], layout: {}, labels: [] })),
+            captureChart('PDF').catch(() => ({ url: '' }))
         ]);
+        const probImg = probResult.url;
+        const relImg = relResult.url;
+        const pdfImg = pdfResult.url;
+        const relDataJSON = JSON.stringify(relResult.traces || []);
+        const relLayoutJSON = JSON.stringify(relResult.layout || {});
+        const relLabels = relResult.labels || [];
 
         const ts = new Date().toLocaleString('zh-TW', { dateStyle: 'long', timeStyle: 'short' });
         const n1 = name1, n2 = name2;
@@ -667,6 +698,10 @@ tbody tr:nth-child(even){background:#F9FAFB}
 .info-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 .info-row .left,.info-row .right{min-width:0}
 .info-row.full{grid-template-columns:1fr}
+.rel-chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid #E5E7EB;overflow:hidden;min-height:420px;background:#fff}
+#rel-chart{position:absolute;inset:0;pointer-events:auto}
+#rel-fallback{width:100%;display:block}
+.rel-label{position:absolute;padding:2px 6px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap;cursor:grab;user-select:none;z-index:10;pointer-events:auto;background:rgba(255,255,255,0.92);box-shadow:0 1px 3px rgba(0,0,0,0.12)}
 @media(max-width:900px){body{padding:12px}.chart-grid{grid-template-columns:1fr;gap:10px}.metrics{grid-template-columns:repeat(2,1fr)}.info-row{grid-template-columns:1fr}.dual-grid{grid-template-columns:1fr;gap:10px}}
 </style>
 </head>
@@ -677,7 +712,14 @@ tbody tr:nth-child(even){background:#F9FAFB}
 <!-- Charts: 3-up dense -->
 <div class="section"><h2>圖表 &bull; Charts</h2><div class="chart-grid">
 ${probImg ? `<div class="chart-cell"><img class="chart-img" src="${probImg}" alt="Probability Plot"><span class="chart-caption">機率圖 Probability Plot</span></div>` : ''}
-${relImg ? `<div class="chart-cell"><img class="chart-img" src="${relImg}" alt="Reliability Curve"><span class="chart-caption">可靠度曲線 Reliability Curve</span></div>` : ''}
+${relImg ? `<div class="chart-cell">
+<div class="rel-chart-wrap" id="rel-chart-wrap">
+<img id="rel-fallback" class="chart-img" src="${relImg}" alt="Reliability Curve">
+<div id="rel-chart"></div>
+${relLabels.map(l => `<div id="ol-${l.id}" class="rel-label" style="color:${l.color};border:1px solid ${l.color}">${l.text}</div>`).join('')}
+</div>
+<span class="chart-caption">可靠度曲線 Reliability Curve  <span style="color:#6B7280;font-weight:400">(拖拽標籤 Drag labels)</span></span>
+</div>` : ''}
 ${pdfImg ? `<div class="chart-cell"><img class="chart-img" src="${pdfImg}" alt="Probability Density"><span class="chart-caption">機率密度 Probability Density</span></div>` : ''}
 </div></div>
 
@@ -729,6 +771,39 @@ ${isDualMode && r1 && r2 ? `<div class="dual-grid" style="gap:10px"><div class="
 <div class="section-footer">
 本報告由凱益品管部產出 This Report is Generated by Mouldex QC Department
 </div>
+<script type="application/json" id="rel-data">${relDataJSON}</script>
+<script type="application/json" id="rel-layout">${relLayoutJSON}</script>
+<script type="application/json" id="rel-labels">${JSON.stringify(relLabels)}</script>
+<script>
+(function(){var c=document.getElementById('rel-chart-wrap');if(!c)return;
+var data,layout,labels;
+try{data=JSON.parse(document.getElementById('rel-data').textContent)}catch(e){return}
+try{layout=JSON.parse(document.getElementById('rel-layout').textContent)}catch(e){return}
+try{labels=JSON.parse(document.getElementById('rel-labels').textContent)}catch(e){return}
+if(!data||!data.length)return;
+var gd,drag=null,offsets={};
+function pos(){if(!gd||!gd._fullLayout||!gd._fullLayout.xaxis)return;
+var xa=gd._fullLayout.xaxis,ya=gd._fullLayout.yaxis;
+for(var i=0;i<labels.length;i++){var d=labels[i],el=document.getElementById('ol-'+d.id);
+if(!el)continue;var px,py;
+try{px=xa._offset+xa.d2p(d.dataX);py=ya._offset+ya.d2p(d.dataY)}catch(e){continue}
+if(!isFinite(px)||!isFinite(py))continue;
+var o=offsets[d.id]||{x:0,y:0},bx=px+12,by=py-12;
+el.dataset.baseX=bx;el.dataset.baseY=by;el.style.left=(bx+o.x)+'px';el.style.top=(by+o.y)+'px';}}
+function init(){var fb=document.getElementById('rel-fallback');if(fb)fb.style.display='none';
+var cont=document.getElementById('rel-chart');
+if(!cont)return;
+Plotly.newPlot(cont,data,layout,{responsive:true,displayModeBar:false,displaylogo:false}).then(function(g){gd=g;pos();gd.on('plotly_relayout',pos);}).catch(function(){if(fb)fb.style.display='block';});}
+if(typeof Plotly!=='undefined'){init()}else{var s=document.createElement('script');s.src='https://cdn.plot.ly/plotly-latest.min.js';s.onload=init;s.onerror=function(){var fb=document.getElementById('rel-fallback');if(fb)fb.style.display='block';};document.head.appendChild(s);}
+document.addEventListener('mousedown',function(e){var el=e.target.closest('.rel-label');if(!el)return;e.preventDefault();var id=el.id.replace('ol-','');
+drag={id:id,startMX:e.clientX,startMY:e.clientY,baseLeft:parseFloat(el.style.left)||0,baseTop:parseFloat(el.style.top)||0};});
+document.addEventListener('mousemove',function(e){if(!drag)return;var el=document.getElementById('ol-'+drag.id);if(!el)return;
+el.style.left=(drag.baseLeft+e.clientX-drag.startMX)+'px';el.style.top=(drag.baseTop+e.clientY-drag.startMY)+'px';});
+document.addEventListener('mouseup',function(){if(!drag)return;var el=document.getElementById('ol-'+drag.id);
+if(el){var bx=parseFloat(el.dataset.baseX||'0'),by=parseFloat(el.dataset.baseY||'0');
+var cx=parseFloat(el.style.left)||0,cy=parseFloat(el.style.top)||0;offsets[drag.id]={x:cx-bx,y:cy-by};}
+drag=null;});})();
+</script>
 </body>
 </html>`;
         const blob = new Blob([reportHTML], { type: 'text/html;charset=utf-8' });
