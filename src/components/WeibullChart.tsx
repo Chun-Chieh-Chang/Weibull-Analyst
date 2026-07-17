@@ -631,9 +631,17 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 // Scale down fonts for interactive chart
                 const interactiveLayout = JSON.parse(JSON.stringify(layout));
                 interactiveLayout.font = { ...layout.font, size: 13, family: 'Inter, sans-serif' };
-                if (interactiveLayout.xaxis?.title?.font) interactiveLayout.xaxis.title.font.size = 13;
+                // Ensure both axes title fonts exist and have consistent size (no weight)
+                if (interactiveLayout.xaxis?.title) {
+                    if (!interactiveLayout.xaxis.title.font) interactiveLayout.xaxis.title.font = {};
+                    interactiveLayout.xaxis.title.font.size = 13;
+                    delete interactiveLayout.xaxis.title.font.weight;
+                }
                 if (interactiveLayout.xaxis?.tickfont) interactiveLayout.xaxis.tickfont.size = 12;
-                if (interactiveLayout.yaxis?.title?.font) interactiveLayout.yaxis.title.font.size = 13;
+                if (interactiveLayout.yaxis?.title) {
+                    if (!interactiveLayout.yaxis.title.font) interactiveLayout.yaxis.title.font = {};
+                    interactiveLayout.yaxis.title.font.size = 13;
+                }
                 if (interactiveLayout.yaxis?.tickfont) interactiveLayout.yaxis.tickfont.size = 12;
                 if (interactiveLayout.annotations) {
                     interactiveLayout.annotations = interactiveLayout.annotations.map((a: any) => {
