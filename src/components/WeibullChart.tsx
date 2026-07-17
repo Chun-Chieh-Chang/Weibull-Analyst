@@ -8,7 +8,7 @@ import {
     HandRaisedIcon,
     DocumentTextIcon
 } from '@heroicons/react/24/outline';
-import { WeibullResult, ChartType, Language, Theme } from '../types';
+import { WeibullResult, ChartType, Language } from '../types';
 import { t } from '../utils/locales';
 
 interface WeibullChartProps {
@@ -17,7 +17,6 @@ interface WeibullChartProps {
     label1?: string;
     label2?: string;
     lang: Language;
-    theme: Theme;
     aiAnalysis?: string | null;
 }
 
@@ -38,7 +37,6 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     label1 = "Group A",
     label2 = "Group B",
     lang,
-    theme,
     aiAnalysis
 }) => {
     const plotRef = useRef<HTMLDivElement>(null);
@@ -47,16 +45,14 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const [visibleGroups, setVisibleGroups] = useState<{ g1: boolean, g2: boolean }>({ g1: true, g2: true });
     const [interactionMode, setInteractionMode] = useState<'ZOOM' | 'PAN'>('ZOOM');
 
-    // Theme colors (mirrors CSS variables from index.css)
-    const isDark = theme === 'dark';
-    const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-    const axisColor = isDark ? '#475569' : '#94a3b8';
-    const axisTextColor = isDark ? '#94A3B8' : '#6B7280';
-    const bgColor = isDark ? '#0F172A' : '#ffffff';
+    const gridColor = 'rgba(0,0,0,0.06)';
+    const axisColor = '#94a3b8';
+    const axisTextColor = '#6B7280';
+    const bgColor = '#ffffff';
     const plotBgColor = 'transparent';
 
-    const colorA = isDark ? '#38bdf8' : '#4f46e5';
-    const colorB = isDark ? '#fbbf24' : '#e11d48';
+    const colorA = '#4f46e5';
+    const colorB = '#e11d48';
 
     const name1 = lang === 'zh' ? "A 組" : label1;
     const name2 = lang === 'zh' ? "B 組" : label2;
