@@ -615,7 +615,20 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     labels.push({ id: 'r095-2', dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: colorB });
                     labels.push({ id: 'eta-2', dataX: result2.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${result2.eta.toFixed(2)}`, color: colorB });
                 }
-                result = { url, traces: cleanTraces, layout, labels };
+                // Scale down fonts for interactive chart (image capture uses large fonts for 900px@2x)
+                const interactiveLayout = JSON.parse(JSON.stringify(layout));
+                interactiveLayout.font = { ...layout.font, size: 13, family: 'Inter, sans-serif' };
+                if (interactiveLayout.xaxis?.title?.font) interactiveLayout.xaxis.title.font.size = 13;
+                if (interactiveLayout.xaxis?.tickfont) interactiveLayout.xaxis.tickfont.size = 12;
+                if (interactiveLayout.yaxis?.title?.font) interactiveLayout.yaxis.title.font.size = 13;
+                if (interactiveLayout.yaxis?.tickfont) interactiveLayout.yaxis.tickfont.size = 12;
+                if (interactiveLayout.annotations) {
+                    interactiveLayout.annotations = interactiveLayout.annotations.map((a: any) => {
+                        if (!a.font) return a;
+                        return { ...a, font: { ...a.font, size: typeof a.font.size === 'number' ? Math.round(a.font.size * 0.6) : 16 } };
+                    });
+                }
+                result = { url, traces: cleanTraces, layout: interactiveLayout, labels };
             }
 
             Plotly.purge(div);
