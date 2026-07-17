@@ -4,6 +4,24 @@
 
 ---
 
+## 📅 2026-07-17 — Phase 8: Report Chart UI Overhaul & Codebase Cleanup
+
+### Overview
+Interactive CDN charts for all three report charts, layout refinements, offline fallback fix, axis font consistency, and comprehensive dead code removal.
+
+### Changes
+- **All report charts use Plotly CDN**: Probability, Reliability, and PDF now all render interactively from `cdn.plot.ly/plotly-latest.min.js` with draggable overlay labels on Reliability chart
+- **Offline fallback**: `showFallback()` helper hides empty `.plot` div and shows PNG fallback when CDN fails (previously the absolutely-positioned plot div covered the fallback)
+- **Axis font consistency**: Fixed y-axis title losing `font.size` due to `layout.yaxis.title = { text }` overwrite; both axes now have identical font config
+- **Label clipping fix**: Removed `overflow:hidden` from `.chart-wrap`, applied to `.chart-wrap .plot` instead, so draggable labels and annotations are visible
+- **Report layout rearrangement**: Left column (Metrics + Summary stacked) | Right column (Raw Data), AI Analysis full-width below
+- **Dead code removal**: Removed unused `getFMShort()` function; simplified `RankMethod` enum (removed dead `MEAN` branch, inlined MEDIAN calculation)
+- **Dependency fix**: Moved `@tailwindcss/vite` from `dependencies` to `devDependencies`
+- **Theme color fix**: `index.html` meta `theme-color` changed from `#0F172A` (dark) to `#F9FAFB` (light)
+- **Docs sync**: README.md, DEVELOPMENT_LOG.md, PROJECT_STATUS.md updated
+
+---
+
 ## 📅 2026-07-17 — Phase 7: Final Codebase Refactor & Dark Mode Purge
 
 ### Overview

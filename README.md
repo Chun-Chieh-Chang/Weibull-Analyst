@@ -11,8 +11,8 @@
 - **韋伯分析引擎** — 支援單組與雙組比較分析、暫緩數據 (Suspension)、中位秩回歸
 - **三種圖表** — 機率圖 (Probability Plot)、可靠度曲線 (Reliability)、機率密度函數 (PDF)
 - **AI 分析** — 支援 Gemini / OpenAI / Agnes / Claude，可選模型，雙語分析 (繁中 + English)
-- **HTML 報告** — 一鍵導出含三張圖表、指標卡、AI 分析與原始數據的完整報告
-- **雙主題** — 深色/淺色模式，遵循 SkillsBuilder Color Master Palette
+- **HTML 報告** — 一鍵導出含三張互動式圖表、指標卡、AI 分析與原始數據的完整報告（Plotly CDN），離線自動降級為 PNG 備援
+- **Light-only 主題** — 遵循 SkillsBuilder Color Master Palette
 - **雙語言** — 繁體中文 / English
 
 ## 技術架構

@@ -1,6 +1,6 @@
 # Project Status — Weibull AI Analyst
 
-> **Last Updated**: 2026-07-17
+> **Last Updated**: 2026-07-17 (Phase 8)
 
 ---
 
@@ -25,7 +25,7 @@
 | Light-only theme | ✅ Done | SkillsBuilder Color Master Palette; dark mode fully removed |
 | Responsive layout | ✅ Done | Desktop 3-column, mobile bottom tab bar |
 | Chart (plotly.js) | ✅ Done | Probability, Reliability, PDF with R=0.95 markers, Eta η markers at R(η)=e⁻¹≈0.368 |
-| Report generation | ✅ Done | Self-contained HTML with 3 chart captures, metrics, AI, data |
+| Report generation | ✅ Done | Self-contained HTML with 3 interactive Plotly CDN charts, draggable Reliability labels, offline PNG fallback, metrics, AI, data |
 
 ### 3. Business Logic
 | Item | Status | Notes |
@@ -64,7 +64,6 @@
 |------|----------|-------|
 | Missing unit tests | 🟡 Medium | Consider Vitest |
 | `virtual:pwa-register` TS error | 🟢 Low | Pre-existing, no runtime impact |
-| Draggable label feature — reverted | 🔴 Low | Caused infinite re-render crash on button click; reverted via git checkout, uncommitted improvements re-applied manually |
 
 ---
 

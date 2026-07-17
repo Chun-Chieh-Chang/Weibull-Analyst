@@ -674,7 +674,6 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         const n1 = name1, n2 = name2;
         const r1 = result1, r2 = result2;
         const getFM = (b: number) => b < 0.9 ? 'Infant Mortality 早夭期' : b <= 1.1 ? 'Random Failures 隨機失效' : 'Wear-out 耗損期';
-        const getFMShort = (b: number) => b < 0.9 ? 'infant' : b <= 1.1 ? 'random' : 'wear';
 
         const buildDataRows = (r: WeibullResult) => {
             const weibullTrans = (p: number) => Math.log(-Math.log(1 - p / 100));

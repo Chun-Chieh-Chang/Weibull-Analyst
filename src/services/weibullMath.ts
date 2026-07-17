@@ -1,4 +1,4 @@
-import { WeibullDataPoint, WeibullResult, RankMethod } from '../types';
+import { WeibullDataPoint, WeibullResult } from '../types';
 
 // Lanczos approximation for Gamma function
 const gamma = (z: number): number => {
@@ -56,8 +56,7 @@ export const parseInputData = (input: string): { time: number; status: 'F' | 'S'
 };
 
 export const calculateWeibull = (
-    data: { time: number; status: 'F' | 'S' }[], 
-    method: RankMethod = RankMethod.MEDIAN
+    data: { time: number; status: 'F' | 'S' }[]
 ): WeibullResult | null => {
   const n = data.length;
   if (n < 2) return null;
@@ -80,11 +79,7 @@ export const calculateWeibull = (
         previousOrderNumber = orderNumber; // Update for next iteration
 
         // Calculate Median Rank using Benard's approximation with the adjusted order number
-        if (method === RankMethod.MEDIAN) {
-            rank = (orderNumber - 0.3) / (n + 0.4);
-        } else {
-            rank = orderNumber / (n + 1);
-        }
+        rank = (orderNumber - 0.3) / (n + 0.4);
     } else {
         // For suspensions, we don't calculate a rank for plotting, 
         // and we don't increment the Order Number (it stays "stuck" until next failure jumps it forward)

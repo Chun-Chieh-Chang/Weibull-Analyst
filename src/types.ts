@@ -16,10 +16,7 @@ export interface WeibullResult {
   linePoints: { x: number; y: number }[]; // For Probability Plot regression line
 }
 
-export enum RankMethod {
-  MEDIAN = 'MEDIAN',
-  MEAN = 'MEAN',
-}
+
 
 export type AnalysisMode = 'SINGLE' | 'DUAL';
 export type ChartType = 'PROBABILITY' | 'PDF' | 'RELIABILITY';
