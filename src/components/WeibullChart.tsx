@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Plot from 'react-plotly.js';
 import Plotly from 'plotly.js-dist-min';
 import {
@@ -45,6 +45,11 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const [visibleGroups, setVisibleGroups] = useState<{ g1: boolean, g2: boolean }>({ g1: true, g2: true });
     const [interactionMode, setInteractionMode] = useState<'ZOOM' | 'PAN'>('ZOOM');
 
+    // --- Draggable label refs (zero React state during drag) ---
+    const graphRef = useRef<any>(null);
+    const labelOffsetsRef = useRef<Map<string, {x: number; y: number}>>(new Map());
+    const dragRef = useRef<{active: boolean; id: string; startMX: number; startMY: number; baseLeft: number; baseTop: number} | null>(null);
+
     const gridColor = 'rgba(0,0,0,0.06)';
     const axisColor = '#94a3b8';
     const axisTextColor = '#6B7280';
@@ -74,6 +79,110 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         if (beta <= 1.1) return t('results.metrics.random', lang);
         return t('results.metrics.wearout', lang);
     };
+
+    // --- Draggable HTML overlay labels (Reliability chart: R=0.95 + Eta markers) ---
+    const labelDefs = useMemo(() => {
+        const defs: { id: string; dataX: number; dataY: number; text: string; color: string }[] = [];
+        if (chartType !== 'RELIABILITY') return defs;
+        const rEta = Math.exp(-1);
+        if (visibleGroups.g1 && result1) {
+            const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
+            defs.push({ id: 'r095-1', dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: colorA });
+            defs.push({ id: 'eta-1', dataX: result1.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${result1.eta.toFixed(2)}`, color: colorA });
+        }
+        if (visibleGroups.g2 && result2) {
+            const t_095 = result2.eta * Math.pow(-Math.log(0.95), 1 / result2.beta);
+            defs.push({ id: 'r095-2', dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: colorB });
+            defs.push({ id: 'eta-2', dataX: result2.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${result2.eta.toFixed(2)}`, color: colorB });
+        }
+        return defs;
+    }, [chartType, result1, result2, visibleGroups, colorA, colorB]);
+
+    const labelDefsRef = useRef(labelDefs);
+    labelDefsRef.current = labelDefs;
+
+    const refreshLabelPositions = useCallback(() => {
+        const gd = graphRef.current;
+        if (!gd || !gd._fullLayout || !gd._fullLayout.xaxis) return;
+        const xaxis = gd._fullLayout.xaxis;
+        const yaxis = gd._fullLayout.yaxis;
+        for (const def of labelDefsRef.current) {
+            const el = document.getElementById(def.id);
+            if (!el) continue;
+            let px: number, py: number;
+            try {
+                px = xaxis._offset + xaxis.d2p(def.dataX);
+                py = yaxis._offset + yaxis.d2p(def.dataY);
+            } catch { continue; }
+            if (!isFinite(px) || !isFinite(py)) continue;
+            const off = labelOffsetsRef.current.get(def.id) || { x: 0, y: 0 };
+            const baseX = px + 12;
+            const baseY = py - 12;
+            el.dataset.baseX = String(baseX);
+            el.dataset.baseY = String(baseY);
+            el.style.left = `${baseX + off.x}px`;
+            el.style.top = `${baseY + off.y}px`;
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        const drag = dragRef.current;
+        if (!drag?.active) return;
+        const el = document.getElementById(drag.id);
+        if (!el) return;
+        el.style.left = `${drag.baseLeft + e.clientX - drag.startMX}px`;
+        el.style.top = `${drag.baseTop + e.clientY - drag.startMY}px`;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleMouseUp = useCallback(() => {
+        const drag = dragRef.current;
+        if (!drag?.active) { dragRef.current = null; return; }
+        const el = document.getElementById(drag.id);
+        if (el) {
+            const baseX = parseFloat(el.dataset.baseX || '0');
+            const baseY = parseFloat(el.dataset.baseY || '0');
+            const cx = parseFloat(el.style.left) || 0;
+            const cy = parseFloat(el.style.top) || 0;
+            labelOffsetsRef.current.set(drag.id, { x: cx - baseX, y: cy - baseY });
+        }
+        dragRef.current = null;
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleLabelMouseDown = useCallback((e: React.MouseEvent, id: string) => {
+        e.preventDefault();
+        const el = document.getElementById(id);
+        if (!el) return;
+        dragRef.current = {
+            active: true, id,
+            startMX: e.clientX, startMY: e.clientY,
+            baseLeft: parseFloat(el.style.left) || 0,
+            baseTop: parseFloat(el.style.top) || 0,
+        };
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        if (chartType !== 'RELIABILITY') return;
+        const timer = setTimeout(() => refreshLabelPositions(), 60);
+        const gd = graphRef.current;
+        const onRelayout = () => refreshLabelPositions();
+        if (gd) gd.on('plotly_relayout', onRelayout);
+        return () => {
+            clearTimeout(timer);
+            if (gd) gd.removeListener('plotly_relayout', onRelayout);
+            if (dragRef.current?.active) {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+            }
+        };
+    }, [labelDefs, chartType]);
 
     // --- Plotly Data Preparation ---
     const plotData = useMemo(() => {
@@ -202,65 +311,44 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             }
         }
 
-        // R(0.95) coordinate markers for Reliability chart
+        // R(0.95) coordinate markers for Reliability chart (text removed → HTML overlay)
         if (chartType === 'RELIABILITY') {
             if (visibleGroups.g1 && result1) {
                 const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
                 traces.push({
-                    x: [t_095],
-                    y: [0.95],
-                    mode: 'markers+text',
+                    x: [t_095], y: [0.95],
+                    mode: 'markers',
                     marker: { color: 'white', size: 14, line: { color: colorA, width: 2.5 }, symbol: 'circle' },
-                    text: `R=0.95 @ t=${t_095.toFixed(2)}`,
-                    textfont: { color: colorA, size: 13, weight: 'bold' },
-                    textposition: 'middle right',
-                    showlegend: false,
-                    hoverinfo: 'none'
+                    showlegend: false, hoverinfo: 'none'
                 });
             }
             if (visibleGroups.g2 && result2) {
                 const t_095 = result2.eta * Math.pow(-Math.log(0.95), 1 / result2.beta);
                 traces.push({
-                    x: [t_095],
-                    y: [0.95],
-                    mode: 'markers+text',
+                    x: [t_095], y: [0.95],
+                    mode: 'markers',
                     marker: { color: 'white', size: 14, line: { color: colorB, width: 2.5 }, symbol: 'circle' },
-                    text: `R=0.95 @ t=${t_095.toFixed(2)}`,
-                    textfont: { color: colorB, size: 13, weight: 'bold' },
-                    textposition: 'middle right',
-                    showlegend: false,
-                    hoverinfo: 'none'
+                    showlegend: false, hoverinfo: 'none'
                 });
             }
 
-            // Eta (Characteristic Life) coordinate markers: R(η) = e⁻¹ ≈ 0.368
             const rEta = Math.exp(-1);
             if (visibleGroups.g1 && result1) {
                 const eta = result1.eta;
                 traces.push({
-                    x: [eta],
-                    y: [rEta],
-                    mode: 'markers+text',
+                    x: [eta], y: [rEta],
+                    mode: 'markers',
                     marker: { color: 'white', size: 14, line: { color: colorA, width: 2.5 }, symbol: 'diamond' },
-                    text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${eta.toFixed(2)}`,
-                    textfont: { color: colorA, size: 13, weight: 'bold' },
-                    textposition: 'middle right',
-                    showlegend: false,
-                    hoverinfo: 'none'
+                    showlegend: false, hoverinfo: 'none'
                 });
             }
             if (visibleGroups.g2 && result2) {
                 const eta = result2.eta;
                 traces.push({
-                    x: [eta],
-                    y: [rEta],
-                    mode: 'markers+text',
+                    x: [eta], y: [rEta],
+                    mode: 'markers',
                     marker: { color: 'white', size: 14, line: { color: colorB, width: 2.5 }, symbol: 'diamond' },
-                    text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${eta.toFixed(2)}`,
-                    textfont: { color: colorB, size: 13, weight: 'bold' },
-                    textposition: 'middle right',
-                    showlegend: false,
-                    hoverinfo: 'none'
+                    showlegend: false, hoverinfo: 'none'
                 });
             }
         }
@@ -781,7 +869,26 @@ ${isDualMode && r1 && r2 ? `<div class="dual-grid" style="gap:10px"><div class="
                             setModalData({ time: data.points[0].x as number });
                         }
                     }}
+                    onInitialized={(fig, gd) => { graphRef.current = gd; }}
                 />
+                {chartType === 'RELIABILITY' && labelDefs.map(def => (
+                    <div key={def.id} id={def.id}
+                        className="absolute px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap cursor-grab select-none"
+                        style={{
+                            color: def.color,
+                            backgroundColor: 'rgba(255,255,255,0.92)',
+                            border: `1px solid ${def.color}`,
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+                            pointerEvents: 'auto',
+                            zIndex: 10,
+                            fontSize: 13,
+                            left: 0, top: 0
+                        }}
+                        onMouseDown={(e) => handleLabelMouseDown(e, def.id)}
+                    >
+                        {def.text}
+                    </div>
+                ))}
             </div>
 
             <div className="flex-none px-4 py-1.5 text-[9px] text-right uppercase tracking-widest font-bold" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
