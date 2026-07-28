@@ -59,8 +59,8 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const colorA = '#4f46e5';
     const colorB = '#e11d48';
 
-    const name1 = lang === 'zh' ? "A 組" : label1;
-    const name2 = lang === 'zh' ? "B 組" : label2;
+    const name1 = label1 || (lang === 'zh' ? "A 組" : "Group A");
+    const name2 = label2 || (lang === 'zh' ? "B 組" : "Group B");
 
     // Reset visibility when result arrives
     useEffect(() => {

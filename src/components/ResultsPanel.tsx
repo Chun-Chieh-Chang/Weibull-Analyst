@@ -110,10 +110,8 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         else setApiKeyInput(claudeKey || '');
     }, [activeProvider, geminiKey, openaiKey, agnesKey, claudeKey]);
 
-    if (lang === 'zh') {
-        label1 = "A 組";
-        label2 = "B 組";
-    }
+    const name1 = label1 || (lang === 'zh' ? "A 組" : "Group A");
+    const name2 = label2 || (lang === 'zh' ? "B 組" : "Group B");
 
     const handleAIAnalyze = async (keyToUse?: string, providerToUse?: AIProvider) => {
         const prov = providerToUse || activeProvider;
@@ -128,7 +126,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         setLoading(true);
         setError(null);
         try {
-            const text = await analyzeWithAI(result1, result2, isDualMode, lang, key, prov, geminiModel, openaiModel, claudeModel);
+            const text = await analyzeWithAI(result1, result2, isDualMode, lang, key, prov, geminiModel, openaiModel, claudeModel, name1, name2);
             handleSetAiAnalysis(text || "No analysis returned.");
         } catch (e: any) {
             setError(e.message || "An error occurred.");
@@ -250,7 +248,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     <tr>
                                         <th className="px-3 py-2 w-10 font-mono" style={{ backgroundColor: 'var(--bg-app)' }}>#</th>
                                         <th className="px-3 py-2 border-l" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)', borderColor: 'var(--border)', color: 'var(--accent)' }}>
-                                            {label1} <span className="font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>({t('results.table.time', lang)})</span>
+                                            {name1} <span className="font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>({t('results.table.time', lang)})</span>
                                         </th>
                                         <th className="px-2 py-2 text-center w-16" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)', color: 'var(--accent)' }}>
                                             {t('results.table.status', lang)}
@@ -258,7 +256,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                         {isDualMode && (
                                             <>
                                                 <th className="px-3 py-2 border-l" style={{ backgroundColor: 'color-mix(in srgb, var(--error) 8%, transparent)', borderColor: 'var(--border)', color: 'var(--error)' }}>
-                                                    {label2} <span className="font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>({t('results.table.time', lang)})</span>
+                                                    {name2} <span className="font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>({t('results.table.time', lang)})</span>
                                                 </th>
                                                 <th className="px-2 py-2 text-center w-16" style={{ backgroundColor: 'color-mix(in srgb, var(--error) 8%, transparent)', color: 'var(--error)' }}>
                                                     {t('results.table.status', lang)}
@@ -334,8 +332,8 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     <thead className="font-bold" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-app)' }}>
                                         <tr>
                                             <th className="px-4 py-3">Metric</th>
-                                            <th className="px-4 py-3" style={{ color: 'var(--accent)' }}>{label1}</th>
-                                            <th className="px-4 py-3" style={{ color: 'var(--error)' }}>{label2}</th>
+                                            <th className="px-4 py-3" style={{ color: 'var(--accent)' }}>{name1}</th>
+                                            <th className="px-4 py-3" style={{ color: 'var(--error)' }}>{name2}</th>
                                         </tr>
                                     </thead>
                                     <tbody>

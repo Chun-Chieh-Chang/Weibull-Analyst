@@ -11,7 +11,9 @@ export const analyzeWithAI = async (
     provider: AIProvider = 'GEMINI',
     geminiModel: GeminiModel = 'gemini-2.5-flash',
     openaiModel: OpenAIModel = 'gpt-4o-mini',
-    claudeModel: ClaudeModel = 'claude-sonnet-4-6'
+    claudeModel: ClaudeModel = 'claude-sonnet-4-6',
+    label1: string = 'Group A',
+    label2: string = 'Group B'
 ) => {
     if (!apiKey) throw new Error("API Key is required.");
 
@@ -20,15 +22,15 @@ export const analyzeWithAI = async (
 
     if (isDualMode && result1 && result2) {
         prompt = `
-I have performed a comparative Weibull Analysis on two datasets (Group A vs Group B).
+I have performed a comparative Weibull Analysis on two datasets (${label1} vs ${label2}).
 
-Group A Results:
+${label1} Results:
 - Beta (Shape): ${result1.beta.toFixed(4)}
 - Eta (Scale): ${result1.eta.toFixed(4)}
 - MTTF: ${result1.mttf.toFixed(4)}
 - R²: ${result1.rSquared.toFixed(4)}
 
-Group B Results:
+${label2} Results:
 - Beta (Shape): ${result2.beta.toFixed(4)}
 - Eta (Scale): ${result2.eta.toFixed(4)}
 - MTTF: ${result2.mttf.toFixed(4)}

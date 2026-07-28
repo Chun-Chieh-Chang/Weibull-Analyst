@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WeibullResult, AnalysisMode, Language } from './types';
 import { parseInputData, calculateWeibull } from './services/weibullMath';
 import WeibullChart from './components/WeibullChart';
@@ -10,12 +10,17 @@ import {
     ArrowDownTrayIcon,
     TrashIcon,
     LanguageIcon,
-    InformationCircleIcon
+    InformationCircleIcon,
+    PencilSquareIcon
 } from '@heroicons/react/24/outline';
 
 const App: React.FC = () => {
     const [mode, setMode] = useState<AnalysisMode>('SINGLE');
     const [lang, setLang] = useState<Language>('en');
+
+    // Group Names
+    const [label1, setLabel1] = useState<string>('Group A');
+    const [label2, setLabel2] = useState<string>('Group B');
 
     // Default Data
     const [text1, setText1] = useState<string>('100\n120\n135\n150\n210\n240\n300\n350\n400');
@@ -133,11 +138,11 @@ const App: React.FC = () => {
             return section;
         };
 
-        const name1 = mode === 'DUAL' ? (lang === 'zh' ? 'A 組數據 (Group A)' : 'Group A Data') : (lang === 'zh' ? '失效數據 (Failure Data)' : 'Failure Data');
+        const name1 = mode === 'DUAL' ? (label1 || (lang === 'zh' ? 'A 組數據' : 'Group A Data')) : (label1 || (lang === 'zh' ? '失效數據' : 'Failure Data'));
         content += generateGroupReport(name1, result1, text1);
 
         if (mode === 'DUAL') {
-            const name2 = lang === 'zh' ? 'B 組數據 (Group B)' : 'Group B Data';
+            const name2 = label2 || (lang === 'zh' ? 'B 組數據' : 'Group B Data');
             content += generateGroupReport(name2, result2, text2);
         }
 
@@ -263,10 +268,19 @@ const App: React.FC = () => {
                         {/* Input Group 1 */}
                         <div className="flex flex-col min-h-[180px] flex-1">
                             <div className="flex justify-between items-center mb-2">
-                                <label className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${mode === 'DUAL' ? '' : ''}`} style={{ color: mode === 'DUAL' ? 'var(--accent)' : 'var(--text-secondary)' }}>
-                                    {mode === 'DUAL' ? t('input.groupA', lang) : t('input.failureData', lang)}
-                                </label>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--text-secondary) 10%, transparent)' }}>
+                                <div className="flex items-center space-x-1.5 flex-1 mr-2 min-w-0">
+                                    <PencilSquareIcon className="w-3.5 h-3.5 shrink-0" style={{ color: mode === 'DUAL' ? 'var(--accent)' : 'var(--text-secondary)' }} />
+                                    <input
+                                        type="text"
+                                        value={label1}
+                                        onChange={(e) => setLabel1(e.target.value)}
+                                        placeholder={mode === 'DUAL' ? (lang === 'zh' ? 'A 組名稱' : 'Group A Name') : (lang === 'zh' ? '數據名稱' : 'Dataset Name')}
+                                        className="text-xs sm:text-sm font-bold uppercase tracking-wider bg-transparent outline-none border-b border-transparent hover:border-slate-300 focus:border-indigo-500 transition-colors w-full truncate"
+                                        style={{ color: mode === 'DUAL' ? 'var(--accent)' : 'var(--text-secondary)' }}
+                                        title={lang === 'zh' ? "點擊修改組別名稱" : "Click to edit group name"}
+                                    />
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--text-secondary) 10%, transparent)' }}>
                                     N={parseInputData(text1).length}
                                 </span>
                             </div>
@@ -285,10 +299,19 @@ const App: React.FC = () => {
                         {mode === 'DUAL' && (
                             <div className="flex flex-col min-h-[180px] flex-1 animate-slideUp">
                                 <div className="flex justify-between items-center mb-2">
-                                    <label className="text-xs sm:text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--error)' }}>
-                                        {t('input.groupB', lang)}
-                                    </label>
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--text-secondary) 10%, transparent)' }}>
+                                    <div className="flex items-center space-x-1.5 flex-1 mr-2 min-w-0">
+                                        <PencilSquareIcon className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--error)' }} />
+                                        <input
+                                            type="text"
+                                            value={label2}
+                                            onChange={(e) => setLabel2(e.target.value)}
+                                            placeholder={lang === 'zh' ? 'B 組名稱' : 'Group B Name'}
+                                            className="text-xs sm:text-sm font-bold uppercase tracking-wider bg-transparent outline-none border-b border-transparent hover:border-rose-300 focus:border-rose-500 transition-colors w-full truncate"
+                                            style={{ color: 'var(--error)' }}
+                                            title={lang === 'zh' ? "點擊修改組別名稱" : "Click to edit group name"}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--text-secondary) 10%, transparent)' }}>
                                         N={parseInputData(text2).length}
                                     </span>
                                 </div>
@@ -323,6 +346,8 @@ const App: React.FC = () => {
                         <WeibullChart
                             result1={result1}
                             result2={result2}
+                            label1={label1}
+                            label2={label2}
                             lang={lang}
                             aiAnalysis={aiAnalysis}
                         />
@@ -336,6 +361,8 @@ const App: React.FC = () => {
                             result1={result1}
                             result2={result2}
                             isDualMode={mode === 'DUAL'}
+                            label1={label1}
+                            label2={label2}
                             onTogglePoint={handleTogglePoint}
                             lang={lang}
                             onAiAnalysisChange={setAiAnalysis}
