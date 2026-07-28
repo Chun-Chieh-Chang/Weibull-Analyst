@@ -8,16 +8,18 @@ import {
     HandRaisedIcon,
     DocumentTextIcon
 } from '@heroicons/react/24/outline';
-import { WeibullResult, ChartType, Language } from '../types';
+import { WeibullResult, ChartType, Language, GroupDataset } from '../types';
 import { t } from '../utils/locales';
 
 interface WeibullChartProps {
-    result1: WeibullResult | null;
-    result2: WeibullResult | null;
+    groups?: GroupDataset[];
+    result1?: WeibullResult | null;
+    result2?: WeibullResult | null;
     label1?: string;
     label2?: string;
     lang: Language;
     aiAnalysis?: string | null;
+    onToggleVisibility?: (groupId: string) => void;
 }
 
 const calculateMetrics = (t: number, beta: number, eta: number) => {
@@ -32,18 +34,29 @@ const calculateMetrics = (t: number, beta: number, eta: number) => {
 };
 
 const WeibullChart: React.FC<WeibullChartProps> = ({
+    groups,
     result1,
     result2,
     label1 = "Group A",
     label2 = "Group B",
     lang,
-    aiAnalysis
+    aiAnalysis,
+    onToggleVisibility
 }) => {
     const plotRef = useRef<HTMLDivElement>(null);
     const [chartType, setChartType] = useState<ChartType>('PROBABILITY');
     const [modalData, setModalData] = useState<{ time: number } | null>(null);
     const [visibleGroups, setVisibleGroups] = useState<{ g1: boolean, g2: boolean }>({ g1: true, g2: true });
     const [interactionMode, setInteractionMode] = useState<'ZOOM' | 'PAN'>('ZOOM');
+
+    // Effective groups calculation
+    const effectiveGroups = useMemo(() => {
+        if (groups && groups.length > 0) return groups;
+        const res: GroupDataset[] = [];
+        if (result1) res.push({ id: 'g1', label: label1 || (lang === 'zh' ? 'A 組' : 'Group A'), text: '', color: '#4f46e5', result: result1, visible: visibleGroups.g1 });
+        if (result2) res.push({ id: 'g2', label: label2 || (lang === 'zh' ? 'B 組' : 'Group B'), text: '', color: '#e11d48', result: result2, visible: visibleGroups.g2 });
+        return res;
+    }, [groups, result1, result2, label1, label2, lang, visibleGroups]);
 
     // --- Draggable label refs (zero React state during drag) ---
     const graphRef = useRef<any>(null);
@@ -55,18 +68,6 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const axisTextColor = '#6B7280';
     const bgColor = '#ffffff';
     const plotBgColor = 'transparent';
-
-    const colorA = '#4f46e5';
-    const colorB = '#e11d48';
-
-    const name1 = label1 || (lang === 'zh' ? "A 組" : "Group A");
-    const name2 = label2 || (lang === 'zh' ? "B 組" : "Group B");
-
-    // Reset visibility when result arrives
-    useEffect(() => {
-        if (result1) setVisibleGroups(v => ({ ...v, g1: true }));
-        if (result2) setVisibleGroups(v => ({ ...v, g2: true }));
-    }, [result1, result2]);
 
     const getFailureModeBadge = (beta: number) => {
         if (beta < 0.9) return "Infant";
@@ -85,18 +86,15 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         const defs: { id: string; dataX: number; dataY: number; text: string; color: string }[] = [];
         if (chartType !== 'RELIABILITY') return defs;
         const rEta = Math.exp(-1);
-        if (visibleGroups.g1 && result1) {
-            const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
-            defs.push({ id: 'r095-1', dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: colorA });
-            defs.push({ id: 'eta-1', dataX: result1.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${result1.eta.toFixed(2)}`, color: colorA });
-        }
-        if (visibleGroups.g2 && result2) {
-            const t_095 = result2.eta * Math.pow(-Math.log(0.95), 1 / result2.beta);
-            defs.push({ id: 'r095-2', dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: colorB });
-            defs.push({ id: 'eta-2', dataX: result2.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${result2.eta.toFixed(2)}`, color: colorB });
-        }
+        effectiveGroups.forEach(g => {
+            if (!g.visible || !g.result) return;
+            const r = g.result;
+            const t_095 = r.eta * Math.pow(-Math.log(0.95), 1 / r.beta);
+            defs.push({ id: `r095-${g.id}`, dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: g.color });
+            defs.push({ id: `eta-${g.id}`, dataX: r.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${r.eta.toFixed(2)}`, color: g.color });
+        });
         return defs;
-    }, [chartType, result1, result2, visibleGroups, colorA, colorB]);
+    }, [chartType, effectiveGroups]);
 
     const labelDefsRef = useRef(labelDefs);
     labelDefsRef.current = labelDefs;
@@ -186,175 +184,106 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 
     // --- Plotly Data Preparation ---
     const plotData = useMemo(() => {
-        if (!result1) return [];
+        const validGroups = effectiveGroups.filter(g => g.result !== null);
+        if (validGroups.length === 0) return [];
         const traces: any[] = [];
+        const symbols = ['circle', 'triangle-up', 'diamond', 'square', 'star', 'hexagon', 'pentagon', 'cross'];
 
         if (chartType === 'PROBABILITY') {
-            const probTicks = [0.1, 0.5, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
             const weibullTrans = (p: number) => Math.log(-Math.log(1 - p / 100));
+            validGroups.forEach((g, idx) => {
+                if (!g.visible || !g.result) return;
+                const r = g.result;
+                const symbol = symbols[idx % symbols.length];
 
-            // Group A
-            if (visibleGroups.g1 && result1) {
                 // Line
                 traces.push({
-                    x: result1.linePoints.map(p => Math.exp(p.x)),
-                    y: result1.linePoints.map(p => p.y),
+                    x: r.linePoints.map(p => Math.exp(p.x)),
+                    y: r.linePoints.map(p => p.y),
                     mode: 'lines',
-                    name: `${name1} fit`,
-                    line: { color: colorA, width: 2 },
+                    name: `${g.label} fit`,
+                    line: { color: g.color, width: 2 },
                     hoverinfo: 'none'
                 });
                 // Points
+                const failPts = r.dataPoints.filter(p => p.status === 'F');
                 traces.push({
-                    x: result1.dataPoints.filter(p => p.status === 'F').map(p => p.time),
-                    y: result1.dataPoints.filter(p => p.status === 'F').map(p => weibullTrans(p.rank * 100)),
+                    x: failPts.map(p => p.time),
+                    y: failPts.map(p => weibullTrans(p.rank * 100)),
                     mode: 'markers',
-                    name: name1,
-                    marker: { color: bgColor, line: { color: colorA, width: 2 }, size: 8, symbol: 'circle' },
-                    hovertemplate: `<b>${name1}</b><br>Time: %{x:.2f}<br>Unreliability: %{customdata:.2f}%<extra></extra>`,
-                    customdata: result1.dataPoints.filter(p => p.status === 'F').map(p => p.rank * 100)
+                    name: g.label,
+                    marker: { color: bgColor, line: { color: g.color, width: 2 }, size: 8, symbol },
+                    hovertemplate: `<b>${g.label}</b><br>Time: %{x:.2f}<br>Unreliability: %{customdata:.2f}%<extra></extra>`,
+                    customdata: failPts.map(p => p.rank * 100)
                 });
-            }
-
-            // Group B
-            if (visibleGroups.g2 && result2) {
-                // Line
-                traces.push({
-                    x: result2.linePoints.map(p => Math.exp(p.x)),
-                    y: result2.linePoints.map(p => p.y),
-                    mode: 'lines',
-                    name: `${name2} fit`,
-                    line: { color: colorB, width: 2 },
-                    hoverinfo: 'none'
-                });
-                // Points
-                traces.push({
-                    x: result2.dataPoints.filter(p => p.status === 'F').map(p => p.time),
-                    y: result2.dataPoints.filter(p => p.status === 'F').map(p => weibullTrans(p.rank * 100)),
-                    mode: 'markers',
-                    name: name2,
-                    marker: { color: bgColor, line: { color: colorB, width: 2 }, size: 9, symbol: 'triangle-up' },
-                    hovertemplate: `<b>${name2}</b><br>Time: %{x:.2f}<br>Unreliability: %{customdata:.2f}%<extra></extra>`,
-                    customdata: result2.dataPoints.filter(p => p.status === 'F').map(p => p.rank * 100)
-                });
-            }
+            });
         } else {
-            // PDF or Reliability
-            const maxT = Math.max(
-                result1.dataPoints[result1.dataPoints.length - 1].time,
-                result2 ? result2.dataPoints[result2.dataPoints.length - 1].time : 0
-            ) * 1.3;
+            // PDF or RELIABILITY
+            const maxTimes = validGroups.map(g => g.result!.dataPoints[g.result!.dataPoints.length - 1].time);
+            const maxT = Math.max(...maxTimes, 1) * 1.3;
             const steps = 150;
             const step = maxT / steps;
             const xValues = Array.from({ length: steps + 1 }, (_, i) => i * step);
 
-            if (visibleGroups.g1 && result1) {
+            validGroups.forEach((g, idx) => {
+                if (!g.visible || !g.result) return;
+                const r = g.result;
+                const symbol = symbols[idx % symbols.length];
                 const yValues = xValues.map(x => {
-                    const m = calculateMetrics(x, result1.beta, result1.eta);
+                    const m = calculateMetrics(x, r.beta, r.eta);
                     return chartType === 'RELIABILITY' ? m.reliability : m.pdf;
                 });
+
                 traces.push({
                     x: xValues,
                     y: yValues,
                     mode: 'lines',
-                    name: name1,
-                    line: { color: colorA, width: 2.5, shape: 'spline' },
+                    name: g.label,
+                    line: { color: g.color, width: 2.5, shape: 'spline' },
                     fill: 'tozeroy',
-                    fillcolor: `${colorA}15`
+                    fillcolor: `${g.color}15`
                 });
 
-                // Failures marker overlay
-                const failureTimes = result1.dataPoints.filter(p => p.status === 'F').map(p => p.time);
+                const failureTimes = r.dataPoints.filter(p => p.status === 'F').map(p => p.time);
                 const failureY = failureTimes.map(t => {
-                    const m = calculateMetrics(t, result1.beta, result1.eta);
+                    const m = calculateMetrics(t, r.beta, r.eta);
                     return chartType === 'RELIABILITY' ? m.reliability : m.pdf;
                 });
                 traces.push({
                     x: failureTimes,
                     y: failureY,
                     mode: 'markers',
-                    marker: { color: bgColor, line: { color: colorA, width: 2 }, size: 7 },
-                    name: `${name1} Failures`,
+                    marker: { color: bgColor, line: { color: g.color, width: 2 }, size: 8, symbol },
+                    name: `${g.label} Failures`,
                     hoverinfo: 'none'
                 });
-            }
-
-            if (visibleGroups.g2 && result2) {
-                const yValues = xValues.map(x => {
-                    const m = calculateMetrics(x, result2.beta, result2.eta);
-                    return chartType === 'RELIABILITY' ? m.reliability : m.pdf;
-                });
-                traces.push({
-                    x: xValues,
-                    y: yValues,
-                    mode: 'lines',
-                    name: name2,
-                    line: { color: colorB, width: 2.5, shape: 'spline' },
-                    fill: 'tozeroy',
-                    fillcolor: `${colorB}15`
-                });
-
-                // Failures marker overlay
-                const failureTimes = result2.dataPoints.filter(p => p.status === 'F').map(p => p.time);
-                const failureY = failureTimes.map(t => {
-                    const m = calculateMetrics(t, result2.beta, result2.eta);
-                    return chartType === 'RELIABILITY' ? m.reliability : m.pdf;
-                });
-                traces.push({
-                    x: failureTimes,
-                    y: failureY,
-                    mode: 'markers',
-                    marker: { color: bgColor, line: { color: colorB, width: 2 }, size: 8, symbol: 'triangle-up' },
-                    name: `${name2} Failures`,
-                    hoverinfo: 'none'
-                });
-            }
+            });
         }
 
-        // R(0.95) coordinate markers for Reliability chart (text removed → HTML overlay)
+        // Reliability coordinate markers
         if (chartType === 'RELIABILITY') {
-            if (visibleGroups.g1 && result1) {
-                const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
-                traces.push({
-                    x: [t_095], y: [0.95],
-                    mode: 'markers',
-                    marker: { color: 'white', size: 14, line: { color: colorA, width: 2.5 }, symbol: 'circle' },
-                    showlegend: false, hoverinfo: 'none'
-                });
-            }
-            if (visibleGroups.g2 && result2) {
-                const t_095 = result2.eta * Math.pow(-Math.log(0.95), 1 / result2.beta);
-                traces.push({
-                    x: [t_095], y: [0.95],
-                    mode: 'markers',
-                    marker: { color: 'white', size: 14, line: { color: colorB, width: 2.5 }, symbol: 'circle' },
-                    showlegend: false, hoverinfo: 'none'
-                });
-            }
-
             const rEta = Math.exp(-1);
-            if (visibleGroups.g1 && result1) {
-                const eta = result1.eta;
+            validGroups.forEach(g => {
+                if (!g.visible || !g.result) return;
+                const r = g.result;
+                const t_095 = r.eta * Math.pow(-Math.log(0.95), 1 / r.beta);
                 traces.push({
-                    x: [eta], y: [rEta],
+                    x: [t_095], y: [0.95],
                     mode: 'markers',
-                    marker: { color: 'white', size: 14, line: { color: colorA, width: 2.5 }, symbol: 'diamond' },
+                    marker: { color: 'white', size: 14, line: { color: g.color, width: 2.5 }, symbol: 'circle' },
                     showlegend: false, hoverinfo: 'none'
                 });
-            }
-            if (visibleGroups.g2 && result2) {
-                const eta = result2.eta;
                 traces.push({
-                    x: [eta], y: [rEta],
+                    x: [r.eta], y: [rEta],
                     mode: 'markers',
-                    marker: { color: 'white', size: 14, line: { color: colorB, width: 2.5 }, symbol: 'diamond' },
+                    marker: { color: 'white', size: 14, line: { color: g.color, width: 2.5 }, symbol: 'diamond' },
                     showlegend: false, hoverinfo: 'none'
                 });
-            }
+            });
         }
 
         return traces;
-    }, [chartType, result1, result2, visibleGroups, colorA, colorB, bgColor, name1, name2]);
+    }, [chartType, effectiveGroups, bgColor]);
 
     const plotLayout = useMemo(() => {
         const layout: any = {
@@ -392,10 +321,10 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         } else {
             layout.yaxis.title = { text: chartType === 'RELIABILITY' ? 'Reliability R(t)' : 'Probability Density f(t)', font: { size: 13, weight: 800 } };
             if (chartType === 'RELIABILITY') layout.yaxis.range = [0, 1.05];
-            const maxT = Math.max(
-                result1 ? result1.dataPoints[result1.dataPoints.length - 1].time : 0,
-                result2 ? result2.dataPoints[result2.dataPoints.length - 1].time : 0
-            ) * 1.3;
+
+            const validGroups = effectiveGroups.filter(g => g.result !== null);
+            const maxTimes = validGroups.map(g => g.result!.dataPoints[g.result!.dataPoints.length - 1].time);
+            const maxT = Math.max(...maxTimes, 0) * 1.3;
             if (maxT > 0) layout.xaxis.range = [0, maxT];
 
             if (chartType === 'PDF') {
@@ -404,8 +333,9 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     return calculateMetrics(tPeak, res.beta, res.eta).pdf;
                 };
                 let maxPdf = 0;
-                if (visibleGroups.g1 && result1) maxPdf = Math.max(maxPdf, getPeakPdf(result1));
-                if (visibleGroups.g2 && result2) maxPdf = Math.max(maxPdf, getPeakPdf(result2));
+                validGroups.forEach(g => {
+                    if (g.visible && g.result) maxPdf = Math.max(maxPdf, getPeakPdf(g.result));
+                });
                 if (maxPdf > 0) layout.yaxis.range = [0, maxPdf * 1.15];
             }
         }
@@ -414,46 +344,25 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         layout.shapes = [];
         layout.annotations = [];
         if (chartType === 'RELIABILITY') {
-            if (visibleGroups.g1 && result1) {
-                const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
-                layout.shapes.push(
-                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.95, x1: t_095, y1: 0.95, line: { color: `${colorA}80`, width: 1.5, dash: 'dash' } },
-                    { type: 'line', xref: 'x', yref: 'y', x0: t_095, y0: 0, x1: t_095, y1: 0.95, line: { color: `${colorA}80`, width: 1.5, dash: 'dash' } }
-                );
-            }
-            if (visibleGroups.g2 && result2) {
-                const t_095 = result2.eta * Math.pow(-Math.log(0.95), 1 / result2.beta);
-                layout.shapes.push(
-                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.95, x1: t_095, y1: 0.95, line: { color: `${colorB}80`, width: 1.5, dash: 'dash' } },
-                    { type: 'line', xref: 'x', yref: 'y', x0: t_095, y0: 0, x1: t_095, y1: 0.95, line: { color: `${colorB}80`, width: 1.5, dash: 'dash' } }
-                );
-            }
-
-            // Eta reference lines
             const rEta = Math.exp(-1);
-            if (visibleGroups.g1 && result1) {
-                const eta = result1.eta;
+            effectiveGroups.forEach(g => {
+                if (!g.visible || !g.result) return;
+                const r = g.result;
+                const t_095 = r.eta * Math.pow(-Math.log(0.95), 1 / r.beta);
                 layout.shapes.push(
-                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: rEta, x1: eta, y1: rEta, line: { color: `${colorA}80`, width: 1.5, dash: 'dot' } },
-                    { type: 'line', xref: 'x', yref: 'y', x0: eta, y0: 0, x1: eta, y1: rEta, line: { color: `${colorA}80`, width: 1.5, dash: 'dot' } }
+                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.95, x1: t_095, y1: 0.95, line: { color: `${g.color}80`, width: 1.5, dash: 'dash' } },
+                    { type: 'line', xref: 'x', yref: 'y', x0: t_095, y0: 0, x1: t_095, y1: 0.95, line: { color: `${g.color}80`, width: 1.5, dash: 'dash' } },
+                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: rEta, x1: r.eta, y1: rEta, line: { color: `${g.color}80`, width: 1.5, dash: 'dot' } },
+                    { type: 'line', xref: 'x', yref: 'y', x0: r.eta, y0: 0, x1: r.eta, y1: rEta, line: { color: `${g.color}80`, width: 1.5, dash: 'dot' } }
                 );
-            }
-            if (visibleGroups.g2 && result2) {
-                const eta = result2.eta;
-                layout.shapes.push(
-                    { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: rEta, x1: eta, y1: rEta, line: { color: `${colorB}80`, width: 1.5, dash: 'dot' } },
-                    { type: 'line', xref: 'x', yref: 'y', x0: eta, y0: 0, x1: eta, y1: rEta, line: { color: `${colorB}80`, width: 1.5, dash: 'dot' } }
-                );
-            }
+            });
 
             // Weibull formula annotation with actual values and matching curve colors
             const formulaLines: string[] = [];
-            if (visibleGroups.g1 && result1) {
-                formulaLines.push(`<span style="color:${colorA}">${name1}: R(t) = e<sup>-(t/${result1.eta.toFixed(2)})<sup>${result1.beta.toFixed(4)}</sup></sup></span>`);
-            }
-            if (visibleGroups.g2 && result2) {
-                formulaLines.push(`<span style="color:${colorB}">${name2}: R(t) = e<sup>-(t/${result2.eta.toFixed(2)})<sup>${result2.beta.toFixed(4)}</sup></sup></span>`);
-            }
+            effectiveGroups.forEach(g => {
+                if (!g.visible || !g.result) return;
+                formulaLines.push(`<span style="color:${g.color}">${g.label}: R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
+            });
             if (formulaLines.length > 0) {
                 layout.annotations.push({
                     text: formulaLines.join('<br>'),
@@ -471,7 +380,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         }
 
         return layout;
-    }, [chartType, interactionMode, gridColor, axisColor, axisTextColor, plotBgColor, result1, result2, visibleGroups, colorA, colorB]);
+    }, [chartType, interactionMode, gridColor, axisColor, axisTextColor, plotBgColor, effectiveGroups]);
 
     const generateHTMLReport = async () => {
         if (!result1) return;
@@ -884,25 +793,34 @@ drag=null;});})();
     };
 
     const CustomLegend = () => (
-        <div className="absolute top-4 left-0 right-0 flex justify-center items-center space-x-12 z-10 pointer-events-none select-none">
-            {visibleGroups.g1 && result1 && (
-                <div className="flex items-center space-x-3 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--bg-surface) 60%, transparent)', border: '1px solid var(--border)' }}>
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colorA }}></div>
-                    <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{name1}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-tighter px-2 py-0.5 rounded-full" style={{ color: 'var(--text-secondary)', border: '1px solid color-mix(in srgb, var(--border) 60%, transparent)' }}>
-                        {getFailureModeBadge(result1.beta)}
-                    </span>
-                </div>
-            )}
-            {visibleGroups.g2 && result2 && (
-                <div className="flex items-center space-x-3 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--bg-surface) 60%, transparent)', border: '1px solid var(--border)' }}>
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colorB }}></div>
-                    <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{name2}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-tighter px-2 py-0.5 rounded-full" style={{ color: 'var(--text-secondary)', border: '1px solid color-mix(in srgb, var(--border) 60%, transparent)' }}>
-                        {getFailureModeBadge(result2.beta)}
-                    </span>
-                </div>
-            )}
+        <div className="absolute top-4 left-0 right-0 flex flex-wrap justify-center items-center gap-3 z-10 pointer-events-none select-none px-4">
+            {effectiveGroups.map((g) => {
+                if (!g.result) return null;
+                return (
+                    <button
+                        key={g.id}
+                        onClick={() => {
+                            if (onToggleVisibility) {
+                                onToggleVisibility(g.id);
+                            } else {
+                                setVisibleGroups(v => g.id === 'g1' ? { ...v, g1: !v.g1 } : { ...v, g2: !v.g2 });
+                            }
+                        }}
+                        className="pointer-events-auto flex items-center space-x-2 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm transition-all cursor-pointer hover:scale-105"
+                        style={{
+                            backgroundColor: 'color-mix(in srgb, var(--bg-surface) 75%, transparent)',
+                            border: `1.5px solid ${g.visible ? g.color : 'var(--border)'}`,
+                            opacity: g.visible ? 1 : 0.4
+                        }}
+                    >
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: g.color }}></div>
+                        <span className="text-xs font-bold truncate max-w-[120px]" style={{ color: 'var(--text-primary)' }}>{g.label}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-tighter px-1.5 py-0.5 rounded-full shrink-0" style={{ color: 'var(--text-secondary)', border: '1px solid color-mix(in srgb, var(--border) 60%, transparent)' }}>
+                            {getFailureModeBadge(g.result.beta)}
+                        </span>
+                    </button>
+                );
+            })}
         </div>
     );
 

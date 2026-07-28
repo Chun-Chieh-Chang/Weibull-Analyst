@@ -16,9 +16,16 @@ export interface WeibullResult {
   linePoints: { x: number; y: number }[]; // For Probability Plot regression line
 }
 
+export interface GroupDataset {
+  id: string;
+  label: string;
+  text: string;
+  color: string;
+  result: WeibullResult | null;
+  visible: boolean;
+}
 
-
-export type AnalysisMode = 'SINGLE' | 'DUAL';
+export type AnalysisMode = 'SINGLE' | 'MULTI';
 export type ChartType = 'PROBABILITY' | 'PDF' | 'RELIABILITY';
 export type Language = 'en' | 'zh';
 export type AIProvider = 'GEMINI' | 'OPENAI' | 'AGNES' | 'CLAUDE';

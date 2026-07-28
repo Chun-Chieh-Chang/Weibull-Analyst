@@ -18,12 +18,14 @@ import {
 import { StarIcon } from '@heroicons/react/24/solid';
 
 interface ResultsPanelProps {
-    result1: WeibullResult | null;
-    result2: WeibullResult | null;
-    isDualMode: boolean;
+    groups?: GroupDataset[];
+    result1?: WeibullResult | null;
+    result2?: WeibullResult | null;
+    isDualMode?: boolean;
+    isMultiMode?: boolean;
     label1?: string;
     label2?: string;
-    onTogglePoint?: (groupIndex: 1 | 2, pointId: number, currentStatus: 'F' | 'S') => void;
+    onTogglePoint?: (groupIndex: number, pointId: number, currentStatus: 'F' | 'S') => void;
     lang: Language;
     onAiAnalysisChange?: (text: string | null) => void;
 }
@@ -73,9 +75,11 @@ const MetricCard = ({
 type TabType = 'INSIGHTS' | 'DATA' | 'THEORY';
 
 const ResultsPanel: React.FC<ResultsPanelProps> = ({
+    groups,
     result1,
     result2,
-    isDualMode,
+    isDualMode = false,
+    isMultiMode = false,
     label1 = "Group A",
     label2 = "Group B",
     onTogglePoint,
@@ -110,8 +114,16 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         else setApiKeyInput(claudeKey || '');
     }, [activeProvider, geminiKey, openaiKey, agnesKey, claudeKey]);
 
-    const name1 = label1 || (lang === 'zh' ? "A 組" : "Group A");
-    const name2 = label2 || (lang === 'zh' ? "B 組" : "Group B");
+    const effectiveGroups = useMemo(() => {
+        if (groups && groups.length > 0) return groups;
+        const res: GroupDataset[] = [];
+        if (result1) res.push({ id: 'g1', label: label1 || (lang === 'zh' ? 'A 組' : 'Group A'), text: '', color: '#4f46e5', result: result1, visible: true });
+        if (result2) res.push({ id: 'g2', label: label2 || (lang === 'zh' ? 'B 組' : 'Group B'), text: '', color: '#e11d48', result: result2, visible: true });
+        return res;
+    }, [groups, result1, result2, label1, label2, lang]);
+
+    const validGroups = useMemo(() => effectiveGroups.filter(g => g.result !== null), [effectiveGroups]);
+    const isMultiple = validGroups.length > 1;
 
     const handleAIAnalyze = async (keyToUse?: string, providerToUse?: AIProvider) => {
         const prov = providerToUse || activeProvider;
@@ -122,11 +134,12 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
             return;
         }
 
-        if (!result1) return;
+        if (validGroups.length === 0) return;
         setLoading(true);
         setError(null);
         try {
-            const text = await analyzeWithAI(result1, result2, isDualMode, lang, key, prov, geminiModel, openaiModel, claudeModel, name1, name2);
+            const text = await analyzeWithAI(effectiveGroups, null, isMultiple, lang, key, prov, geminiModel, openaiModel, claudeModel);
+            handleSetAiAnalysis(text || "No analysis returned.");
             handleSetAiAnalysis(text || "No analysis returned.");
         } catch (e: any) {
             setError(e.message || "An error occurred.");
@@ -319,34 +332,38 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
 
                 {activeTab === 'INSIGHTS' && (
                     <div className="h-full overflow-y-auto p-4 space-y-6">
-                        {!isDualMode ? (
+                        {!isMultiple && validGroups[0]?.result ? (
                             <div className="space-y-3">
-                                <MetricCard label={t('results.metrics.shape', lang)} value={result1.beta.toFixed(3)} subtext={getFailureModeLabel(result1.beta)} colorClass="text-indigo-600" />
-                                <MetricCard label={t('results.metrics.scale', lang)} value={result1.eta.toFixed(2)} subtext={t('results.metrics.charLife', lang)} colorClass="text-emerald-600" />
-                                <MetricCard label={t('results.metrics.mttf', lang)} value={result1.mttf.toFixed(2)} subtext={t('results.metrics.mttfSub', lang)} colorClass="text-blue-600" />
-                                <MetricCard label={t('results.metrics.r2', lang)} value={result1.rSquared.toFixed(4)} subtext={isLowR2 ? t('results.metrics.poorFit', lang) : t('results.metrics.excellentFit', lang)} colorClass={isLowR2 ? "text-amber-600" : "text-purple-600"} warning={isLowR2} tooltip={t('results.metrics.r2Tooltip', lang)} />
+                                <MetricCard label={t('results.metrics.shape', lang)} value={validGroups[0].result.beta.toFixed(3)} subtext={getFailureModeLabel(validGroups[0].result.beta)} colorClass="text-indigo-600" />
+                                <MetricCard label={t('results.metrics.scale', lang)} value={validGroups[0].result.eta.toFixed(2)} subtext={t('results.metrics.charLife', lang)} colorClass="text-emerald-600" />
+                                <MetricCard label={t('results.metrics.mttf', lang)} value={validGroups[0].result.mttf.toFixed(2)} subtext={t('results.metrics.mttfSub', lang)} colorClass="text-blue-600" />
+                                <MetricCard label={t('results.metrics.r2', lang)} value={validGroups[0].result.rSquared.toFixed(4)} subtext={validGroups[0].result.rSquared < 0.9 ? t('results.metrics.poorFit', lang) : t('results.metrics.excellentFit', lang)} colorClass={validGroups[0].result.rSquared < 0.9 ? "text-amber-600" : "text-purple-600"} warning={validGroups[0].result.rSquared < 0.9} tooltip={t('results.metrics.r2Tooltip', lang)} />
                             </div>
                         ) : (
-                            <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                            <div className="rounded-xl border overflow-x-auto" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
                                 <table className="w-full text-sm text-left">
                                     <thead className="font-bold" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-app)' }}>
                                         <tr>
                                             <th className="px-4 py-3">Metric</th>
-                                            <th className="px-4 py-3" style={{ color: 'var(--accent)' }}>{name1}</th>
-                                            <th className="px-4 py-3" style={{ color: 'var(--error)' }}>{name2}</th>
+                                            {validGroups.map(g => (
+                                                <th key={g.id} className="px-4 py-3" style={{ color: g.color }}>{g.label}</th>
+                                            ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {[
-                                            { l: 'Beta (β)', v1: result1.beta.toFixed(3), v2: result2?.beta.toFixed(3) },
-                                            { l: 'Eta (η)', v1: result1.eta.toFixed(1), v2: result2?.eta.toFixed(1) },
-                                            { l: 'MTTF', v1: result1.mttf.toFixed(1), v2: result2?.mttf.toFixed(1) },
-                                            { l: 'R²', v1: result1.rSquared.toFixed(4), v2: result2?.rSquared.toFixed(4) }
+                                            { l: 'Beta (β)', getV: (r: WeibullResult) => r.beta.toFixed(3) },
+                                            { l: 'Eta (η)', getV: (r: WeibullResult) => r.eta.toFixed(1) },
+                                            { l: 'MTTF', getV: (r: WeibullResult) => r.mttf.toFixed(1) },
+                                            { l: 'R²', getV: (r: WeibullResult) => r.rSquared.toFixed(4) }
                                         ].map((row, idx) => (
                                             <tr key={idx} className="transition-colors" style={{ borderBottom: '1px solid var(--border)' }}>
                                                 <td className="px-4 py-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>{row.l}</td>
-                                                <td className="px-4 py-4 font-mono font-bold text-lg" style={{ color: 'var(--text-primary)' }}>{row.v1}</td>
-                                                <td className="px-4 py-4 font-mono font-bold text-lg" style={{ color: 'var(--text-primary)' }}>{row.v2 || '-'}</td>
+                                                {validGroups.map(g => (
+                                                    <td key={g.id} className="px-4 py-4 font-mono font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+                                                        {g.result ? row.getV(g.result) : '-'}
+                                                    </td>
+                                                ))}
                                             </tr>
                                         ))}
                                     </tbody>

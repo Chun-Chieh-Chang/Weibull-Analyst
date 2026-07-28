@@ -1,11 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
-import { WeibullResult, Language, AIProvider, GeminiModel, OpenAIModel, ClaudeModel } from "../types";
+import { WeibullResult, Language, AIProvider, GeminiModel, OpenAIModel, ClaudeModel, GroupDataset } from "../types";
 
 export const analyzeWithAI = async (
-    result1: WeibullResult | null,
+    groupsOrResult1: GroupDataset[] | WeibullResult | null,
     result2: WeibullResult | null,
-    isDualMode: boolean,
+    isMultiMode: boolean,
     lang: Language,
     apiKey: string,
     provider: AIProvider = 'GEMINI',
@@ -20,40 +20,54 @@ export const analyzeWithAI = async (
     const isZh = lang === 'zh';
     let prompt = '';
 
-    if (isDualMode && result1 && result2) {
+    let activeGroups: { label: string; result: WeibullResult }[] = [];
+
+    if (Array.isArray(groupsOrResult1)) {
+        activeGroups = groupsOrResult1
+            .filter(g => g.result !== null)
+            .map(g => ({ label: g.label, result: g.result! }));
+    } else {
+        if (groupsOrResult1) activeGroups.push({ label: label1, result: groupsOrResult1 });
+        if (isMultiMode && result2) activeGroups.push({ label: label2, result: result2 });
+    }
+
+    if (activeGroups.length === 0) {
+        throw new Error("No results to analyze.");
+    }
+
+    if (activeGroups.length > 1) {
+        const groupSummaries = activeGroups.map(g => `
+Dataset: ${g.label}
+- Beta (Shape): ${g.result.beta.toFixed(4)}
+- Eta (Scale): ${g.result.eta.toFixed(4)}
+- MTTF: ${g.result.mttf.toFixed(4)}
+- R²: ${g.result.rSquared.toFixed(4)}
+`).join('\n');
+
         prompt = `
-I have performed a comparative Weibull Analysis on two datasets (${label1} vs ${label2}).
+I have performed a comparative Weibull Analysis on ${activeGroups.length} datasets (${activeGroups.map(g => g.label).join(' vs ')}).
 
-${label1} Results:
-- Beta (Shape): ${result1.beta.toFixed(4)}
-- Eta (Scale): ${result1.eta.toFixed(4)}
-- MTTF: ${result1.mttf.toFixed(4)}
-- R²: ${result1.rSquared.toFixed(4)}
+${groupSummaries}
 
-${label2} Results:
-- Beta (Shape): ${result2.beta.toFixed(4)}
-- Eta (Scale): ${result2.eta.toFixed(4)}
-- MTTF: ${result2.mttf.toFixed(4)}
-- R²: ${result2.rSquared.toFixed(4)}
-
-As a Senior Reliability Engineer, provide a comparative analysis:
-1. Compare the failure modes (based on Beta). Which group is aging faster?
-2. Compare the life characteristics (based on Eta and MTTF). Which group lasts longer?
-3. Conclusion: Which group is more reliable?
-4. Suggest a reason for the difference (e.g., material change, manufacturing defect).
+As a Senior Reliability Engineer, provide a comprehensive comparative analysis across all datasets:
+1. Compare failure modes (based on Beta). Which dataset is aging/wearing out faster?
+2. Compare characteristic life (Eta) and MTTF. Which dataset demonstrates the longest life?
+3. Overall Reliability Ranking: Rank the datasets from most reliable to least reliable.
+4. Suggest potential root causes for observed differences (e.g. material variation, process changes, stress levels).
 
 Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. Beta) or Unicode (e.g. R²).
 
 **CRITICAL: You MUST respond in BOTH languages.** First paragraph in Traditional Chinese (繁體中文), second paragraph in English. Each point must have both languages. Example format:
 - **Beta 解讀 Beta Interpretation:** (Chinese text...) (English text...)`;
-    } else if (result1) {
+    } else {
+        const g = activeGroups[0];
         prompt = `
-I have performed a Weibull Analysis on failure data.
+I have performed a Weibull Analysis on dataset: ${g.label}.
 Results:
-- Beta (Shape): ${result1.beta.toFixed(4)}
-- Eta (Scale): ${result1.eta.toFixed(4)}
-- MTTF: ${result1.mttf.toFixed(4)}
-- R²: ${result1.rSquared.toFixed(4)}
+- Beta (Shape): ${g.result.beta.toFixed(4)}
+- Eta (Scale): ${g.result.eta.toFixed(4)}
+- MTTF: ${g.result.mttf.toFixed(4)}
+- R²: ${g.result.rSquared.toFixed(4)}
 
 Provide a technical analysis:
 1. Interpret Beta (infant mortality, random, wear-out).
@@ -65,8 +79,6 @@ Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. B
 
 **CRITICAL: You MUST respond in BOTH languages.** First paragraph in Traditional Chinese (繁體中文), second paragraph in English. Each point must have both languages. Example format:
 - **Beta 解讀 Beta Interpretation:** (Chinese text...) (English text...)`;
-    } else {
-        throw new Error("No results to analyze.");
     }
 
     try {
