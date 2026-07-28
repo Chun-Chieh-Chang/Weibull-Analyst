@@ -372,7 +372,8 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 linecolor: axisColor,
                 tickfont: { color: axisTextColor, weight: 700 },
                 zeroline: false,
-                type: chartType === 'PROBABILITY' ? 'log' : 'linear'
+                type: chartType === 'PROBABILITY' ? 'log' : 'linear',
+                rangemode: chartType === 'PROBABILITY' ? 'normal' : 'nonnegative'
             },
             yaxis: {
                 gridcolor: gridColor,
@@ -390,6 +391,11 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         } else {
             layout.yaxis.title = { text: chartType === 'RELIABILITY' ? 'Reliability R(t)' : 'Probability Density f(t)', font: { size: 13, weight: 800 } };
             if (chartType === 'RELIABILITY') layout.yaxis.range = [0, 1.05];
+            const maxT = Math.max(
+                result1 ? result1.dataPoints[result1.dataPoints.length - 1].time : 0,
+                result2 ? result2.dataPoints[result2.dataPoints.length - 1].time : 0
+            ) * 1.3;
+            if (maxT > 0) layout.xaxis.range = [0, maxT];
         }
 
         // R(0.95) dashed reference lines for Reliability chart
@@ -531,7 +537,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 paper_bgcolor: bg, plot_bgcolor: 'transparent',
                 font: { family: 'Inter, sans-serif', size: 21, color: axisC },
                 hovermode: 'closest', margin: { l: 80, r: 55, t: 65, b: 80 }, showlegend: false,
-                xaxis: { title: { text: 'Time-to-Failure (t)', font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 } },
+                xaxis: { title: { text: 'Time-to-Failure (t)', font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative' },
                 yaxis: { title: { font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 } }
             };
             if (type === 'PROBABILITY') {
@@ -543,6 +549,11 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             } else if (type === 'RELIABILITY') {
                 layout.yaxis.title = { text: 'Reliability R(t)' };
                 layout.yaxis.range = [0, 1.05];
+                const maxT = Math.max(
+                    result1 ? result1.dataPoints[result1.dataPoints.length - 1].time : 0,
+                    result2 ? result2.dataPoints[result2.dataPoints.length - 1].time : 0
+                ) * 1.3;
+                if (maxT > 0) layout.xaxis.range = [0, maxT];
                 layout.shapes = [];
                 layout.annotations = [];
                 const addRefLine = (r: WeibullResult, clr: string) => {
@@ -583,6 +594,11 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 }
             } else {
                 layout.yaxis.title = { text: 'Probability Density f(t)' };
+                const maxT = Math.max(
+                    result1 ? result1.dataPoints[result1.dataPoints.length - 1].time : 0,
+                    result2 ? result2.dataPoints[result2.dataPoints.length - 1].time : 0
+                ) * 1.3;
+                if (maxT > 0) layout.xaxis.range = [0, maxT];
             }
 
             const div = document.createElement('div');
