@@ -4,6 +4,21 @@
 
 ---
 
+## 📅 2026-07-28 — Phase 9: Multi-Group Calculation Engine, HTML Report Fix & Typography Polish
+
+### Overview
+Fixed multi-group data calculation empty state bug, refactored HTML report generator for N-dataset dynamic rendering, refined top-right formula box typography, created handover restoration baseline, and synced all development documentation.
+
+### Changes
+- **Multi-Group Data Calculation Fix**: Replaced legacy `if (!result1)` checks with `validGroups.length === 0` in `ResultsPanel.tsx` and `WeibullChart.tsx`, resolving empty-state blockage when operating in Multi-Group mode with 3 or more datasets.
+- **Dynamic HTML Report Generator**: Refactored `generateHTMLReport` in `WeibullChart.tsx` to eliminate hardcoded `r1` / `r2` references that caused `TypeError` runtime crashes. Report now dynamically renders Metrics, Summary, Raw Data tables, and Plotly CDN charts for N datasets.
+- **Dynamic Data Points Table**: Updated `ResultsPanel.tsx` Data tab to dynamically render table columns and failure/suspension toggle buttons for all active datasets.
+- **Chart Typography Refinement**: Reduced formula annotation box font size to 10.5px–11px with `font-weight: 600` on dataset labels and soft border styling; adjusted overlay badges (`R=0.95`, `R(η)=e⁻¹`) for clean visual harmony.
+- **Handover Baseline & Doc Sync**: Created `handover_resume_guide.md` as project restoration checkpoint; updated `DEVELOPMENT_LOG.md` and `PROJECT_STATUS.md`.
+- **Build Verification**: Verified `npm run build` passes with zero errors and clean output.
+
+---
+
 ## 📅 2026-07-17 — Phase 8: Report Chart UI Overhaul & Codebase Cleanup
 
 ### Overview

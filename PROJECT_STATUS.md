@@ -1,10 +1,10 @@
 # Project Status — Weibull AI Analyst
 
-> **Last Updated**: 2026-07-17 (Phase 8)
+> **Last Updated**: 2026-07-28 (Phase 9)
 
 ---
 
-## Overall Progress: Feature Complete ✅
+## Overall Progress: Feature Complete & Multi-Group Capable ✅
 
 ---
 
@@ -24,15 +24,15 @@
 | Tailwind CSS v4 | ✅ Done | `@tailwindcss/vite` plugin |
 | Light-only theme | ✅ Done | SkillsBuilder Color Master Palette; dark mode fully removed |
 | Responsive layout | ✅ Done | Desktop 3-column, mobile bottom tab bar |
-| Chart (plotly.js) | ✅ Done | Probability, Reliability, PDF with R=0.95 markers, Eta η markers at R(η)=e⁻¹≈0.368 |
-| Report generation | ✅ Done | Self-contained HTML with 3 interactive Plotly CDN charts, draggable Reliability labels, offline PNG fallback, metrics, AI, data |
+| Chart (plotly.js) | ✅ Done | Probability, Reliability, PDF with R=0.95 markers, Eta η markers at R(η)=e⁻¹≈0.368, refined formula annotation box typography |
+| Report generation | ✅ Done | Self-contained HTML with 3 interactive Plotly CDN charts, dynamic N-dataset metrics/summary/raw data |
 
 ### 3. Business Logic
 | Item | Status | Notes |
 |------|--------|-------|
 | Weibull calculation engine | ✅ Done | Median rank regression with suspension support |
 | AI service integration | ✅ Done | Gemini, OpenAI, Agnes, Claude with model selection |
-| Dual mode comparison | ✅ Done | Side-by-side metrics and charts |
+| Multi-Group Comparative Mode | ✅ Done | Dynamic N-group side-by-side calculation, chart rendering, and data table |
 
 ### 4. AI Providers
 | Provider | Status | Models |
@@ -53,8 +53,9 @@
 | Item | Status | Notes |
 |------|--------|-------|
 | README.md | ✅ Updated | Feature overview, tech stack, usage |
-| DEVELOPMENT_LOG.md | ✅ Updated | Full development timeline (7 phases) |
+| DEVELOPMENT_LOG.md | ✅ Updated | Full development timeline (9 phases) |
 | PROJECT_STATUS.md | ✅ Updated | This file |
+| handover_resume_guide.md | ✅ Created | Project restoration baseline |
 
 ---
 
