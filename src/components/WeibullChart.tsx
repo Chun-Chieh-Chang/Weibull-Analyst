@@ -468,10 +468,8 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             } else if (type === 'RELIABILITY') {
                 layout.yaxis.title = { text: 'Reliability R(t)' };
                 layout.yaxis.range = [0, 1.05];
-                const maxT = Math.max(
-                    result1 ? result1.dataPoints[result1.dataPoints.length - 1].time : 0,
-                    result2 ? result2.dataPoints[result2.dataPoints.length - 1].time : 0
-                ) * 1.3;
+                const maxTimes = validGroups.map(g => g.result ? g.result.dataPoints[g.result.dataPoints.length - 1].time : 0);
+                const maxT = Math.max(...maxTimes, 1) * 1.3;
                 if (maxT > 0) layout.xaxis.range = [0, maxT];
                 layout.shapes = [];
                 layout.annotations = [];
@@ -487,16 +485,14 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                         { type: 'line', xref: 'x', yref: 'y', x0: r.eta, y0: 0, x1: r.eta, y1: rEta, line: { color: `${clr}80`, width: 1.5, dash: 'dot' } }
                     );
                 };
-                if (result1) addRefLine(result1, colorA);
-                if (result2) addRefLine(result2, colorB);
+                validGroups.forEach(g => { if (g.result) addRefLine(g.result, g.color); });
 
                 const formulaLines: string[] = [];
-                if (result1) {
-                    formulaLines.push(`<span style="color:${colorA}">${name1}: R(t) = e<sup>-(t/${result1.eta.toFixed(2)})<sup>${result1.beta.toFixed(4)}</sup></sup></span>`);
-                }
-                if (result2) {
-                    formulaLines.push(`<span style="color:${colorB}">${name2}: R(t) = e<sup>-(t/${result2.eta.toFixed(2)})<sup>${result2.beta.toFixed(4)}</sup></sup></span>`);
-                }
+                validGroups.forEach(g => {
+                    if (g.result) {
+                        formulaLines.push(`<span style="color:${g.color}">${g.label}: R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
+                    }
+                });
                 if (formulaLines.length > 0) {
                     layout.annotations.push({
                         text: formulaLines.join('<br>'),
@@ -513,10 +509,8 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 }
             } else {
                 layout.yaxis.title = { text: 'Probability Density f(t)' };
-                const maxT = Math.max(
-                    result1 ? result1.dataPoints[result1.dataPoints.length - 1].time : 0,
-                    result2 ? result2.dataPoints[result2.dataPoints.length - 1].time : 0
-                ) * 1.3;
+                const maxTimes = validGroups.map(g => g.result ? g.result.dataPoints[g.result.dataPoints.length - 1].time : 0);
+                const maxT = Math.max(...maxTimes, 1) * 1.3;
                 if (maxT > 0) layout.xaxis.range = [0, maxT];
 
                 const getPeakPdf = (res: WeibullResult) => {
@@ -524,8 +518,9 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     return calculateMetrics(tPeak, res.beta, res.eta).pdf;
                 };
                 let maxPdf = 0;
-                if (result1) maxPdf = Math.max(maxPdf, getPeakPdf(result1));
-                if (result2) maxPdf = Math.max(maxPdf, getPeakPdf(result2));
+                validGroups.forEach(g => {
+                    if (g.result) maxPdf = Math.max(maxPdf, getPeakPdf(g.result));
+                });
                 if (maxPdf > 0) layout.yaxis.range = [0, maxPdf * 1.15];
             }
 
@@ -560,16 +555,13 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 if (type === 'RELIABILITY') {
                     const labels: any[] = [];
                     const rEta = Math.exp(-1);
-                    if (result1) {
-                        const t_095 = result1.eta * Math.pow(-Math.log(0.95), 1 / result1.beta);
-                        labels.push({ id: 'r095-1', dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: colorA });
-                        labels.push({ id: 'eta-1', dataX: result1.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${result1.eta.toFixed(2)}`, color: colorA });
-                    }
-                    if (result2) {
-                        const t_095 = result2.eta * Math.pow(-Math.log(0.95), 1 / result2.beta);
-                        labels.push({ id: 'r095-2', dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: colorB });
-                        labels.push({ id: 'eta-2', dataX: result2.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${result2.eta.toFixed(2)}`, color: colorB });
-                    }
+                    validGroups.forEach(g => {
+                        if (g.result) {
+                            const t_095 = g.result.eta * Math.pow(-Math.log(0.95), 1 / g.result.beta);
+                            labels.push({ id: `r095-${g.id}`, dataX: t_095, dataY: 0.95, text: `R=0.95 @ t=${t_095.toFixed(2)}`, color: g.color });
+                            labels.push({ id: `eta-${g.id}`, dataX: g.result.eta, dataY: rEta, text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${g.result.eta.toFixed(2)}`, color: g.color });
+                        }
+                    });
                     resultData.labels = labels;
                 }
                 // Scale down fonts for interactive chart
@@ -615,12 +607,9 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         ];
 
         const ts = new Date().toLocaleString('zh-TW', { dateStyle: 'long', timeStyle: 'short' });
-        const n1 = name1, n2 = name2;
-        const r1 = result1, r2 = result2;
         const getFM = (b: number) => b < 0.9 ? 'Infant Mortality 早夭期' : b <= 1.1 ? 'Random Failures 隨機失效' : 'Wear-out 耗損期';
 
         const buildDataRows = (r: WeibullResult) => {
-            const weibullTrans = (p: number) => Math.log(-Math.log(1 - p / 100));
             return r.dataPoints.map(p => {
                 const rankStr = p.status === 'F' ? (p.rank * 100).toFixed(4) + '%' : '-';
                 const xStr = p.x.toFixed(4);
@@ -628,15 +617,10 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 return `<tr><td>${p.id + 1}</td><td>${p.time.toFixed(2)}</td><td>${p.status}</td><td>${rankStr}</td><td class="mono">${xStr}</td><td class="mono">${yStr}</td></tr>`;
             }).join('');
         };
-        const rows1 = buildDataRows(r1);
-        const rows2 = r2 ? buildDataRows(r2) : '';
 
         const colorizeText = (txt: string) =>
             txt.replace(/([\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+)/g, '<span class="zh">$1</span>');
-        const aiHtml = aiAnalysis ? `<div class="section"><h2>AI 分析 &bull; AI Analysis</h2><div class="ai-box">${colorizeText(aiAnalysis.replace(/\n/g, '<br>'))}</div></div>` : '';
-        const modeLabel = isDualMode ? '雙組比較 Comparative' : '單組分析 Single';
-        const metricCard = (lbl: string, enLbl: string, val: string, sub: string, fm?: number) =>
-            `<div class="metric-card"><div class="label">${lbl}<br>${enLbl}</div><div class="value">${val}</div><div class="sub">${fm !== undefined ? sub : sub}</div></div>`;
+        const modeLabel = isDualMode ? '多組比較 Comparative' : '單組分析 Single';
 
         const reportHTML = `<!DOCTYPE html>
 <html lang="zh-TW">
@@ -707,34 +691,52 @@ ${labels.map((l: any) => `<div id="ol-${l.id}" class="chart-label" style="color:
 <div class="info-row">
 <div class="left">
 <div class="section"><h2>指標 &bull; Metrics</h2>
-${isDualMode && r1 && r2 ? `<div style="margin-bottom:12px"><div style="display:flex;gap:16px;margin-bottom:8px"><span style="font-size:12px;font-weight:700;color:#3B82F6">${n1}</span><span style="font-size:12px;font-weight:700;color:#EF4444">${n2}</span></div><div class="metrics" style="grid-template-columns:repeat(4,1fr)">
-${metricCard('形狀 Shape β', '', r1.beta.toFixed(4) + ' / ' + r2.beta.toFixed(4), '', (r1.beta + r2.beta) / 2)}
-${metricCard('尺度 Scale η', '', r1.eta.toFixed(2) + ' / ' + r2.eta.toFixed(2), '特徵壽命 Char. Life')}
-${metricCard('平均 MTTF', '', r1.mttf.toFixed(2) + ' / ' + r2.mttf.toFixed(2), 'Mean Time To Failure')}
-${metricCard('適配 R²', '', r1.rSquared.toFixed(4) + ' / ' + r2.rSquared.toFixed(4), r1.rSquared >= 0.9 && r2.rSquared >= 0.9 ? '良好 Good Fit' : '偏低 Poor Fit')}
-</div></div>` : r1 ? `<div class="metrics">
-${metricCard('形狀參數', 'Shape β', r1.beta.toFixed(4), '', r1.beta)}
-${metricCard('尺度參數', 'Scale η', r1.eta.toFixed(4), '特徵壽命 Char. Life')}
-${metricCard('平均壽命', 'MTTF', r1.mttf.toFixed(4), 'Mean Time To Failure')}
-${metricCard('適配度', 'R²', r1.rSquared.toFixed(4), r1.rSquared >= 0.9 ? '適配良好 Good Fit' : '適配偏低 Poor Fit')}
-</div>` : ''}
+<div class="metrics" style="display:grid; grid-template-columns: repeat(${Math.min(validGroups.length, 2)}, 1fr); gap:8px;">
+${validGroups.map(g => {
+    if (!g.result) return '';
+    return `<div class="metric-card" style="border-left: 4px solid ${g.color}">
+        <div class="label" style="color:${g.color}">${g.label}</div>
+        <div class="value">β = ${g.result.beta.toFixed(4)}</div>
+        <div class="sub">η = ${g.result.eta.toFixed(2)} | MTTF = ${g.result.mttf.toFixed(2)}</div>
+        <div class="sub" style="font-size:11px; margin-top:2px;">R² = ${g.result.rSquared.toFixed(4)} (${getFM(g.result.beta)})</div>
+    </div>`;
+}).join('')}
+</div>
 </div>
 <div class="section"><h2>摘要 &bull; Summary</h2>
-${isDualMode && r1 && r2 ? `<div class="dual-grid" style="gap:10px"><div class="summary-box"><strong>${n1}<br></strong>
-N: <span class="val">${r1.dataPoints.length}</span> &nbsp; F: <span class="val">${r1.dataPoints.filter(p => p.status === 'F').length}</span> &nbsp; S: <span class="val">${r1.dataPoints.filter(p => p.status === 'S').length}</span><br>
-失效模式: <span class="val">${getFM(r1.beta)}</span> &nbsp; R²: <span class="val">${r1.rSquared.toFixed(4)}</span>
-</div><div class="summary-box"><strong>${n2}<br></strong>
-N: <span class="val">${r2.dataPoints.length}</span> &nbsp; F: <span class="val">${r2.dataPoints.filter(p => p.status === 'F').length}</span> &nbsp; S: <span class="val">${r2.dataPoints.filter(p => p.status === 'S').length}</span><br>
-失效模式: <span class="val">${getFM(r2.beta)}</span> &nbsp; R²: <span class="val">${r2.rSquared.toFixed(4)}</span>
-</div></div>` : r1 ? `<div class="summary-box"><strong>${n1}<br></strong>
-N: <span class="val">${r1.dataPoints.length}</span> &nbsp; F: <span class="val">${r1.dataPoints.filter(p => p.status === 'F').length}</span> &nbsp; S: <span class="val">${r1.dataPoints.filter(p => p.status === 'S').length}</span><br>
-失效模式: <span class="val">${getFM(r1.beta)}</span> &nbsp; R²: <span class="val">${r1.rSquared.toFixed(4)}</span>
-</div>` : ''}
+<div class="dual-grid" style="display:grid; grid-template-columns: repeat(${Math.min(validGroups.length, 2)}, 1fr); gap:10px;">
+${validGroups.map(g => {
+    if (!g.result) return '';
+    const fCount = g.result.dataPoints.filter(p => p.status === 'F').length;
+    const sCount = g.result.dataPoints.filter(p => p.status === 'S').length;
+    return `<div class="summary-box" style="border-top:3px solid ${g.color}">
+        <strong style="color:${g.color}">${g.label}</strong><br>
+        N: <span class="val">${g.result.dataPoints.length}</span> &nbsp; 
+        F: <span class="val">${fCount}</span> &nbsp; 
+        S: <span class="val">${sCount}</span><br>
+        失效模式: <span class="val">${getFM(g.result.beta)}</span> &nbsp; 
+        R²: <span class="val">${g.result.rSquared.toFixed(4)}</span>
+    </div>`;
+}).join('')}
+</div>
 </div>
 </div>
 <div class="right">
 <div class="section"><h2>原始數據 &bull; Raw Data</h2>
-${isDualMode && r1 && r2 ? `<div class="dual-grid" style="gap:10px"><div class="table-wrap"><table><thead><tr><th>#</th><th>Time</th><th>St</th><th>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows1}</tbody></table></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Time</th><th>St</th><th>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows2}</tbody></table></div></div>` : `<div class="table-wrap"><table><thead><tr><th>#</th><th>Time</th><th>Status</th><th>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead><tbody>${rows1}</tbody></table></div>`}
+<div class="dual-grid" style="display:grid; grid-template-columns: repeat(${Math.min(validGroups.length, 2)}, 1fr); gap:10px;">
+${validGroups.map(g => {
+    if (!g.result) return '';
+    return `<div>
+        <h4 style="color:${g.color}; margin-bottom:4px; font-size:13px; font-weight:700;">${g.label}</h4>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>#</th><th>Time</th><th>St</th><th>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead>
+                <tbody>${buildDataRows(g.result)}</tbody>
+            </table>
+        </div>
+    </div>`;
+}).join('')}
+</div>
 </div>
 </div>
 </div>
