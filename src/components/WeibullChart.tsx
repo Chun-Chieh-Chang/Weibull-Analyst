@@ -434,13 +434,13 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 );
             }
 
-            // Weibull formula annotation with actual values
+            // Weibull formula annotation with actual values and matching curve colors
             const formulaLines: string[] = [];
-            if (result1) {
-                formulaLines.push(`${name1}: R(t) = e<sup>-(t/${result1.eta.toFixed(2)})<sup>${result1.beta.toFixed(4)}</sup></sup>`);
+            if (visibleGroups.g1 && result1) {
+                formulaLines.push(`<span style="color:${colorA}">${name1}: R(t) = e<sup>-(t/${result1.eta.toFixed(2)})<sup>${result1.beta.toFixed(4)}</sup></sup></span>`);
             }
-            if (result2) {
-                formulaLines.push(`${name2}: R(t) = e<sup>-(t/${result2.eta.toFixed(2)})<sup>${result2.beta.toFixed(4)}</sup></sup>`);
+            if (visibleGroups.g2 && result2) {
+                formulaLines.push(`<span style="color:${colorB}">${name2}: R(t) = e<sup>-(t/${result2.eta.toFixed(2)})<sup>${result2.beta.toFixed(4)}</sup></sup></span>`);
             }
             if (formulaLines.length > 0) {
                 layout.annotations.push({
@@ -448,9 +448,9 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     xref: 'paper', yref: 'paper',
                     x: 0.98, y: 0.98,
                     showarrow: false,
-                    font: { size: 18, color: axisTextColor, weight: 'bold' },
+                    font: { size: 14, weight: 'bold' },
                     align: 'left',
-                    bgcolor: 'rgba(255,255,255,0.85)',
+                    bgcolor: 'rgba(255,255,255,0.92)',
                     bordercolor: axisColor,
                     borderwidth: 1,
                     borderpad: 6
@@ -573,10 +573,10 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 
                 const formulaLines: string[] = [];
                 if (result1) {
-                    formulaLines.push(`${name1}: R(t) = e<sup>-(t/${result1.eta.toFixed(2)})<sup>${result1.beta.toFixed(4)}</sup></sup>`);
+                    formulaLines.push(`<span style="color:${colorA}">${name1}: R(t) = e<sup>-(t/${result1.eta.toFixed(2)})<sup>${result1.beta.toFixed(4)}</sup></sup></span>`);
                 }
                 if (result2) {
-                    formulaLines.push(`${name2}: R(t) = e<sup>-(t/${result2.eta.toFixed(2)})<sup>${result2.beta.toFixed(4)}</sup></sup>`);
+                    formulaLines.push(`<span style="color:${colorB}">${name2}: R(t) = e<sup>-(t/${result2.eta.toFixed(2)})<sup>${result2.beta.toFixed(4)}</sup></sup></span>`);
                 }
                 if (formulaLines.length > 0) {
                     layout.annotations.push({
