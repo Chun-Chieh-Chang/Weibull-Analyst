@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { WeibullResult, Language, AIProvider, GeminiModel, OpenAIModel, ClaudeModel } from '../types';
 import { analyzeWithAI } from '../services/aiService';
 import TheoreticalGuide from './TheoreticalGuide';
