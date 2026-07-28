@@ -383,8 +383,9 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     }, [chartType, interactionMode, gridColor, axisColor, axisTextColor, plotBgColor, effectiveGroups]);
 
     const generateHTMLReport = async () => {
-        if (!result1) return;
-        const isDualMode = !!result1 && !!result2;
+        const validGroups = effectiveGroups.filter(g => g.result !== null);
+        if (validGroups.length === 0) return;
+        const isDualMode = validGroups.length > 1;
         const bg = '#ffffff', gridC = 'rgba(0,0,0,0.1)', axisC = '#475569';
 
         const captureChart = async (type: ChartType, returnData?: boolean): Promise<{url: string, traces?: any[], layout?: any, labels?: {id: string, dataX: number, dataY: number, text: string, color: string}[]}> => {
@@ -421,8 +422,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     });
                 }
             };
-            if (result1) addGroupTraces(result1, colorA, name1);
-            if (result2) addGroupTraces(result2, colorB, name2);
+            validGroups.forEach(g => { if (g.result) addGroupTraces(g.result, g.color, g.label); });
 
             // R(0.95) reference markers for Reliability chart
             if (type === 'RELIABILITY') {
@@ -436,8 +436,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                         showlegend: false, hoverinfo: 'none'
                     });
                 };
-                if (result1) addR095(result1, colorA, name1);
-                if (result2) addR095(result2, colorB, name2);
+                validGroups.forEach(g => { if (g.result) addR095(g.result, g.color, g.label); });
 
                 // Eta markers
                 const rEta = Math.exp(-1);
@@ -450,8 +449,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                         showlegend: false, hoverinfo: 'none'
                     });
                 };
-                if (result1) addEtaMarker(result1, colorA);
-                if (result2) addEtaMarker(result2, colorB);
+                validGroups.forEach(g => { if (g.result) addEtaMarker(g.result, g.color); });
             }
 
             const layout: any = {
@@ -834,7 +832,7 @@ drag=null;});})();
         </div>
     );
 
-    if (!result1) return (
+    if (effectiveGroups.filter(g => g.result !== null).length === 0) return (
         <div className="w-full h-full flex flex-col items-center justify-center space-y-4" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)' }}>
             <div className="w-16 h-16 rounded-full flex items-center justify-center opacity-40" style={{ backgroundColor: 'color-mix(in srgb, var(--text-secondary) 15%, transparent)' }}>
                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -900,7 +898,7 @@ drag=null;});})();
 
                     <button
                         onClick={generateHTMLReport}
-                        disabled={!result1}
+                        disabled={effectiveGroups.filter(g => g.result !== null).length === 0}
                         className="flex items-center space-x-1.5 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         style={{ color: 'var(--accent)' }}
                         title={lang === 'zh' ? '生成 HTML 報告' : 'Generate HTML Report'}
@@ -962,26 +960,38 @@ drag=null;});})();
                         <h4 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Point Statistics</h4>
                         <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>At Time t = <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{modalData.time.toFixed(2)}</span></p>
 
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest pb-3" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
-                                <span>Metric</span>
-                                <div className="flex space-x-10">
-                                    <span style={{ color: 'var(--accent)' }}>{name1}</span>
-                                    {result2 && <span style={{ color: 'var(--error)' }}>{name2}</span>}
-                                </div>
-                            </div>
-                            {(() => {
-                                const m1 = calculateMetrics(modalData.time, result1.beta, result1.eta);
-                                const m2 = result2 ? calculateMetrics(modalData.time, result2.beta, result2.eta) : undefined;
-                                return (
-                                    <div className="text-sm space-y-1">
-                                        {visibleGroups.g1 && <StatRow label={t('chart.tooltip.reliability', lang)} val1={m1.reliability} val2={visibleGroups.g2 ? m2?.reliability : undefined} />}
-                                        {visibleGroups.g1 && <StatRow label={t('chart.tooltip.cdf', lang)} val1={m1.cdf} val2={visibleGroups.g2 ? m2?.cdf : undefined} />}
-                                        {visibleGroups.g1 && <StatRow label={t('chart.tooltip.pdf', lang)} val1={m1.pdf} val2={visibleGroups.g2 ? m2?.pdf : undefined} />}
-                                        {visibleGroups.g1 && <StatRow label={t('chart.tooltip.hazard', lang)} val1={m1.hazard} val2={visibleGroups.g2 ? m2?.hazard : undefined} />}
-                                    </div>
-                                );
-                            })()}
+                        <div className="space-y-4 overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="font-bold border-b" style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}>
+                                    <tr>
+                                        <th className="py-2">Metric</th>
+                                        {effectiveGroups.map(g => g.visible && g.result && (
+                                            <th key={g.id} className="py-2 px-3 text-right" style={{ color: g.color }}>{g.label}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody className="font-mono text-xs">
+                                    {[
+                                        { label: t('chart.tooltip.reliability', lang), key: 'reliability' as const, fmt: (v: number) => v.toFixed(4) },
+                                        { label: t('chart.tooltip.cdf', lang), key: 'cdf' as const, fmt: (v: number) => (v * 100).toFixed(2) + '%' },
+                                        { label: t('chart.tooltip.pdf', lang), key: 'pdf' as const, fmt: (v: number) => v.toExponential(3) },
+                                        { label: t('chart.tooltip.hazard', lang), key: 'hazard' as const, fmt: (v: number) => v.toExponential(3) }
+                                    ].map(row => (
+                                        <tr key={row.key} style={{ borderBottom: '1px solid var(--border)' }}>
+                                            <td className="py-2 font-sans font-medium" style={{ color: 'var(--text-secondary)' }}>{row.label}</td>
+                                            {effectiveGroups.map(g => {
+                                                if (!g.visible || !g.result) return null;
+                                                const m = calculateMetrics(modalData.time, g.result.beta, g.result.eta);
+                                                return (
+                                                    <td key={g.id} className="py-2 px-3 text-right font-bold" style={{ color: g.color }}>
+                                                        {row.fmt(m[row.key])}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

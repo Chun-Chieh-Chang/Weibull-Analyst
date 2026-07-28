@@ -191,7 +191,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         return clean;
     };
 
-    if (!result1) {
+    if (validGroups.length === 0) {
         return (
             <div className="h-full flex flex-col items-center justify-center p-8" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--bg-app) 50%, var(--bg-surface))' }}>
                 <BeakerIcon className="w-16 h-16 mb-4 opacity-30" style={{ color: 'var(--text-secondary)' }} />
@@ -201,19 +201,15 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         );
     }
 
-    const isLowR2 = result1.rSquared < 0.9;
+    const isLowR2 = validGroups.some(g => g.result && g.result.rSquared < 0.9);
     const getFailureModeLabel = (beta: number) => {
         if (beta < 0.9) return t('results.metrics.infant', lang);
         if (beta <= 1.1) return t('results.metrics.random', lang);
         return t('results.metrics.wearout', lang);
     };
 
-    const maxRows = Math.max(result1.dataPoints.length, result2?.dataPoints.length || 0);
-    const dataRows = Array.from({ length: maxRows }, (_, i) => ({
-        id: i + 1,
-        p1: result1.dataPoints[i] || null,
-        p2: result2?.dataPoints[i] || null,
-    }));
+    const maxRows = Math.max(...validGroups.map(g => g.result?.dataPoints.length || 0), 0);
+    const dataRows = Array.from({ length: maxRows }, (_, i) => i);
 
     return (
         <div className="flex flex-col h-full w-full transition-colors relative" style={{ backgroundColor: 'var(--bg-app)' }}>
@@ -260,68 +256,48 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                 <thead className="font-bold sticky top-0 z-10" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
                                     <tr>
                                         <th className="px-3 py-2 w-10 font-mono" style={{ backgroundColor: 'var(--bg-app)' }}>#</th>
-                                        <th className="px-3 py-2 border-l" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)', borderColor: 'var(--border)', color: 'var(--accent)' }}>
-                                            {name1} <span className="font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>({t('results.table.time', lang)})</span>
-                                        </th>
-                                        <th className="px-2 py-2 text-center w-16" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)', color: 'var(--accent)' }}>
-                                            {t('results.table.status', lang)}
-                                        </th>
-                                        {isDualMode && (
-                                            <>
-                                                <th className="px-3 py-2 border-l" style={{ backgroundColor: 'color-mix(in srgb, var(--error) 8%, transparent)', borderColor: 'var(--border)', color: 'var(--error)' }}>
-                                                    {name2} <span className="font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>({t('results.table.time', lang)})</span>
+                                        {validGroups.map((g) => (
+                                            <React.Fragment key={g.id}>
+                                                <th className="px-3 py-2 border-l" style={{ backgroundColor: `color-mix(in srgb, ${g.color} 8%, transparent)`, borderColor: 'var(--border)', color: g.color }}>
+                                                    {g.label} <span className="font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>({t('results.table.time', lang)})</span>
                                                 </th>
-                                                <th className="px-2 py-2 text-center w-16" style={{ backgroundColor: 'color-mix(in srgb, var(--error) 8%, transparent)', color: 'var(--error)' }}>
+                                                <th className="px-2 py-2 text-center w-16" style={{ backgroundColor: `color-mix(in srgb, ${g.color} 8%, transparent)`, color: g.color }}>
                                                     {t('results.table.status', lang)}
                                                 </th>
-                                            </>
-                                        )}
+                                            </React.Fragment>
+                                        ))}
                                     </tr>
                                 </thead>
                                 <tbody className="font-mono" style={{ color: 'var(--text-primary)' }}>
-                                    {dataRows.map((row) => (
-                                        <tr key={row.id} className="transition-colors" style={{ borderBottom: '1px solid var(--border)' }}>
-                                            <td className="px-3 py-1.5" style={{ color: 'var(--text-secondary)' }}>{row.id}</td>
-                                            <td className="px-3 py-1.5 border-l" style={{ borderColor: 'var(--border)' }}>
-                                                {row.p1 ? row.p1.time.toFixed(2) : '-'}
-                                            </td>
-                                            <td className="px-3 py-2 text-center">
-                                                {row.p1 ? (
-                                                    <button
-                                                        onClick={() => onTogglePoint && onTogglePoint(1, row.p1!.id, row.p1!.status)}
-                                                        className={`px-2 py-1 w-full inline-flex items-center justify-center rounded text-[10px] font-bold uppercase tracking-tighter cursor-pointer transition-all`}
-                                                        style={{
-                                                            backgroundColor: row.p1.status === 'F' ? 'color-mix(in srgb, var(--accent) 12%, transparent)' : 'color-mix(in srgb, #F59E0B 12%, transparent)',
-                                                            color: row.p1.status === 'F' ? 'var(--accent)' : '#D97706',
-                                                            border: row.p1.status === 'F' ? '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' : '1px solid color-mix(in srgb, #F59E0B 25%, transparent)'
-                                                        }}
-                                                    >
-                                                        {row.p1.status === 'F' ? t('results.table.fail', lang) : t('results.table.susp', lang)}
-                                                    </button>
-                                                ) : '-'}
-                                            </td>
-                                            {isDualMode && (
-                                                <>
-                                                    <td className="px-3 py-1.5 border-l" style={{ borderColor: 'var(--border)' }}>
-                                                        {row.p2 ? row.p2.time.toFixed(2) : '-'}
-                                                    </td>
-                                                    <td className="px-3 py-2 text-center">
-                                                        {row.p2 ? (
-                                                            <button
-                                                                onClick={() => onTogglePoint && onTogglePoint(2, row.p2!.id, row.p2!.status)}
-                                                                className={`px-2 py-1 w-full inline-flex items-center justify-center rounded text-[10px] font-bold uppercase tracking-tighter cursor-pointer transition-all`}
-                                                                style={{
-                                                                    backgroundColor: row.p2.status === 'F' ? 'color-mix(in srgb, var(--error) 12%, transparent)' : 'color-mix(in srgb, #F59E0B 12%, transparent)',
-                                                                    color: row.p2.status === 'F' ? 'var(--error)' : '#D97706',
-                                                                    border: row.p2.status === 'F' ? '1px solid color-mix(in srgb, var(--error) 25%, transparent)' : '1px solid color-mix(in srgb, #F59E0B 25%, transparent)'
-                                                                }}
-                                                            >
-                                                                {row.p2.status === 'F' ? t('results.table.fail', lang) : t('results.table.susp', lang)}
-                                                            </button>
-                                                        ) : '-'}
-                                                    </td>
-                                                </>
-                                            )}
+                                    {dataRows.map((rowIndex) => (
+                                        <tr key={rowIndex + 1} className="transition-colors" style={{ borderBottom: '1px solid var(--border)' }}>
+                                            <td className="px-3 py-1.5" style={{ color: 'var(--text-secondary)' }}>{rowIndex + 1}</td>
+                                            {validGroups.map((g) => {
+                                                const pt = g.result?.dataPoints[rowIndex];
+                                                const groupIndexInAll = effectiveGroups.findIndex(eg => eg.id === g.id) + 1;
+                                                return (
+                                                    <React.Fragment key={g.id}>
+                                                        <td className="px-3 py-1.5 border-l" style={{ borderColor: 'var(--border)' }}>
+                                                            {pt ? pt.time.toFixed(2) : '-'}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-center">
+                                                            {pt ? (
+                                                                <button
+                                                                    onClick={() => onTogglePoint && onTogglePoint(groupIndexInAll, pt.id, pt.status)}
+                                                                    className={`px-2 py-1 w-full inline-flex items-center justify-center rounded text-[10px] font-bold uppercase tracking-tighter cursor-pointer transition-all`}
+                                                                    style={{
+                                                                        backgroundColor: pt.status === 'F' ? `color-mix(in srgb, ${g.color} 12%, transparent)` : 'color-mix(in srgb, #F59E0B 12%, transparent)',
+                                                                        color: pt.status === 'F' ? g.color : '#D97706',
+                                                                        border: pt.status === 'F' ? `1px solid color-mix(in srgb, ${g.color} 25%, transparent)` : '1px solid color-mix(in srgb, #F59E0B 25%, transparent)'
+                                                                    }}
+                                                                >
+                                                                    {pt.status === 'F' ? t('results.table.fail', lang) : t('results.table.susp', lang)}
+                                                                </button>
+                                                            ) : '-'}
+                                                        </td>
+                                                    </React.Fragment>
+                                                );
+                                            })}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -395,7 +371,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     <p className="text-xs mb-4 font-medium italic" style={{ color: 'color-mix(in srgb, var(--accent) 40%, var(--text-secondary))' }}>{t('results.ai.prompt', lang)}</p>
                                     <button
                                         onClick={() => handleAIAnalyze()}
-                                        disabled={loading || (isDualMode && !result2)}
+                                        disabled={loading || validGroups.length === 0}
                                         className={`w-full py-3 rounded-xl text-sm font-bold uppercase tracking-widest text-white shadow-lg transition-all flex items-center justify-center space-x-2 ${loading ? 'cursor-wait' : 'active:scale-[0.97]'}`}
                                         style={{ backgroundColor: loading ? 'color-mix(in srgb, var(--accent) 50%, transparent)' : 'var(--accent)' }}
                                     >
