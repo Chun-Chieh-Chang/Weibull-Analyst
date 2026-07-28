@@ -361,18 +361,19 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             const formulaLines: string[] = [];
             effectiveGroups.forEach(g => {
                 if (!g.visible || !g.result) return;
-                formulaLines.push(`<span style="color:${g.color}">${g.label}: R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
+                formulaLines.push(`<span style="color:${g.color}; font-weight:600;">${g.label}:</span> <span style="color:${g.color}; font-size:95%;">R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
             });
             if (formulaLines.length > 0) {
+                const fontSize = formulaLines.length > 2 ? 10.5 : 11;
                 layout.annotations.push({
                     text: formulaLines.join('<br>'),
                     xref: 'paper', yref: 'paper',
                     x: 0.98, y: 0.98,
                     showarrow: false,
-                    font: { size: 14, weight: 'bold' },
+                    font: { size: fontSize, family: 'Inter, system-ui, sans-serif' },
                     align: 'left',
                     bgcolor: 'rgba(255,255,255,0.92)',
-                    bordercolor: axisColor,
+                    bordercolor: 'rgba(0,0,0,0.15)',
                     borderwidth: 1,
                     borderpad: 6
                 });
@@ -490,19 +491,20 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 const formulaLines: string[] = [];
                 validGroups.forEach(g => {
                     if (g.result) {
-                        formulaLines.push(`<span style="color:${g.color}">${g.label}: R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
+                        formulaLines.push(`<span style="color:${g.color}; font-weight:600;">${g.label}:</span> <span style="color:${g.color};">R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
                     }
                 });
                 if (formulaLines.length > 0) {
+                    const fontSize = formulaLines.length > 2 ? 16 : 18;
                     layout.annotations.push({
                         text: formulaLines.join('<br>'),
                         xref: 'paper', yref: 'paper',
-                    x: 0.98, y: 0.98,
+                        x: 0.98, y: 0.98,
                         showarrow: false,
-                        font: { size: 28, color: axisC, weight: 'bold' },
+                        font: { size: fontSize, color: axisC },
                         align: 'left',
-                        bgcolor: 'rgba(255,255,255,0.85)',
-                        bordercolor: '#475569',
+                        bgcolor: 'rgba(255,255,255,0.90)',
+                        bordercolor: 'rgba(0,0,0,0.2)',
                         borderwidth: 1,
                         borderpad: 6
                     });
@@ -932,15 +934,15 @@ drag=null;});})();
                 />
                 {chartType === 'RELIABILITY' && labelDefs.map(def => (
                     <div key={def.id} id={def.id}
-                        className="absolute px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap cursor-grab select-none"
+                        className="absolute px-2 py-0.5 rounded text-[10.5px] font-medium whitespace-nowrap cursor-grab select-none"
                         style={{
                             color: def.color,
-                            backgroundColor: 'rgba(255,255,255,0.92)',
+                            backgroundColor: 'rgba(255,255,255,0.94)',
                             border: `1px solid ${def.color}`,
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                             pointerEvents: 'auto',
                             zIndex: 10,
-                            fontSize: 13,
+                            fontSize: 10.5,
                             left: 0, top: 0
                         }}
                         onMouseDown={(e) => handleLabelMouseDown(e, def.id)}
