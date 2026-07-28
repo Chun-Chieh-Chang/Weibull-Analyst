@@ -379,7 +379,8 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 gridcolor: gridColor,
                 linecolor: axisColor,
                 tickfont: { color: axisTextColor, weight: 700 },
-                zeroline: false
+                zeroline: false,
+                rangemode: chartType === 'PROBABILITY' ? 'normal' : 'nonnegative'
             }
         };
 
@@ -396,6 +397,17 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 result2 ? result2.dataPoints[result2.dataPoints.length - 1].time : 0
             ) * 1.3;
             if (maxT > 0) layout.xaxis.range = [0, maxT];
+
+            if (chartType === 'PDF') {
+                const getPeakPdf = (res: WeibullResult) => {
+                    const tPeak = res.beta > 1 ? res.eta * Math.pow((res.beta - 1) / res.beta, 1 / res.beta) : res.eta * 0.02;
+                    return calculateMetrics(tPeak, res.beta, res.eta).pdf;
+                };
+                let maxPdf = 0;
+                if (visibleGroups.g1 && result1) maxPdf = Math.max(maxPdf, getPeakPdf(result1));
+                if (visibleGroups.g2 && result2) maxPdf = Math.max(maxPdf, getPeakPdf(result2));
+                if (maxPdf > 0) layout.yaxis.range = [0, maxPdf * 1.15];
+            }
         }
 
         // R(0.95) dashed reference lines for Reliability chart
@@ -538,7 +550,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 font: { family: 'Inter, sans-serif', size: 21, color: axisC },
                 hovermode: 'closest', margin: { l: 80, r: 55, t: 65, b: 80 }, showlegend: false,
                 xaxis: { title: { text: 'Time-to-Failure (t)', font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative' },
-                yaxis: { title: { font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 } }
+                yaxis: { title: { font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative' }
             };
             if (type === 'PROBABILITY') {
                 const probTicks = [0.1, 0.5, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
@@ -599,6 +611,15 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     result2 ? result2.dataPoints[result2.dataPoints.length - 1].time : 0
                 ) * 1.3;
                 if (maxT > 0) layout.xaxis.range = [0, maxT];
+
+                const getPeakPdf = (res: WeibullResult) => {
+                    const tPeak = res.beta > 1 ? res.eta * Math.pow((res.beta - 1) / res.beta, 1 / res.beta) : res.eta * 0.02;
+                    return calculateMetrics(tPeak, res.beta, res.eta).pdf;
+                };
+                let maxPdf = 0;
+                if (result1) maxPdf = Math.max(maxPdf, getPeakPdf(result1));
+                if (result2) maxPdf = Math.max(maxPdf, getPeakPdf(result2));
+                if (maxPdf > 0) layout.yaxis.range = [0, maxPdf * 1.15];
             }
 
             const div = document.createElement('div');
