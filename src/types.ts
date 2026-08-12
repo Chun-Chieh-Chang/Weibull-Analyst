@@ -29,6 +29,6 @@ export type AnalysisMode = 'SINGLE' | 'MULTI';
 export type ChartType = 'PROBABILITY' | 'PDF' | 'RELIABILITY';
 export type Language = 'en' | 'zh';
 export type AIProvider = 'GEMINI' | 'OPENAI' | 'AGNES' | 'CLAUDE';
-export type GeminiModel = 'gemini-2.5-flash' | 'gemini-3.5-flash';
+export type GeminiModel = 'gemini-3.6-flash' | 'gemini-3.5-flash' | 'gemini-2.5-flash';
 export type OpenAIModel = 'gpt-4o-mini';
 export type ClaudeModel = 'claude-sonnet-4-6' | 'claude-haiku-4-5';

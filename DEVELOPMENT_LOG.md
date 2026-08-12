@@ -4,6 +4,19 @@
 
 ---
 
+## 📅 2026-08-12 — Phase 11: AI Engine Upgrade & PWA Base URL Path Fix
+
+### Overview
+Upgraded AI provider models to the latest API standards (Agnes 2.5-flash & Gemini 3.6-flash). Fixed GitHub Pages subpath 404 image request bug in PWA components using `import.meta.env.BASE_URL`. Performed full MECE codebase audit and documentation alignment.
+
+### Changes
+- **Agnes Model Upgrade**: Updated Agnes model identifier from `agnes-2.0-flash` to `agnes-2.5-flash` in `aiService.ts` and dropdown UI in `ResultsPanel.tsx`.
+- **Gemini Model Upgrade**: Added `gemini-3.6-flash` to `GeminiModel` union in `types.ts`, set as default in `aiService.ts` and `ResultsPanel.tsx`, and updated model selector options with 3.6 Flash (Latest), 3.5 Flash (Stable), and 2.5 Flash (Legacy).
+- **PWA Image Path 404 Fix**: Replaced absolute root image paths (`/pwa-192x192.png`) with Vite base-aware paths (`${import.meta.env.BASE_URL}pwa-192x192.png`) in `PwaPrompt.tsx` to fix 404 errors when deployed on GitHub Pages subpath (`/Weibull-Analyst/`).
+- **Documentation & Handover Sync**: Synced `README.md`, `PROJECT_STATUS.md`, `DEVELOPMENT_LOG.md`, and `handover_resume_guide.md` with Phase 11 updates.
+
+---
+
 ## 📅 2026-08-12 — Phase 10: Mobile PWA Engine & Touch UX Optimization
 
 ### Overview

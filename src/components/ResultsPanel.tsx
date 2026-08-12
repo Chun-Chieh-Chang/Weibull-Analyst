@@ -98,7 +98,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
     // AI Provider & API KEY Logic
     const [showKeyModal, setShowKeyModal] = useState(false);
     const [activeProvider, setActiveProvider] = useState<AIProvider>((localStorage.getItem('ai_provider') as AIProvider) || 'GEMINI');
-    const [geminiModel, setGeminiModel] = useState<GeminiModel>((localStorage.getItem('gemini_model') as GeminiModel) || 'gemini-2.5-flash');
+    const [geminiModel, setGeminiModel] = useState<GeminiModel>((localStorage.getItem('gemini_model') as GeminiModel) || 'gemini-3.6-flash');
     const [openaiModel, setOpenaiModel] = useState<OpenAIModel>((localStorage.getItem('openai_model') as OpenAIModel) || 'gpt-4o-mini');
     const [claudeModel, setClaudeModel] = useState<ClaudeModel>((localStorage.getItem('claude_model') as ClaudeModel) || 'claude-sonnet-4-6');
     const [apiKeyInput, setApiKeyInput] = useState('');
@@ -422,7 +422,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     >
                                         <option value="GEMINI">Google Gemini (Default)</option>
                                         <option value="OPENAI">OpenAI (ChatGPT)</option>
-                                        <option value="AGNES">Agnes (agnes-2.0-flash)</option>
+                                        <option value="AGNES">Agnes (agnes-2.5-flash)</option>
                                         <option value="CLAUDE">Anthropic Claude</option>
                                     </select>
                                     <ChevronDownIcon className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" style={{ color: 'var(--text-secondary)' }} />
@@ -440,8 +440,9 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                             className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold"
                                             style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                                         >
-                                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (穩定 Stable)</option>
-                                            <option value="gemini-3.5-flash">Gemini 3.5 Flash (最新 Latest)</option>
+                                            <option value="gemini-3.6-flash">Gemini 3.6 Flash (最新 Latest)</option>
+                                            <option value="gemini-3.5-flash">Gemini 3.5 Flash (穩定 Stable)</option>
+                                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (經濟 Legacy)</option>
                                         </select>
                                         <ChevronDownIcon className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" style={{ color: 'var(--text-secondary)' }} />
                                     </div>

@@ -1,6 +1,6 @@
 # Project Status — Weibull AI Analyst
 
-> **Last Updated**: 2026-08-12 (Phase 10)
+> **Last Updated**: 2026-08-12 (Phase 11)
 
 ---
 
@@ -38,9 +38,9 @@
 ### 4. AI Providers
 | Provider | Status | Models |
 |----------|--------|--------|
-| Google Gemini | ✅ Done | gemini-2.5-flash, gemini-3.5-flash |
+| Google Gemini | ✅ Done | gemini-3.6-flash (Default), gemini-3.5-flash, gemini-2.5-flash |
 | OpenAI | ✅ Done | gpt-4o-mini |
-| Agnes | ✅ Done | agnes-2.0-flash (reasoning model, 8192 tokens) |
+| Agnes | ✅ Done | agnes-2.5-flash (reasoning model, 8192 tokens) |
 | Anthropic Claude | ✅ Done | claude-sonnet-4-6, claude-haiku-4-5 |
 
 ### 5. CI/CD & Deployment

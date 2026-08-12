@@ -43,9 +43,9 @@ npm run build   # → dist/
 
 | 供應商 | 模型選項 | API 格式 |
 |--------|---------|---------|
-| Google Gemini | gemini-2.5-flash / gemini-3.5-flash | `@google/genai` SDK |
+| Google Gemini | gemini-3.6-flash / gemini-3.5-flash / gemini-2.5-flash | `@google/genai` SDK |
 | OpenAI | gpt-4o-mini | `openai` SDK |
-| Agnes | agnes-2.0-flash | REST API (`apihub.agnes-ai.com`) |
+| Agnes | agnes-2.5-flash | REST API (`apihub.agnes-ai.com`) |
 | Anthropic Claude | claude-sonnet-4-6 / claude-haiku-4-5 | REST API (`api.anthropic.com`) |
 
 API Key 儲存於瀏覽器 localStorage，不會傳送至第三方伺服器。

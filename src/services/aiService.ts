@@ -9,7 +9,7 @@ export const analyzeWithAI = async (
     lang: Language,
     apiKey: string,
     provider: AIProvider = 'GEMINI',
-    geminiModel: GeminiModel = 'gemini-2.5-flash',
+    geminiModel: GeminiModel = 'gemini-3.6-flash',
     openaiModel: OpenAIModel = 'gpt-4o-mini',
     claudeModel: ClaudeModel = 'claude-sonnet-4-6',
     label1: string = 'Group A',
@@ -97,7 +97,7 @@ Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. B
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
                 body: JSON.stringify({
-                    model: 'agnes-2.0-flash',
+                    model: 'agnes-2.5-flash',
                     messages: [
                         {
                             role: "system",
