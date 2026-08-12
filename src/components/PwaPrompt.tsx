@@ -105,7 +105,7 @@ const PwaPrompt: React.FC<PwaPromptProps> = ({ lang, needRefresh = false, onUpda
       {showInstallBanner && !needRefresh && (
         <div className="fixed top-16 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 animate-slideUp bg-white border border-slate-200 rounded-2xl shadow-2xl p-3.5 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img src="/pwa-192x192.png" alt="App Icon" className="w-11 h-11 rounded-xl shadow-sm border border-slate-100 shrink-0" />
+            <img src={`${import.meta.env.BASE_URL}pwa-192x192.png`} alt="App Icon" className="w-11 h-11 rounded-xl shadow-sm border border-slate-100 shrink-0" />
             <div>
               <h4 className="text-xs font-bold text-slate-900">{lang === 'zh' ? '安裝 Weibull AI 應用程式' : 'Install Weibull AI App'}</h4>
               <p className="text-[11px] text-slate-500 leading-tight">
@@ -139,7 +139,7 @@ const PwaPrompt: React.FC<PwaPromptProps> = ({ lang, needRefresh = false, onUpda
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 space-y-4 animate-scaleIn mb-safe">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2">
-                <img src="/pwa-192x192.png" alt="App Icon" className="w-8 h-8 rounded-lg" />
+                <img src={`${import.meta.env.BASE_URL}pwa-192x192.png`} alt="App Icon" className="w-8 h-8 rounded-lg" />
                 <h3 className="text-sm font-bold text-slate-900">{lang === 'zh' ? 'iOS 安裝至主畫面' : 'Install on iOS'}</h3>
               </div>
               <button
