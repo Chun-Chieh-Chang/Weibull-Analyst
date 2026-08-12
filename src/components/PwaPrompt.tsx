@@ -101,9 +101,9 @@ const PwaPrompt: React.FC<PwaPromptProps> = ({ lang, needRefresh = false, onUpda
         </div>
       )}
 
-      {/* 2. PWA Install Bottom Floating Banner */}
+      {/* 2. PWA Install Top Floating Banner */}
       {showInstallBanner && !needRefresh && (
-        <div className="fixed bottom-24 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 animate-slideUp bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 flex items-center justify-between">
+        <div className="fixed top-16 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 animate-slideUp bg-white border border-slate-200 rounded-2xl shadow-2xl p-3.5 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img src="/pwa-192x192.png" alt="App Icon" className="w-11 h-11 rounded-xl shadow-sm border border-slate-100 shrink-0" />
             <div>

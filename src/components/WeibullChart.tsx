@@ -850,22 +850,22 @@ drag=null;});})();
     return (
         <div className="w-full flex flex-col h-full relative transition-colors duration-300" style={{ backgroundColor: 'var(--bg-surface)' }}>
             {/* Integrated Toolbar */}
-            <div className="flex items-center justify-between px-6 py-4 z-20 transition-colors duration-200" style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-surface)' }}>
-                <div className="flex items-center space-x-8">
-                    <h3 className="text-lg font-bold tracking-tight shrink-0" style={{ color: 'var(--text-primary)' }}>
-                        {chartType === 'PROBABILITY' ? 'Probability Plot' : (chartType === 'RELIABILITY' ? 'Reliability Curve' : 'Probability Density')}
+            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3.5 z-20 gap-2 transition-colors duration-200" style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-surface)' }}>
+                <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-6">
+                    <h3 className="text-sm sm:text-lg font-bold tracking-tight shrink-0" style={{ color: 'var(--text-primary)' }}>
+                        {chartType === 'PROBABILITY' ? (lang === 'zh' ? '機率圖' : 'Probability Plot') : (chartType === 'RELIABILITY' ? (lang === 'zh' ? '可靠度曲線' : 'Reliability Curve') : (lang === 'zh' ? '機率密度' : 'Probability Density'))}
                     </h3>
 
-                    <div className="flex p-1 rounded-lg border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
+                    <div className="flex p-0.5 sm:p-1 rounded-lg border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
                         {[
-                            { id: 'PROBABILITY', label: 'Probability' },
-                            { id: 'RELIABILITY', label: 'Reliability' },
+                            { id: 'PROBABILITY', label: lang === 'zh' ? '機率' : 'Prob' },
+                            { id: 'RELIABILITY', label: lang === 'zh' ? '可靠度' : 'Rel' },
                             { id: 'PDF', label: 'PDF' }
                         ].map(type => (
                             <button
                                 key={type.id}
                                 onClick={() => setChartType(type.id as ChartType)}
-                                className={`px-4 py-1.5 text-sm font-bold rounded-md transition-all ${chartType === type.id
+                                className={`px-2.5 sm:px-4 py-1 text-xs sm:text-sm font-bold rounded-md transition-all cursor-pointer min-h-[36px] sm:min-h-0 ${chartType === type.id
                                     ? 'shadow-sm'
                                     : ''
                                     }`}
@@ -877,25 +877,27 @@ drag=null;});})();
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-4">
-                    <div className="flex items-center rounded-lg p-1 border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
+                <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4 pt-1 sm:pt-0 border-t sm:border-t-0" style={{ borderColor: 'var(--border)' }}>
+                    <div className="flex items-center rounded-lg p-0.5 border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
                         <button
                             onClick={() => setInteractionMode('ZOOM')}
-                            className={`p-1.5 rounded-md transition-all ${interactionMode === 'ZOOM' ? 'shadow-sm' : ''}`}
+                            className={`p-1.5 rounded-md transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center ${interactionMode === 'ZOOM' ? 'shadow-sm' : ''}`}
                             style={interactionMode === 'ZOOM' ? { backgroundColor: 'var(--bg-surface)', color: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
+                            title="Zoom Mode"
                         >
                             <MagnifyingGlassPlusIcon className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => setInteractionMode('PAN')}
-                            className={`p-1.5 rounded-md transition-all ${interactionMode === 'PAN' ? 'shadow-sm' : ''}`}
+                            className={`p-1.5 rounded-md transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center ${interactionMode === 'PAN' ? 'shadow-sm' : ''}`}
                             style={interactionMode === 'PAN' ? { backgroundColor: 'var(--bg-surface)', color: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
+                            title="Pan Mode"
                         >
                             <HandRaisedIcon className="w-4 h-4" />
                         </button>
                     </div>
 
-                    <div className="flex items-center space-x-1 text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
+                    <div className="hidden sm:flex items-center space-x-1 text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
                         <ArrowPathIcon className="w-3.5 h-3.5" />
                         <span>Interactive Plotly</span>
                     </div>
@@ -903,28 +905,31 @@ drag=null;});})();
                     <button
                         onClick={generateHTMLReport}
                         disabled={effectiveGroups.filter(g => g.result !== null).length === 0}
-                        className="flex items-center space-x-1.5 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        style={{ color: 'var(--accent)' }}
+                        className="flex items-center space-x-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm active:scale-95"
+                        style={{ color: 'var(--accent)', borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)', backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)' }}
                         title={lang === 'zh' ? '生成 HTML 報告' : 'Generate HTML Report'}
                     >
-                        <DocumentTextIcon className="w-3.5 h-3.5" />
-                        <span>Report</span>
+                        <DocumentTextIcon className="w-4 h-4" />
+                        <span>{lang === 'zh' ? '導出報告' : 'Report'}</span>
                     </button>
                 </div>
             </div>
 
-            <div ref={plotRef} className="flex-1 w-full relative transition-colors duration-200 overflow-hidden">
+            <div ref={plotRef} className="flex-1 w-full relative transition-colors duration-200 overflow-hidden flex items-center justify-center p-1 sm:p-2">
                 <CustomLegend />
                 <Plot
                     data={plotData}
-                    layout={plotLayout}
+                    layout={{
+                        ...plotLayout,
+                        margin: { l: 50, r: 25, t: 30, b: 50 },
+                    }}
                     config={{
                         responsive: true,
                         displayModeBar: 'hover',
                         displaylogo: false,
                         modeBarButtonsToRemove: ['select2d', 'lasso2d']
                     }}
-                    style={{ width: '100%', height: '100%' }}
+                    style={{ width: '100%', height: '100%', maxHeight: 'calc(100vh - 170px)' }}
                     onClick={(data) => {
                         if (data.points && data.points.length > 0) {
                             setModalData({ time: data.points[0].x as number });

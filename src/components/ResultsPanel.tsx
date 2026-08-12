@@ -251,7 +251,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                 {isDualMode ? t('results.table.comparative', lang) : t('results.table.single', lang)}
                             </span>
                         </div>
-                        <div className="overflow-auto flex-1">
+                        <div className="overflow-auto flex-1 pb-28 lg:pb-6">
                             <table className="w-full text-sm text-left">
                                 <thead className="font-bold sticky top-0 z-10" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
                                     <tr>
@@ -307,7 +307,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                 )}
 
                 {activeTab === 'INSIGHTS' && (
-                    <div className="h-full overflow-y-auto p-4 space-y-6">
+                    <div className="h-full overflow-y-auto p-4 space-y-6 pb-28 lg:pb-6">
                         {!isMultiple && validGroups[0]?.result ? (
                             <div className="space-y-3">
                                 <MetricCard label={t('results.metrics.shape', lang)} value={validGroups[0].result.beta.toFixed(3)} subtext={getFailureModeLabel(validGroups[0].result.beta)} colorClass="text-indigo-600" />

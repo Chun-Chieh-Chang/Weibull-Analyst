@@ -12,9 +12,10 @@ Upgraded Weibull AI Analyst into a full-featured Progressive Web App (PWA). Conf
 ### Changes
 - **Workbox Runtime Caching**: Added `runtimeCaching` rule in `vite.config.ts` for `https://cdn.plot.ly/*` with CacheFirst strategy, ensuring offline HTML report generation and interactive chart rendering without network connection.
 - **PWA Manifest & Meta Tags Calibration**: Aligned `theme_color` and `background_color` to `#F9FAFB` in `vite.config.ts`; added comprehensive PWA meta tags (`apple-mobile-web-app-capable`, `mobile-web-app-capable`, `viewport-fit=cover`) in `index.html`.
-- **PWA Prompt & SW Toast Component (`PwaPrompt.tsx`)**: Created `PwaPrompt.tsx` supporting Chrome `beforeinstallprompt` event, iOS Safari "Add to Home Screen" step-by-step modal guide, and Service Worker version update toast notifications.
+- **PWA Prompt & SW Toast Component (`PwaPrompt.tsx`)**: Created `PwaPrompt.tsx` supporting Chrome `beforeinstallprompt` event, iOS Safari "Add to Home Screen" step-by-step modal guide, and Service Worker version update toast notifications. Repositioned install prompt to `top-16` to avoid bottom button overlaps.
 - **Offline Network Indicator**: Integrated `navigator.onLine` state detection in `App.tsx` header with real-time offline status badge ("離線模式 Offline").
-- **Mobile Touch UX & Safe Area Adaptation**: Added `pb-safe`, `mb-safe`, and safe-area-inset CSS variables in `index.css`. Upgraded mobile bottom tab switcher and action buttons to meet >=44x44px touch target guidelines.
+- **Mobile Touch UX & Layout Calibration**: Added `pb-safe`, `mb-safe`, and safe-area-inset CSS variables in `index.css`. Upgraded mobile bottom tab switcher and action buttons to meet >=44x44px touch target guidelines.
+- **Chart Aspect Ratio & Button Obscuration Fixes**: Refactored `WeibullChart.tsx` toolbar into responsive wrap layout; restricted plot max-height (`max-h-[calc(100vh-170px)]`) to prevent vertical stretch; added bottom padding (`pb-28 lg:pb-6`) in `ResultsPanel.tsx` so all bottom actions remain 100% visible.
 - **Build Verification**: Verified `npm run build` passes cleanly with Workbox service worker (`dist/sw.js`) and manifest generated.
 
 ---
