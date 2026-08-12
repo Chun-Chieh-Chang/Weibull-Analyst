@@ -3,6 +3,7 @@ import { WeibullResult, AnalysisMode, Language, GroupDataset } from './types';
 import { parseInputData, calculateWeibull } from './services/weibullMath';
 import WeibullChart from './components/WeibullChart';
 import ResultsPanel from './components/ResultsPanel';
+import PwaPrompt from './components/PwaPrompt';
 import { t } from './utils/locales';
 import {
     ChartPieIcon,
@@ -13,7 +14,8 @@ import {
     InformationCircleIcon,
     PencilSquareIcon,
     PlusIcon,
-    XMarkIcon
+    XMarkIcon,
+    WifiIcon
 } from '@heroicons/react/24/outline';
 
 const PALETTE = ['#4f46e5', '#e11d48', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
@@ -30,6 +32,34 @@ const App: React.FC = () => {
 
     const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
     const [activeMobileView, setActiveMobileView] = useState<'INPUT' | 'CHART' | 'RESULTS'>('CHART');
+    
+    // PWA & Network State
+    const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+    const [needRefresh, setNeedRefresh] = useState<boolean>(false);
+    const [updateSWFn, setUpdateSWFn] = useState<(() => void) | null>(null);
+
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        const handlePwaRefresh = (e: Event) => {
+            const customEvt = e as CustomEvent;
+            setNeedRefresh(true);
+            if (typeof customEvt.detail === 'function') {
+                setUpdateSWFn(() => customEvt.detail);
+            }
+        };
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        window.addEventListener('pwa-need-refresh', handlePwaRefresh);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+            window.removeEventListener('pwa-need-refresh', handlePwaRefresh);
+        };
+    }, []);
 
     const handleCalculate = () => {
         setGroups(prev => prev.map((g, idx) => {
@@ -161,6 +191,14 @@ const App: React.FC = () => {
         URL.revokeObjectURL(url);
     };
 
+    const handleUpdateServiceWorker = () => {
+        if (updateSWFn) {
+            updateSWFn();
+        } else {
+            window.location.reload();
+        }
+    };
+
     const displayedGroups = mode === 'SINGLE' ? groups.slice(0, 1) : groups;
 
     return (
@@ -176,14 +214,21 @@ const App: React.FC = () => {
                             {t('app.title', lang)} <span className="text-indigo-600">{t('app.titleSuffix', lang)}</span>
                         </h1>
                     </div>
+
+                    {!isOnline && (
+                        <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 text-[11px] font-bold">
+                            <WifiIcon className="w-3.5 h-3.5" />
+                            <span>{lang === 'zh' ? '離線模式' : 'Offline'}</span>
+                        </div>
+                    )}
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end px-4 py-2 sm:py-0 space-x-2 sm:space-x-3 sm:bg-transparent border-t sm:border-t-0" style={{ backgroundColor: 'var(--bg-sidebar)', borderColor: 'var(--border)' }}>
+                <div className="flex items-center justify-between sm:justify-end px-2 py-1.5 sm:py-0 space-x-2 sm:space-x-3 sm:bg-transparent border-t sm:border-t-0" style={{ backgroundColor: 'var(--bg-sidebar)', borderColor: 'var(--border)' }}>
                     {/* Mode Toggle */}
                     <div className="flex p-0.5 rounded-lg border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
                         <button
                             onClick={() => setMode('SINGLE')}
-                            className={`px-3 sm:px-4 py-1.5 text-[10px] sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all ${mode === 'SINGLE'
+                            className={`px-3 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all min-h-[40px] sm:min-h-0 ${mode === 'SINGLE'
                                 ? 'bg-indigo-600 text-white shadow-sm'
                                 : 'hover:opacity-70 transition-opacity'
                                 }`}
@@ -193,7 +238,7 @@ const App: React.FC = () => {
                         </button>
                         <button
                             onClick={() => setMode('MULTI')}
-                            className={`px-3 sm:px-4 py-1.5 text-[10px] sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all ${mode === 'MULTI'
+                            className={`px-3 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all min-h-[40px] sm:min-h-0 ${mode === 'MULTI'
                                 ? 'bg-indigo-600 text-white shadow-sm'
                                 : 'hover:opacity-70 transition-opacity'
                                 }`}
@@ -209,7 +254,7 @@ const App: React.FC = () => {
                     <div className="flex items-center space-x-1">
                         <button
                             onClick={toggleLanguage}
-                            className="p-2 rounded-md transition-colors flex items-center space-x-1 hover:opacity-70"
+                            className="p-2 rounded-md transition-colors flex items-center space-x-1 hover:opacity-70 min-h-[44px] min-w-[44px] justify-center"
                             style={{ color: 'var(--text-secondary)' }}
                             title="Switch Language"
                         >
@@ -221,11 +266,11 @@ const App: React.FC = () => {
                     <div className="h-4 w-px" style={{ backgroundColor: 'var(--border)' }}></div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center">
-                        <button onClick={handleExport} className="p-2 sm:p-1.5 rounded-md transition-colors hover:opacity-70" style={{ color: 'var(--text-secondary)' }} title={t('app.export', lang)}>
+                    <div className="flex items-center space-x-1">
+                        <button onClick={handleExport} className="p-2 sm:p-1.5 rounded-md transition-colors hover:opacity-70 min-h-[44px] min-w-[44px] flex items-center justify-center" style={{ color: 'var(--text-secondary)' }} title={t('app.export', lang)}>
                             <ArrowDownTrayIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={handleClear} className="p-2 sm:p-1.5 rounded-md transition-colors hover:opacity-70" style={{ color: 'var(--text-secondary)' }} title={t('app.clear', lang)}>
+                        <button onClick={handleClear} className="p-2 sm:p-1.5 rounded-md transition-colors hover:opacity-70 min-h-[44px] min-w-[44px] flex items-center justify-center" style={{ color: 'var(--text-secondary)' }} title={t('app.clear', lang)}>
                             <TrashIcon className="w-5 h-5" />
                         </button>
                     </div>
@@ -236,16 +281,16 @@ const App: React.FC = () => {
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
 
                 {/* Mobile Tab Switcher */}
-                <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 backdrop-blur-xl rounded-full shadow-2xl flex items-center p-1 z-50 transition-all duration-300" style={{ backgroundColor: 'color-mix(in srgb, var(--bg-surface) 90%, transparent)', border: '1px solid var(--border)' }}>
+                <div className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 backdrop-blur-xl rounded-full shadow-2xl flex items-center p-1.5 z-50 transition-all duration-300 mb-safe" style={{ backgroundColor: 'color-mix(in srgb, var(--bg-surface) 92%, transparent)', border: '1px solid var(--border)' }}>
                     {[
-                        { id: 'INPUT', label: 'Data', icon: ArrowPathIcon },
-                        { id: 'CHART', label: 'Plot', icon: ChartPieIcon },
-                        { id: 'RESULTS', label: 'Analysis', icon: InformationCircleIcon }
+                        { id: 'INPUT', label: lang === 'zh' ? '數據' : 'Data', icon: ArrowPathIcon },
+                        { id: 'CHART', label: lang === 'zh' ? '圖表' : 'Plot', icon: ChartPieIcon },
+                        { id: 'RESULTS', label: lang === 'zh' ? '分析' : 'Analysis', icon: InformationCircleIcon }
                     ].map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveMobileView(tab.id as any)}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeMobileView === tab.id
+                            className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all min-h-[44px] cursor-pointer ${activeMobileView === tab.id
                                 ? 'text-white shadow-lg'
                                 : ''
                                 }`}
@@ -259,11 +304,11 @@ const App: React.FC = () => {
 
                 {/* LEFT COLUMN: Data Input Sidebar */}
                 <aside className={`${activeMobileView === 'INPUT' ? 'flex' : 'hidden'} lg:flex w-full lg:w-80 flex-none flex-col z-20 transition-all duration-300`} style={{ backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid var(--border)' }}>
-                    <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 pb-24 lg:pb-4">
+                    <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 pb-28 lg:pb-4">
                         {/* Format Info Box */}
                         <div className="p-3 rounded-lg flex gap-3 animate-fadeIn" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                             <InformationCircleIcon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} />
-                            <p className="text-[11px] sm:text-xs leading-normal font-medium" style={{ color: 'color-mix(in srgb, var(--accent) 70%, var(--text-primary))' }}>
+                            <p className="text-xs leading-normal font-medium" style={{ color: 'color-mix(in srgb, var(--accent) 70%, var(--text-primary))' }}>
                                 {t('input.formatInfo', lang)}
                             </p>
                         </div>
@@ -291,7 +336,7 @@ const App: React.FC = () => {
                                         {mode === 'MULTI' && groups.length > 2 && (
                                             <button
                                                 onClick={() => handleRemoveGroup(g.id)}
-                                                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                                className="p-2 text-gray-400 hover:text-red-500 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                                                 title={lang === 'zh' ? '刪除此數據組' : 'Delete Dataset'}
                                             >
                                                 <XMarkIcon className="w-4 h-4" />
@@ -300,7 +345,7 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
                                 <textarea
-                                    className="flex-1 w-full p-2.5 rounded-lg resize-none font-mono text-[13px] outline-none transition-all leading-relaxed"
+                                    className="flex-1 w-full p-2.5 rounded-lg resize-none font-mono text-xs sm:text-[13px] outline-none transition-all leading-relaxed"
                                     style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                                     placeholder={t('input.placeholderSingle', lang)}
                                     value={g.text}
@@ -315,7 +360,7 @@ const App: React.FC = () => {
                         {mode === 'MULTI' && (
                             <button
                                 onClick={handleAddGroup}
-                                className="w-full py-2.5 px-4 rounded-xl border-2 border-dashed flex items-center justify-center space-x-2 font-bold text-xs uppercase tracking-wider transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                                className="w-full py-3 px-4 rounded-xl border-2 border-dashed flex items-center justify-center space-x-2 font-bold text-xs uppercase tracking-wider transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer min-h-[44px]"
                                 style={{
                                     borderColor: 'color-mix(in srgb, var(--accent) 50%, transparent)',
                                     color: 'var(--accent)',
@@ -328,10 +373,10 @@ const App: React.FC = () => {
                         )}
                     </div>
 
-                    <div className="p-4 sticky bottom-0 z-30 pb-24 lg:pb-4" style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-sidebar)' }}>
+                    <div className="p-4 sticky bottom-0 z-30 pb-28 lg:pb-4" style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-sidebar)' }}>
                         <button
                             onClick={handleCalculate}
-                            className="w-full text-white text-sm font-bold py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 active:scale-[0.97] shadow-lg cursor-pointer"
+                            className="w-full text-white text-sm font-bold py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 active:scale-[0.97] shadow-lg cursor-pointer min-h-[44px]"
                             style={{ backgroundColor: 'var(--accent)' }}
                         >
                             <ArrowPathIcon className="w-5 h-5" />
@@ -342,7 +387,7 @@ const App: React.FC = () => {
 
                 {/* CENTER COLUMN: Chart */}
                 <main className={`${activeMobileView === 'CHART' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 relative transition-all duration-300`} style={{ backgroundColor: 'var(--bg-surface)' }}>
-                    <div className="absolute inset-0 flex flex-col pt-4 lg:pt-0">
+                    <div className="absolute inset-0 flex flex-col pt-2 lg:pt-0 pb-20 lg:pb-0">
                         <WeibullChart
                             groups={displayedGroups}
                             lang={lang}
@@ -366,6 +411,9 @@ const App: React.FC = () => {
                 </aside>
 
             </div>
+
+            {/* PWA Prompts & Notifications */}
+            <PwaPrompt lang={lang} needRefresh={needRefresh} onUpdateServiceWorker={handleUpdateServiceWorker} />
 
             {/* Footer */}
             <div className="hidden sm:block flex-none px-4 py-1.5 text-[9px] text-right uppercase tracking-widest font-bold" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>

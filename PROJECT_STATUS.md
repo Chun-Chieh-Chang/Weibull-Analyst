@@ -1,10 +1,10 @@
 # Project Status — Weibull AI Analyst
 
-> **Last Updated**: 2026-07-28 (Phase 9)
+> **Last Updated**: 2026-08-12 (Phase 10)
 
 ---
 
-## Overall Progress: Feature Complete & Multi-Group Capable ✅
+## Overall Progress: Feature Complete, PWA & Mobile UX Optimized ✅
 
 ---
 
@@ -15,7 +15,7 @@
 |------|--------|-------|
 | Directory structure | ✅ Done | MECE-compliant: `src/components/`, `services/`, `utils/` |
 | TypeScript config | ✅ Done | Strict mode, alias `@/` |
-| Vite config | ✅ Done | PWA, Tailwind v4, path aliases |
+| Vite config | ✅ Done | PWA with Workbox Plotly CDN runtime caching, Tailwind v4, path aliases |
 
 ### 2. Frontend Development
 | Item | Status | Notes |
@@ -23,9 +23,10 @@
 | React 19 + TypeScript | ✅ Done | Functional components, hooks |
 | Tailwind CSS v4 | ✅ Done | `@tailwindcss/vite` plugin |
 | Light-only theme | ✅ Done | SkillsBuilder Color Master Palette; dark mode fully removed |
-| Responsive layout | ✅ Done | Desktop 3-column, mobile bottom tab bar |
+| Responsive layout | ✅ Done | Desktop 3-column, mobile bottom tab bar (safe area inset & >=44px touch targets) |
 | Chart (plotly.js) | ✅ Done | Probability, Reliability, PDF with R=0.95 markers, Eta η markers at R(η)=e⁻¹≈0.368, refined formula annotation box typography |
 | Report generation | ✅ Done | Self-contained HTML with 3 interactive Plotly CDN charts, dynamic N-dataset metrics/summary/raw data |
+| Mobile PWA UX | ✅ Done | Chrome/Android install prompt, iOS Safari guide modal, SW update toast, offline indicator |
 
 ### 3. Business Logic
 | Item | Status | Notes |
@@ -47,13 +48,13 @@
 |------|--------|-------|
 | GitHub Actions | ✅ Done | Build + deploy to Pages |
 | Automatic build | ✅ Done | Triggered on push to `main` |
-| PWA support | ✅ Done | Auto-update Service Worker, offline support |
+| PWA support | ✅ Done | Auto-update Service Worker, Workbox Plotly CDN offline cache, PwaPrompt component |
 
 ### 6. Documentation
 | Item | Status | Notes |
 |------|--------|-------|
 | README.md | ✅ Updated | Feature overview, tech stack, usage |
-| DEVELOPMENT_LOG.md | ✅ Updated | Full development timeline (9 phases) |
+| DEVELOPMENT_LOG.md | ✅ Updated | Full development timeline (10 phases) |
 | PROJECT_STATUS.md | ✅ Updated | This file |
 | handover_resume_guide.md | ✅ Created | Project restoration baseline |
 

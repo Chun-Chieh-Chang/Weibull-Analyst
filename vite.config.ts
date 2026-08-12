@@ -16,9 +16,12 @@ export default defineConfig({
         name: 'Weibull AI Analyst',
         short_name: 'Weibull',
         description: 'Modern web-based Weibull Analysis tool for reliability engineering',
-        theme_color: '#0F172A',
-        background_color: '#0F172A',
+        theme_color: '#F9FAFB',
+        background_color: '#F9FAFB',
         display: 'standalone',
+        orientation: 'any',
+        start_url: '/Weibull-Analyst/',
+        scope: '/Weibull-Analyst/',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -41,6 +44,22 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/cdn\.plot\.ly\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'plotly-cdn-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
       },
 
     }),
