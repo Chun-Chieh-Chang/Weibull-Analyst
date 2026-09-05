@@ -11,7 +11,7 @@
 - **韋伯分析引擎** — 支援單組與雙組比較分析、暫緩數據 (Suspension)、中位秩回歸
 - **三種圖表** — 機率圖 (Probability Plot)、可靠度曲線 (Reliability)、機率密度函數 (PDF)
 - **AI 分析** — 支援 Gemini / OpenAI / Agnes / Claude，可選模型，雙語分析 (繁中 + English)
-- **HTML 報告** — 一鍵導出含三張互動式圖表、指標卡、AI 分析與原始數據的完整報告（Plotly CDN），離線自動降級為 PNG 備援
+- **HTML 報告** — 一鍵導出含 2×2 圖表網格（機率/可靠度/PDF + 參數指標卡 β·η·MTTF·R²·R(MTTF)·B₁₀）、AI 分析與原始數據的完整報告（Plotly CDN 3.3.1 釘版本），離線自動降級為 PNG 備援
 - **Light-only 主題** — 遵循 SkillsBuilder Color Master Palette
 - **雙語言** — 繁體中文 / English
 
@@ -30,6 +30,7 @@
 npm install
 npm run dev     # http://localhost:3000
 npm run build   # → dist/
+npx tsc --noEmit # 型別檢查(基準 0 errors)
 ```
 
 ## 使用說明

@@ -92,7 +92,9 @@ const translations: Record<Language, any> = {
         awaiting: 'Awaiting Calculation',
         awaitingSub: 'Enter failure data in the left panel to begin analysis.',
         prompt: 'Generate insights based on your calculated parameters.',
-      }
+      },
+      pointStats: 'Point Statistics',
+      atTime: 'At Time t =',
     },
     guide: {
       title: 'Weibull Theory Guide',
@@ -177,7 +179,9 @@ const translations: Record<Language, any> = {
         awaiting: '等待計算',
         awaitingSub: '請在左側輸入失效數據以開始分析。',
         prompt: '根據計算出的參數生成深入見解。',
-      }
+      },
+      pointStats: '數據點統計',
+      atTime: '時間 t =',
     },
     guide: {
       title: '韋伯分析理論指南',

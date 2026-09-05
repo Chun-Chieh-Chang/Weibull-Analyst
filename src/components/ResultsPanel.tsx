@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { WeibullResult, Language, AIProvider, GeminiModel, OpenAIModel, ClaudeModel } from '../types';
+import { WeibullResult, Language, GroupDataset, AIProvider, GeminiModel, OpenAIModel, ClaudeModel } from '../types';
 import { analyzeWithAI } from '../services/aiService';
 import TheoreticalGuide from './TheoreticalGuide';
 import { t } from '../utils/locales';

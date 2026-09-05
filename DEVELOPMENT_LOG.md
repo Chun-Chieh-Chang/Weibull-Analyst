@@ -1,8 +1,27 @@
-# Development Log — Weibull AI Analyst
+﻿# Development Log — Weibull AI Analyst
 
 > **Systematic development history based on MECE principles**
 
 ---
+
+## 📅 2026-09-05 — Phase 12: Typography System, Report Layout Redesign & Codebase Hygiene
+
+### Overview
+Established a single-source typography scale (FS constant) for the interactive chart, redesigned the HTML report layout from a dense 3-up chart grid to a 2×2 grid with a Key Parameters tile, and performed a full codebase hygiene pass (zero-regression policy).
+
+### Changes
+- **Typography SSOT**: Added `FS` scale constant in `WeibullChart.tsx` (base 13 / tick 11.5 / axis 13.5 / annotation 20 / label 13 / stat 11.5). All chart fonts now reference it; removed conflicting JSX margin override and dead `StatRow` component.
+- **Report Layout Redesign**: Chart grid changed 3-up → 2×2 (each chart ~600px, matching the 2× PNG capture 1:1); third chart paired with a new "04 Key Parameters" tile (β/η/MTTF/R²/R(MTTF)/B₁₀ per group, color-coded); removed duplicate metrics from Summary boxes; numbered captions (01–04); print-safe `break-inside:avoid`.
+- **Report Engineering**: CDN pinned to `plotly-3.3.1.min.js` (async); capture upgraded to 1200×800 @2×; all plotly `font.weight` specs removed (unsupported in plotly.js v3); report fully localized via `lang` (`zh-TW`/`en-US` date, headers, table columns, failure modes).
+- **Information Density**: Interactive footer stat strip (β/η/MTTF/R²/N per visible group); probability-plot hover now shows Median Rank % + fitted F(t)%; report summary includes sample context line and B₁₀/R(MTTF).
+- **Codebase Hygiene (this phase)**: Fixed real 404 — `index.html` icons now use `%BASE_URL%` (dist rewrite verified); added `src/vite-env.d.ts` (`vite-plugin-pwa/client` types); imported `GroupDataset` into `ResultsPanel.tsx` (pre-existing tsc error); removed contradictory zero-usage `@` alias (vite.config.ts + tsconfig.json); normalized `WeibullChart.tsx` line endings to CRLF; i18n hole closed (point-statistics modal now localized).
+- **Tooling note**: Verification baseline is `npm run build` (vite only) + `npx tsc --noEmit`; both exit 0 after this phase.
+
+### Verification
+- `npm run build` → exit 0; `npx tsc --noEmit` → 0 errors (baseline was 3).
+- Icon 404 fixed: `dist/index.html` carries `/Weibull-Analyst/` prefix on favicon & apple-touch-icon.
+- Known asset caveat: the four `public/*.png` icons are byte-identical 1024×1024 JPEG-data files named .png (PWA manifest declares 192/512). Browsers render them via content sniffing; regeneration deferred to avoid visual regression.
+
 
 ## 📅 2026-08-12 — Phase 11: AI Engine Upgrade & PWA Base URL Path Fix
 

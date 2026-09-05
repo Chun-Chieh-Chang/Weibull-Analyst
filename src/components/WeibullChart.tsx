@@ -69,6 +69,18 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const bgColor = '#ffffff';
     const plotBgColor = 'transparent';
 
+    // Typography scale — single source of truth for the interactive chart.
+    // Principle: content >= chrome. Axis titles and annotations carry the
+    // analysis conclusion, so they rank at/above base; ticks/badges are chrome.
+    const FS = {
+        base: 13,         // plotly default (hover text, fallback)
+        tick: 11.5,       // axis tick labels
+        axis: 13.5,       // axis titles (units + meaning)
+        annotation: 20,   // formula box (the analysis conclusion)
+        label: 13,        // draggable overlay labels (R=0.95, eta markers)
+        stat: 11.5,       // footer stat strip
+    };
+
     const getFailureModeBadge = (beta: number) => {
         if (beta < 0.9) return "Infant";
         if (beta <= 1.1) return "Random";
@@ -213,8 +225,8 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     mode: 'markers',
                     name: g.label,
                     marker: { color: bgColor, line: { color: g.color, width: 2 }, size: 8, symbol },
-                    hovertemplate: `<b>${g.label}</b><br>Time: %{x:.2f}<br>Unreliability: %{customdata:.2f}%<extra></extra>`,
-                    customdata: failPts.map(p => p.rank * 100)
+                    hovertemplate: `<b>${g.label}</b><br>${t('chart.tooltip.time', lang)}: %{x:.2f}<br>${t('chart.tooltip.medianRank', lang)}: %{customdata[0]:.2f}%<br>${lang === 'zh' ? '擬合不靠度 F(t)' : 'Fitted F(t)'}: %{customdata[1]:.2f}%<extra></extra>`,
+                    customdata: failPts.map(p => [p.rank * 100, calculateMetrics(p.time, r.beta, r.eta).cdf * 100])
                 });
             });
         } else {
@@ -283,23 +295,23 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         }
 
         return traces;
-    }, [chartType, effectiveGroups, bgColor]);
+    }, [chartType, effectiveGroups, bgColor, lang]);
 
     const plotLayout = useMemo(() => {
         const layout: any = {
             autosize: true,
             showlegend: false,
-            margin: { l: 60, r: 40, t: 60, b: 60 },
+            margin: { l: 64, r: 28, t: 44, b: 56 },
             paper_bgcolor: plotBgColor,
             plot_bgcolor: plotBgColor,
-            font: { family: 'Inter, sans-serif', size: 13, color: axisTextColor },
+            font: { family: 'Inter, sans-serif', size: FS.base, color: axisTextColor },
             hovermode: 'closest',
             dragmode: interactionMode === 'ZOOM' ? 'zoom' : 'pan',
             xaxis: {
-                title: { text: 'Time-to-Failure (t)', font: { size: 13, weight: 800 } },
+                title: { text: t('chart.time', lang), font: { size: FS.axis, color: axisTextColor } },
                 gridcolor: gridColor,
                 linecolor: axisColor,
-                tickfont: { color: axisTextColor, weight: 700 },
+                tickfont: { size: FS.tick, color: axisTextColor },
                 zeroline: false,
                 type: chartType === 'PROBABILITY' ? 'log' : 'linear',
                 rangemode: chartType === 'PROBABILITY' ? 'normal' : 'nonnegative'
@@ -307,19 +319,24 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             yaxis: {
                 gridcolor: gridColor,
                 linecolor: axisColor,
-                tickfont: { color: axisTextColor, weight: 700 },
+                tickfont: { size: FS.tick, color: axisTextColor },
                 zeroline: false,
                 rangemode: chartType === 'PROBABILITY' ? 'normal' : 'nonnegative'
             }
         };
 
         if (chartType === 'PROBABILITY') {
-            const probTicks = [0.1, 0.5, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
-            layout.yaxis.title = { text: 'Unreliability F(t) %', font: { size: 13, weight: 800 } };
+            // Curated tick set: the full 15-tick paper grid collides on short
+            // containers; the report keeps the full set on its larger canvas.
+            const probTicks = [0.1, 0.5, 1, 5, 10, 30, 50, 70, 90, 95, 99];
+            layout.yaxis.title = { text: t('chart.unreliability', lang), font: { size: FS.axis, color: axisTextColor } };
             layout.yaxis.ticktext = probTicks.map(p => p < 1 ? p.toFixed(1) + '%' : p + '%');
             layout.yaxis.tickvals = probTicks.map(p => Math.log(-Math.log(1 - p / 100)));
         } else {
-            layout.yaxis.title = { text: chartType === 'RELIABILITY' ? 'Reliability R(t)' : 'Probability Density f(t)', font: { size: 13, weight: 800 } };
+            layout.yaxis.title = {
+                text: chartType === 'RELIABILITY' ? t('chart.reliabilityAxis', lang) : t('chart.pdfAxis', lang),
+                font: { size: FS.axis, color: axisTextColor }
+            };
             if (chartType === 'RELIABILITY') layout.yaxis.range = [0, 1.05];
 
             const validGroups = effectiveGroups.filter(g => g.result !== null);
@@ -361,14 +378,15 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             const formulaLines: string[] = [];
             effectiveGroups.forEach(g => {
                 if (!g.visible || !g.result) return;
-                formulaLines.push(`<span style="color:${g.color}; font-weight:600;">${g.label}:</span> <span style="color:${g.color}; font-size:95%;">R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
+                formulaLines.push(`<span style="color:${g.color};">${g.label}:</span> <span style="color:${g.color}">R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
             });
             if (formulaLines.length > 0) {
-                const fontSize = formulaLines.length > 2 ? 10.5 : 11;
+                const fontSize = formulaLines.length > 2 ? 16 : FS.annotation;
                 layout.annotations.push({
                     text: formulaLines.join('<br>'),
                     xref: 'paper', yref: 'paper',
                     x: 0.98, y: 0.98,
+                    xanchor: 'right', yanchor: 'top',
                     showarrow: false,
                     font: { size: fontSize, family: 'Inter, system-ui, sans-serif' },
                     align: 'left',
@@ -381,7 +399,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         }
 
         return layout;
-    }, [chartType, interactionMode, gridColor, axisColor, axisTextColor, plotBgColor, effectiveGroups]);
+    }, [chartType, interactionMode, gridColor, axisColor, axisTextColor, plotBgColor, effectiveGroups, lang]);
 
     const generateHTMLReport = async () => {
         const validGroups = effectiveGroups.filter(g => g.result !== null);
@@ -402,8 +420,8 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     traces.push({
                         x: failPts.map(p => p.time), y: failPts.map(p => weibullTrans(p.rank * 100)),
                         mode: 'markers', name: nm, marker: { color: bg, line: { color: clr, width: 3 }, size: 11, symbol: 'circle' },
-                        hovertemplate: `<b>${nm}</b><br>Time: %{x:.2f}<br>Unreliability: %{customdata:.2f}%<extra></extra>`,
-                        customdata: failPts.map(p => p.rank * 100)
+                        hovertemplate: `<b>${nm}</b><br>${t('chart.tooltip.time', lang)}: %{x:.2f}<br>${t('chart.tooltip.medianRank', lang)}: %{customdata[0]:.2f}%<br>${lang === 'zh' ? '擬合不靠度 F(t)' : 'Fitted F(t)'}: %{customdata[1]:.2f}%<extra></extra>`,
+                        customdata: failPts.map(p => [p.rank * 100, calculateMetrics(p.time, r.beta, r.eta).cdf * 100])
                     });
                 } else {
                     const pts = r.dataPoints;
@@ -433,7 +451,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                         x: [t_095], y: [0.95], mode: 'markers+text',
                         marker: { color: bg, size: 16, line: { color: clr, width: 2.5 }, symbol: 'circle' },
                         text: `R=0.95 @ t=${t_095.toFixed(2)}`,
-                        textfont: { color: clr, size: 22, weight: 'bold' }, textposition: 'middle right',
+                        textfont: { color: clr, size: 13 }, textposition: 'middle right',
                         showlegend: false, hoverinfo: 'none'
                     });
                 };
@@ -446,7 +464,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                         x: [r.eta], y: [rEta], mode: 'markers+text',
                         marker: { color: bg, size: 16, line: { color: clr, width: 2.5 }, symbol: 'diamond' },
                         text: `R(η)=e⁻¹≈${rEta.toFixed(4)} @ η=${r.eta.toFixed(2)}`,
-                        textfont: { color: clr, size: 22, weight: 'bold' }, textposition: 'middle right',
+                        textfont: { color: clr, size: 13 }, textposition: 'middle right',
                         showlegend: false, hoverinfo: 'none'
                     });
                 };
@@ -455,19 +473,19 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 
             const layout: any = {
                 paper_bgcolor: bg, plot_bgcolor: 'transparent',
-                font: { family: 'Inter, sans-serif', size: 21, color: axisC },
-                hovermode: 'closest', margin: { l: 80, r: 55, t: 65, b: 80 }, showlegend: false,
-                xaxis: { title: { text: 'Time-to-Failure (t)', font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative' },
-                yaxis: { title: { font: { size: 22, weight: 700 } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 18, weight: 700 }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative' }
+                font: { family: 'Inter, sans-serif', size: 14, color: axisC },
+                hovermode: 'closest', margin: { l: 84, r: 48, t: 60, b: 72 }, showlegend: false,
+                xaxis: { title: { text: t('chart.time', lang), font: { size: 14, color: axisC } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 13, color: axisC }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative' },
+                yaxis: { title: { font: { size: 14, color: axisC } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 13, color: axisC }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative' }
             };
             if (type === 'PROBABILITY') {
                 const probTicks = [0.1, 0.5, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
-                layout.yaxis.title = { text: 'Unreliability F(t) %' };
+                layout.yaxis.title = { text: t('chart.unreliability', lang), font: { size: 14, color: axisC } };
                 layout.yaxis.ticktext = probTicks.map(p => p < 1 ? p.toFixed(1) + '%' : p + '%');
                 layout.yaxis.tickvals = probTicks.map(p => Math.log(-Math.log(1 - p / 100)));
                 layout.xaxis.type = 'log';
             } else if (type === 'RELIABILITY') {
-                layout.yaxis.title = { text: 'Reliability R(t)' };
+                layout.yaxis.title = { text: t('chart.reliabilityAxis', lang), font: { size: 14, color: axisC } };
                 layout.yaxis.range = [0, 1.05];
                 const maxTimes = validGroups.map(g => g.result ? g.result.dataPoints[g.result.dataPoints.length - 1].time : 0);
                 const maxT = Math.max(...maxTimes, 1) * 1.3;
@@ -487,30 +505,10 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     );
                 };
                 validGroups.forEach(g => { if (g.result) addRefLine(g.result, g.color); });
-
-                const formulaLines: string[] = [];
-                validGroups.forEach(g => {
-                    if (g.result) {
-                        formulaLines.push(`<span style="color:${g.color}; font-weight:600;">${g.label}:</span> <span style="color:${g.color};">R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
-                    }
-                });
-                if (formulaLines.length > 0) {
-                    const fontSize = formulaLines.length > 2 ? 16 : 18;
-                    layout.annotations.push({
-                        text: formulaLines.join('<br>'),
-                        xref: 'paper', yref: 'paper',
-                        x: 0.98, y: 0.98,
-                        showarrow: false,
-                        font: { size: fontSize, color: axisC },
-                        align: 'left',
-                        bgcolor: 'rgba(255,255,255,0.90)',
-                        bordercolor: 'rgba(0,0,0,0.2)',
-                        borderwidth: 1,
-                        borderpad: 6
-                    });
-                }
+                // No formula annotation inside the PNG: the draggable HTML overlay
+                // labels already carry the per-group R=0.95 / η values (avoids duplication).
             } else {
-                layout.yaxis.title = { text: 'Probability Density f(t)' };
+                layout.yaxis.title = { text: t('chart.pdfAxis', lang), font: { size: 14, color: axisC } };
                 const maxTimes = validGroups.map(g => g.result ? g.result.dataPoints[g.result.dataPoints.length - 1].time : 0);
                 const maxT = Math.max(...maxTimes, 1) * 1.3;
                 if (maxT > 0) layout.xaxis.range = [0, maxT];
@@ -527,11 +525,11 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             }
 
             const div = document.createElement('div');
-            div.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:900px;height:600px';
+            div.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1200px;height:800px';
             document.body.appendChild(div);
             await Plotly.newPlot(div, traces, layout, { responsive: false });
             await new Promise(r => setTimeout(r, 200));
-            const url = await Plotly.toImage(div, { format: 'png', width: 900, height: 600, scale: 2 });
+            const url = await Plotly.toImage(div, { format: 'png', width: 1200, height: 800, scale: 2 });
 
             let result: {url: string, traces?: any[], layout?: any, labels?: any[]} = { url };
 
@@ -566,27 +564,15 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     });
                     resultData.labels = labels;
                 }
-                // Scale down fonts for interactive chart
+                // Re-target fonts/margins of the embedded interactive charts to the
+                // in-app design scale (source capture is already weight-free).
                 const interactiveLayout = JSON.parse(JSON.stringify(layout));
-                interactiveLayout.font = { ...layout.font, size: 13, family: 'Inter, sans-serif' };
-                // Ensure both axes title fonts exist and have consistent size (no weight)
-                if (interactiveLayout.xaxis?.title) {
-                    if (!interactiveLayout.xaxis.title.font) interactiveLayout.xaxis.title.font = {};
-                    interactiveLayout.xaxis.title.font.size = 13;
-                    delete interactiveLayout.xaxis.title.font.weight;
-                }
-                if (interactiveLayout.xaxis?.tickfont) interactiveLayout.xaxis.tickfont.size = 12;
-                if (interactiveLayout.yaxis?.title) {
-                    if (!interactiveLayout.yaxis.title.font) interactiveLayout.yaxis.title.font = {};
-                    interactiveLayout.yaxis.title.font.size = 13;
-                }
-                if (interactiveLayout.yaxis?.tickfont) interactiveLayout.yaxis.tickfont.size = 12;
-                if (interactiveLayout.annotations) {
-                    interactiveLayout.annotations = interactiveLayout.annotations.map((a: any) => {
-                        if (!a.font) return a;
-                        return { ...a, font: { ...a.font, size: typeof a.font.size === 'number' ? Math.round(a.font.size * 0.6) : 16 } };
-                    });
-                }
+                interactiveLayout.margin = { l: 56, r: 24, t: 40, b: 52 };
+                interactiveLayout.font = { ...interactiveLayout.font, size: FS.base };
+                if (interactiveLayout.xaxis?.title?.font) interactiveLayout.xaxis.title.font.size = 13.5;
+                if (interactiveLayout.xaxis?.tickfont) interactiveLayout.xaxis.tickfont.size = 11.5;
+                if (interactiveLayout.yaxis?.title?.font) interactiveLayout.yaxis.title.font.size = 13.5;
+                if (interactiveLayout.yaxis?.tickfont) interactiveLayout.yaxis.tickfont.size = 11.5;
                 resultData.layout = interactiveLayout;
                 result = resultData;
             }
@@ -603,13 +589,15 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         ]);
         const probImg = probResult.url, relImg = relResult.url, pdfImg = pdfResult.url;
         const chartTypes = [
-            { id: 'PROBABILITY', label: '機率圖 Probability Plot', img: probImg, data: JSON.stringify(probResult.traces || []), layout: JSON.stringify(probResult.layout || {}) },
-            { id: 'RELIABILITY', label: '可靠度曲線 Reliability Curve', img: relImg, data: JSON.stringify(relResult.traces || []), layout: JSON.stringify(relResult.layout || {}), labels: relResult.labels || [] },
-            { id: 'PDF', label: '機率密度 Probability Density', img: pdfImg, data: JSON.stringify(pdfResult.traces || []), layout: JSON.stringify(pdfResult.layout || {}) }
+            { id: 'PROBABILITY', label: lang === 'zh' ? '機率圖' : 'Probability Plot', img: probImg, data: JSON.stringify(probResult.traces || []), layout: JSON.stringify(probResult.layout || {}) },
+            { id: 'RELIABILITY', label: lang === 'zh' ? '可靠度曲線' : 'Reliability Curve', img: relImg, data: JSON.stringify(relResult.traces || []), layout: JSON.stringify(relResult.layout || {}), labels: relResult.labels || [] },
+            { id: 'PDF', label: lang === 'zh' ? '機率密度' : 'Probability Density', img: pdfImg, data: JSON.stringify(pdfResult.traces || []), layout: JSON.stringify(pdfResult.layout || {}) }
         ];
 
-        const ts = new Date().toLocaleString('zh-TW', { dateStyle: 'long', timeStyle: 'short' });
-        const getFM = (b: number) => b < 0.9 ? 'Infant Mortality 早夭期' : b <= 1.1 ? 'Random Failures 隨機失效' : 'Wear-out 耗損期';
+        const ts = new Date().toLocaleString(lang === 'zh' ? 'zh-TW' : 'en-US', { dateStyle: 'long', timeStyle: 'short' });
+        const getFM = (b: number) => b < 0.9 ? t('results.metrics.infant', lang) : b <= 1.1 ? t('results.metrics.random', lang) : t('results.metrics.wearout', lang);
+        // B10 life: time at which unreliability reaches 10% (uses only beta/eta)
+        const b10 = (r: WeibullResult) => r.eta * Math.pow(-Math.log(0.9), 1 / r.beta);
 
         const buildDataRows = (r: WeibullResult) => {
             return r.dataPoints.map(p => {
@@ -622,60 +610,68 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 
         const colorizeText = (txt: string) =>
             txt.replace(/([\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+)/g, '<span class="zh">$1</span>');
-        const modeLabel = isDualMode ? '多組比較 Comparative' : '單組分析 Single';
+        const modeLabel = isDualMode ? (lang === 'zh' ? '多組比較' : 'Comparative') : (lang === 'zh' ? '單組分析' : 'Single');
 
         const reportHTML = `<!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="${lang === 'zh' ? 'zh-TW' : 'en'}">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Weibull Analysis Report 韋伯分析報告</title>
+<title>${lang === 'zh' ? '韋伯分析報告' : 'Weibull Analysis Report'}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#111827;background:#F9FAFB;padding:16px 20px;max-width:100%;margin:0;-webkit-font-smoothing:antialiased}
-h1{font-size:24px;font-weight:800;color:#111827;margin-bottom:2px;letter-spacing:-.02em}
-.sub{color:#6B7280;font-size:13px;margin-bottom:20px}
-.section{margin-bottom:24px}
-.section h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6B7280;border-bottom:1.5px solid #E5E7EB;padding-bottom:5px;margin-bottom:12px}
-.chart-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.chart-cell{display:flex;flex-direction:column}
-.chart-caption{font-size:13px;font-weight:600;color:#6B7280;margin-top:6px;letter-spacing:.02em;text-align:center}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#111827;background:#F9FAFB;padding:24px 28px;max-width:1280px;margin:0 auto;font-size:13.5px;-webkit-font-smoothing:antialiased}
+h1{font-size:26px;font-weight:800;color:#111827;margin-bottom:4px;letter-spacing:-.02em}
+.sub{color:#6B7280;font-size:13.5px;margin-bottom:24px}
+.section{margin-bottom:28px}
+.section h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6B7280;border-bottom:1.5px solid #E5E7EB;padding-bottom:6px;margin-bottom:14px}
+.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 20px}
+.chart-cell{display:flex;flex-direction:column;min-width:0}
+.chart-caption{font-size:13.5px;font-weight:700;color:#111827;margin-top:10px;letter-spacing:.01em;text-align:left}
+.chart-caption .num{color:#3B82F6;margin-right:8px;font-family:'SF Mono',Consolas,monospace}
 .chart-img{width:100%;border-radius:8px;border:1px solid #E5E7EB;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#F3F4F6;color:#6B7280;font-weight:700;text-align:left;padding:6px 10px;border-bottom:1.5px solid #D1D5DB;white-space:nowrap;text-transform:uppercase;letter-spacing:.03em;font-size:13px}
-td{padding:5px 10px;border-bottom:1px solid #E5E7EB;color:#374151}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:#F3F4F6;color:#6B7280;font-weight:700;text-align:left;padding:6px 10px;border-bottom:1.5px solid #D1D5DB;white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;font-size:11px}
+td{padding:6px 10px;border-bottom:1px solid #E5E7EB;color:#374151}
 tbody tr:nth-child(even){background:#F9FAFB}
-.mono{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-size:13px;font-weight:600;color:#6B7280}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.metric-card{background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:10px 12px}
-.metric-card .label{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#6B7280;margin-bottom:3px;line-height:1.3}
-.metric-card .value{font-size:20px;font-weight:800;color:#111827;font-family:'SF Mono',Consolas,'Noto Sans TC',monospace;letter-spacing:-.02em}
-.metric-card .sub{font-size:13px;font-weight:500;color:#6B7280;margin-top:3px;line-height:1.3}
-.ai-box{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;color:#374151}
+.mono{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-size:12.5px;font-weight:600;color:#6B7280}
+.metrics-tile{background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:18px 20px;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.metrics-tile .grp{display:flex;flex-direction:column;gap:10px}
+.metrics-tile .grp + .grp{border-top:1px solid #E5E7EB;padding-top:12px}
+.metrics-tile .grp-h{font-size:13px;font-weight:700;color:#111827;display:flex;align-items:center;gap:7px}
+.metrics-tile .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.metrics-tile .stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+.metrics-tile .stat .k{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;margin-bottom:2px}
+.metrics-tile .stat .k sub{font-size:8px}
+.metrics-tile .stat .v{font-size:20px;font-weight:800;font-family:'SF Mono',Consolas,'Noto Sans TC',monospace;color:#111827;letter-spacing:-.02em}
+.metrics-tile .grp-sub{font-size:11.5px;color:#6B7280}
+.ai-box{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:16px 18px;font-size:13.5px;line-height:1.75;color:#374151}
 .ai-box .zh{color:#1D4ED8;font-weight:500}
-.summary-box{background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.7}
-.summary-box strong{color:#111827;font-size:14px}
+.summary-box{background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.8}
+.summary-box strong{color:#111827;font-size:13.5px}
 .summary-box .val{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-weight:700;color:#3B82F6}
-.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.summary-box .ctx{font-size:12px;color:#6B7280}
+.summary-box sub{font-size:9px}
+.dual-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .table-wrap{overflow-x:auto;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden}
 .table-wrap table{border:none}
-.section-footer{margin-top:20px;padding-top:16px;border-top:1.5px solid #E5E7EB;font-size:13px;color:#9CA3AF;text-align:center;letter-spacing:.02em}
+.section-footer{margin-top:24px;padding-top:16px;border-top:1.5px solid #E5E7EB;font-size:12px;color:#9CA3AF;text-align:center;letter-spacing:.02em}
 /* dense horizontal layout: rows merge into columns where possible */
-.info-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.info-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
 .info-row .left,.info-row .right{min-width:0}
 .info-row.full{grid-template-columns:1fr}
-.chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid #E5E7EB;min-height:420px;background:#fff}
+.chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid #E5E7EB;aspect-ratio:3/2;min-height:300px;background:#fff;break-inside:avoid}
 .chart-wrap .plot{position:absolute;inset:0;pointer-events:auto;border-radius:8px;overflow:hidden}
 .chart-wrap .fallback{width:100%;display:block}
-.chart-label{position:absolute;padding:2px 6px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap;cursor:grab;user-select:none;z-index:10;pointer-events:auto;background:rgba(255,255,255,0.92);box-shadow:0 1px 3px rgba(0,0,0,0.12)}
-@media(max-width:900px){body{padding:12px}.chart-grid{grid-template-columns:1fr;gap:10px}.metrics{grid-template-columns:repeat(2,1fr)}.info-row{grid-template-columns:1fr}.dual-grid{grid-template-columns:1fr;gap:10px}}
+.chart-label{position:absolute;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap;cursor:grab;user-select:none;z-index:10;pointer-events:auto;background:rgba(255,255,255,0.92);box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+@media(max-width:900px){body{padding:16px}.chart-grid{grid-template-columns:1fr;gap:12px}.info-row{grid-template-columns:1fr}.dual-grid{grid-template-columns:1fr;gap:10px}}
 </style>
 </head>
 <body>
-<h1>韋伯分析報告 &bull; Weibull Analysis Report</h1>
-<p class="sub">產生時間 Generated: ${ts} &nbsp;|&nbsp; 分析模式 Mode: ${modeLabel}</p>
+<h1>${lang === 'zh' ? '韋伯分析報告' : 'Weibull Analysis Report'}</h1>
+<p class="sub">${lang === 'zh' ? '產生時間' : 'Generated'}: ${ts} &nbsp;|&nbsp; ${lang === 'zh' ? '分析模式' : 'Mode'}: ${modeLabel}</p>
 
-<!-- Charts: 3-up dense -->
-<div class="section"><h2>圖表 &bull; Charts</h2><div class="chart-grid">
-${chartTypes.map(c => {
+<!-- Charts: 2x2 grid — PDF row pairs with the key-parameters tile (no empty cell) -->
+<div class="section"><h2>${lang === 'zh' ? '圖表' : 'Charts'}</h2><div class="chart-grid">
+${chartTypes.map((c, idx) => {
   const id = c.id.toLowerCase();
   const labels = c.labels || [];
   return `<div class="chart-cell">
@@ -684,55 +680,67 @@ ${chartTypes.map(c => {
 <div id="${id}-chart" class="plot"></div>
 ${labels.map((l: any) => `<div id="ol-${l.id}" class="chart-label" style="color:${l.color};border:1px solid ${l.color}">${l.text}</div>`).join('')}
 </div>
-<span class="chart-caption">${c.label}${c.labels ? '  <span style="color:#6B7280;font-weight:400">(拖拽標籤 Drag labels)</span>' : ''}</span>
+<span class="chart-caption"><span class="num">${String(idx + 1).padStart(2, '0')}</span>${c.label}${c.labels ? ` <span style="color:#6B7280;font-weight:400">(${lang === 'zh' ? '拖拽標籤' : 'Drag labels'})</span>` : ''}</span>
 </div>`;
 }).join('')}
-</div></div>
-
-<!-- Two-column: left (Metrics + Summary) | right (Raw Data) -->
-<div class="info-row">
-<div class="left">
-<div class="section"><h2>指標 &bull; Metrics</h2>
-<div class="metrics" style="display:grid; grid-template-columns: repeat(${Math.min(validGroups.length, 2)}, 1fr); gap:8px;">
+<div class="chart-cell">
+<div class="metrics-tile">
 ${validGroups.map(g => {
     if (!g.result) return '';
-    return `<div class="metric-card" style="border-left: 4px solid ${g.color}">
-        <div class="label" style="color:${g.color}">${g.label}</div>
-        <div class="value">β = ${g.result.beta.toFixed(4)}</div>
-        <div class="sub">η = ${g.result.eta.toFixed(2)} | MTTF = ${g.result.mttf.toFixed(2)}</div>
-        <div class="sub" style="font-size:11px; margin-top:2px;">R² = ${g.result.rSquared.toFixed(4)} (${getFM(g.result.beta)})</div>
+    const fCount = g.result.dataPoints.filter(p => p.status === 'F').length;
+    const sCount = g.result.dataPoints.filter(p => p.status === 'S').length;
+    const rMttf = calculateMetrics(g.result.mttf, g.result.beta, g.result.eta).reliability;
+    return `<div class="grp">
+        <div class="grp-h"><span class="dot" style="background:${g.color}"></span><span style="color:${g.color}">${g.label}</span></div>
+        <div class="stat-grid">
+            <div class="stat"><div class="k">${lang === 'zh' ? '形狀 β' : 'Shape β'}</div><div class="v" style="color:${g.color}">${g.result.beta.toFixed(3)}</div></div>
+            <div class="stat"><div class="k">${lang === 'zh' ? '尺度 η' : 'Scale η'}</div><div class="v" style="color:${g.color}">${g.result.eta.toFixed(2)}</div></div>
+            <div class="stat"><div class="k">MTTF</div><div class="v">${g.result.mttf.toFixed(1)}</div></div>
+            <div class="stat"><div class="k">R²</div><div class="v">${g.result.rSquared.toFixed(4)}</div></div>
+            <div class="stat"><div class="k">R(MTTF)</div><div class="v">${rMttf.toFixed(3)}</div></div>
+            <div class="stat"><div class="k">B<sub>10</sub></div><div class="v">${b10(g.result).toFixed(1)}</div></div>
+        </div>
+        <div class="grp-sub">${lang === 'zh' ? '失效模式' : 'Failure Mode'}: ${getFM(g.result.beta)} · N=${g.result.dataPoints.length} (F${fCount}/S${sCount})</div>
     </div>`;
 }).join('')}
 </div>
+<span class="chart-caption"><span class="num">04</span>${lang === 'zh' ? '參數指標' : 'Key Parameters'}</span>
 </div>
-<div class="section"><h2>摘要 &bull; Summary</h2>
-<div class="dual-grid" style="display:grid; grid-template-columns: repeat(${Math.min(validGroups.length, 2)}, 1fr); gap:10px;">
+</div></div>
+
+<!-- Two-column: left (Summary) | right (Raw Data) -->
+<div class="info-row">
+<div class="left">
+<div class="section"><h2>${lang === 'zh' ? '摘要' : 'Summary'}</h2>
+<div class="dual-grid" style="display:grid; grid-template-columns: repeat(${Math.min(validGroups.length, 2)}, minmax(0,1fr)); gap:10px;">
 ${validGroups.map(g => {
     if (!g.result) return '';
     const fCount = g.result.dataPoints.filter(p => p.status === 'F').length;
     const sCount = g.result.dataPoints.filter(p => p.status === 'S').length;
     return `<div class="summary-box" style="border-top:3px solid ${g.color}">
         <strong style="color:${g.color}">${g.label}</strong><br>
-        N: <span class="val">${g.result.dataPoints.length}</span> &nbsp; 
-        F: <span class="val">${fCount}</span> &nbsp; 
+        N: <span class="val">${g.result.dataPoints.length}</span> &nbsp;
+        F: <span class="val">${fCount}</span> &nbsp;
         S: <span class="val">${sCount}</span><br>
-        失效模式: <span class="val">${getFM(g.result.beta)}</span> &nbsp; 
-        R²: <span class="val">${g.result.rSquared.toFixed(4)}</span>
+        <span class="ctx">${lang === 'zh'
+            ? `${fCount} 筆失效 / ${sCount} 筆暫緩，共 ${g.result.dataPoints.length} 筆`
+            : `${fCount} failures / ${sCount} suspensions of ${g.result.dataPoints.length} total`}</span><br>
+        ${lang === 'zh' ? '失效模式' : 'Failure Mode'}: <span class="val">${getFM(g.result.beta)}</span>
     </div>`;
 }).join('')}
 </div>
 </div>
 </div>
 <div class="right">
-<div class="section"><h2>原始數據 &bull; Raw Data</h2>
-<div class="dual-grid" style="display:grid; grid-template-columns: repeat(${Math.min(validGroups.length, 2)}, 1fr); gap:10px;">
+<div class="section"><h2>${lang === 'zh' ? '原始數據' : 'Raw Data'}</h2>
+<div class="dual-grid" style="display:grid; grid-template-columns: repeat(${Math.min(validGroups.length, 2)}, minmax(0,1fr)); gap:10px;">
 ${validGroups.map(g => {
     if (!g.result) return '';
     return `<div>
         <h4 style="color:${g.color}; margin-bottom:4px; font-size:13px; font-weight:700;">${g.label}</h4>
         <div class="table-wrap">
             <table>
-                <thead><tr><th>#</th><th>Time</th><th>St</th><th>Median Rank</th><th>ln(t)</th><th>Y</th></tr></thead>
+                <thead><tr><th>#</th><th>${t('results.table.time', lang)}</th><th>${t('results.table.status', lang)}</th><th>${t('chart.tooltip.medianRank', lang)}</th><th>ln(t)</th><th>Y</th></tr></thead>
                 <tbody>${buildDataRows(g.result)}</tbody>
             </table>
         </div>
@@ -743,10 +751,10 @@ ${validGroups.map(g => {
 </div>
 </div>
 
-${aiAnalysis ? `<div class="section"><h2>AI 分析 &bull; AI Analysis</h2><div class="ai-box">${colorizeText(aiAnalysis.replace(/\n/g, '<br>'))}</div></div>` : ''}
+${aiAnalysis ? `<div class="section"><h2>${lang === 'zh' ? 'AI 分析' : 'AI Analysis'}</h2><div class="ai-box">${colorizeText(aiAnalysis.replace(/\n/g, '<br>'))}</div></div>` : ''}
 
 <div class="section-footer">
-本報告由凱益品管部產出 This Report is Generated by Mouldex QC Department
+${lang === 'zh' ? '本報告由凱益品管部產出' : 'This Report is Generated by Mouldex QC Department'}
 </div>
 ${chartTypes.map(c => `<script type="application/json" id="${c.id.toLowerCase()}-data">${c.data}</script>
 <script type="application/json" id="${c.id.toLowerCase()}-layout">${c.layout}</script>
@@ -769,9 +777,9 @@ el.dataset.baseX=bx;el.dataset.baseY=by;el.style.left=(bx+o.x)+'px';el.style.top
 function showFallback(id){var fb=document.getElementById(id+'-fallback');if(fb)fb.style.display='block';var cont=document.getElementById(id+'-chart');if(cont)cont.style.display='none';}
 function initChart(id){var fb=document.getElementById(id+'-fallback');if(fb)fb.style.display='none';
 var cont=document.getElementById(id+'-chart');if(!cont||!charts[id])return;
-Plotly.newPlot(cont,charts[id].data,charts[id].layout,{responsive:true,displayModeBar:false,displaylogo:false}).then(function(g){gds[id]=g;posAll();g.on('plotly_relayout',posAll);}).catch(function(){showFallback(id);});}
+Plotly.newPlot(cont,charts[id].data,Object.assign({},charts[id].layout,{autosize:true}),{responsive:true,displayModeBar:false,displaylogo:false}).then(function(g){gds[id]=g;posAll();g.on('plotly_relayout',posAll);}).catch(function(){showFallback(id);});}
 function tryInit(){if(typeof Plotly==='undefined')return;ids.forEach(initChart);}
-if(typeof Plotly!=='undefined'){tryInit()}else{var s=document.createElement('script');s.src='https://cdn.plot.ly/plotly-latest.min.js';s.onload=tryInit;s.onerror=function(){ids.forEach(showFallback);};document.head.appendChild(s);}
+if(typeof Plotly!=='undefined'){tryInit()}else{var s=document.createElement('script');s.src='https://cdn.plot.ly/plotly-3.3.1.min.js';s.async=true;s.onload=tryInit;s.onerror=function(){ids.forEach(showFallback);};document.head.appendChild(s);}
 document.addEventListener('mousedown',function(e){var el=e.target.closest('.chart-label');if(!el)return;e.preventDefault();var id=el.id.replace('ol-','');
 drag={id:id,startMX:e.clientX,startMY:e.clientY,baseLeft:parseFloat(el.style.left)||0,baseTop:parseFloat(el.style.top)||0};});
 document.addEventListener('mousemove',function(e){if(!drag)return;var el=document.getElementById('ol-'+drag.id);if(!el)return;
@@ -823,16 +831,6 @@ drag=null;});})();
                     </button>
                 );
             })}
-        </div>
-    );
-
-    const StatRow = ({ label, val1, val2, unit = '' }: { label: string, val1: number, val2?: number, unit?: string }) => (
-        <div className="flex justify-between items-center py-2" style={{ borderBottom: '1px solid var(--border)' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
-            <div className="flex space-x-6">
-                <span className="font-mono font-semibold" style={{ color: 'var(--accent)' }}>{val1.toExponential(3)} {unit}</span>
-                {val2 !== undefined && <span className="font-mono font-semibold" style={{ color: 'var(--error)' }}>{val2.toExponential(3)} {unit}</span>}
-            </div>
         </div>
     );
 
@@ -919,10 +917,7 @@ drag=null;});})();
                 <CustomLegend />
                 <Plot
                     data={plotData}
-                    layout={{
-                        ...plotLayout,
-                        margin: { l: 50, r: 25, t: 30, b: 50 },
-                    }}
+                    layout={plotLayout}
                     config={{
                         responsive: true,
                         displayModeBar: 'hover',
@@ -939,7 +934,7 @@ drag=null;});})();
                 />
                 {chartType === 'RELIABILITY' && labelDefs.map(def => (
                     <div key={def.id} id={def.id}
-                        className="absolute px-2 py-0.5 rounded text-[10.5px] font-medium whitespace-nowrap cursor-grab select-none"
+                        className="absolute px-2 py-0.5 rounded font-semibold whitespace-nowrap cursor-grab select-none"
                         style={{
                             color: def.color,
                             backgroundColor: 'rgba(255,255,255,0.94)',
@@ -947,7 +942,7 @@ drag=null;});})();
                             boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                             pointerEvents: 'auto',
                             zIndex: 10,
-                            fontSize: 10.5,
+                            fontSize: FS.label,
                             left: 0, top: 0
                         }}
                         onMouseDown={(e) => handleLabelMouseDown(e, def.id)}
@@ -957,8 +952,25 @@ drag=null;});})();
                 ))}
             </div>
 
-            <div className="flex-none px-4 py-1.5 text-[9px] text-right uppercase tracking-widest font-bold" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
-                Developed by Wesley Chang @ Mouldex, Jan-2026. All rights reserved.
+            <div className="flex-none px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1" style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-surface)' }}>
+                <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-5 gap-y-0.5 min-w-0">
+                    {effectiveGroups.filter(g => g.visible && g.result).map(g => {
+                        const r = g.result!;
+                        const fN = r.dataPoints.filter(p => p.status === 'F').length;
+                        const sN = r.dataPoints.filter(p => p.status === 'S').length;
+                        return (
+                            <span key={g.id} className="flex items-center gap-1.5 whitespace-nowrap" style={{ color: 'var(--text-secondary)', fontSize: FS.stat }}>
+                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: g.color }}></span>
+                                <span className="font-bold" style={{ color: g.color }}>{g.label}</span>
+                                <span className="font-mono">β={r.beta.toFixed(3)}</span>
+                                <span className="font-mono">η={r.eta.toFixed(2)}</span>
+                                <span className="font-mono">MTTF={r.mttf.toFixed(1)}</span>
+                                <span className="font-mono">R²={r.rSquared.toFixed(4)}</span>
+                                <span className="font-mono">N={r.dataPoints.length} (F{fN}/S{sN})</span>
+                            </span>
+                        );
+                    })}
+                </div>
             </div>
 
             {modalData && (
@@ -966,8 +978,8 @@ drag=null;});})();
                     <div className="absolute inset-0" onClick={() => setModalData(null)}></div>
                     <div className="relative rounded-xl shadow-2xl p-6 w-full max-w-lg animate-slideUp" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                         <button onClick={() => setModalData(null)} className="absolute top-4 right-4 p-1 rounded-full transition-colors" style={{ color: 'var(--text-secondary)' }}><XMarkIcon className="w-5 h-5" /></button>
-                        <h4 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Point Statistics</h4>
-                        <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>At Time t = <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{modalData.time.toFixed(2)}</span></p>
+                        <h4 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{t('results.pointStats', lang)}</h4>
+                        <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>{t('results.atTime', lang)} <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{modalData.time.toFixed(2)}</span></p>
 
                         <div className="space-y-4 overflow-x-auto">
                             <table className="w-full text-sm text-left">
