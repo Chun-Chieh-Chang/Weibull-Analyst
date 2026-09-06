@@ -1,7 +1,7 @@
 # Handover & Resume Guide — Weibull AI Analyst
 
 > **Restoration Baseline & Project Checkpoint**  
-> **Timestamp**: 2026-09-05 Phase 12  
+> **Timestamp**: 2026-09-06 Phase 13  
 
 ---
 
@@ -13,7 +13,7 @@ Weibull AI Analyst is a high-performance, progressive web application (PWA) for 
 ## 📐 Architecture & MECE Structure
 ```
 Weibull-Analyst/
-├── DEVELOPMENT_LOG.md       # Full development timeline (Phases 1–12)
+├── DEVELOPMENT_LOG.md       # Full development timeline (Phases 1–13)
 ├── PROJECT_STATUS.md        # Feature & module status tracker
 ├── README.md                # User & setup guide
 ├── handover_resume_guide.md # Restoration baseline & checkpoint (this file)
@@ -53,6 +53,7 @@ Weibull-Analyst/
 4. **Hygiene**: `src/vite-env.d.ts` added; `GroupDataset` imported in `ResultsPanel.tsx`; contradictory zero-usage `@` alias removed from vite.config.ts + tsconfig.json; `WeibullChart.tsx` line endings normalized to CRLF; point-stats modal localized.
 5. **Clean Build**: `npm run build` exit 0; `npx tsc --noEmit` 0 errors.
 6. **Known caveat**: the four `public/*.png` icons are byte-identical 1024×1024 JPEG-data files (manifest declares 192/512); regeneration deferred to avoid visual regression.
+7. **Phase 13 note**: interface colors follow the 8D-Creator token bridge (`--brand-*` SSOT; navy `#1E3A5F` primary, blue `#3B82F6` interactive); a mono-color print palette was evaluated and rolled back; locale keys are 51 with 0 unused.
 
 ---
 

@@ -5,15 +5,31 @@
 }
 
 :root {
-    --bg-app: #F9FAFB;
-    --bg-surface: #FFFFFF;
-    --bg-sidebar: #F8FAFC;
-    --text-primary: #111827;
-    --text-secondary: #6B7280;
-    --border: #E5E7EB;
-    --accent: #3B82F6;
-    --success: #10B981;
-    --error: #EF4444;
+    /* 8D-Creator brand palette (SSOT: brand-* constants) */
+    --brand-bg: #F9FAFB;
+    --brand-surface: #FFFFFF;
+    --brand-text: #111827;
+    --brand-muted: #6B7280;
+    --brand-border: #E5E7EB;
+    --brand-primary: #1E3A5F;
+    --brand-primary-light: #2C4A6E;
+    --brand-accent: #3B82F6;
+    --brand-success: #10B981;
+    --brand-warning: #F59E0B;
+    --brand-error: #EF4444;
+    /* Runtime tokens (light mode) — same contract as 8D-Creator */
+    --bg-app: var(--brand-bg);
+    --bg-surface: var(--brand-surface);
+    --bg-sidebar: var(--brand-bg);
+    --text-primary: var(--brand-text);
+    --text-secondary: var(--brand-muted);
+    --border: var(--brand-border);
+    --accent: var(--brand-primary);
+    --accent-hover: var(--brand-primary-light);
+    --accent-interactive: var(--brand-accent);
+    --success: var(--brand-success);
+    --warning: var(--brand-warning);
+    --error: var(--brand-error);
     --sat: env(safe-area-inset-top, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
@@ -39,9 +55,6 @@ body {
     padding-top: var(--sat);
 }
 
-.pb-safe {
-    padding-bottom: calc(var(--sab) + 1rem);
-}
 
 .mb-safe {
     margin-bottom: var(--sab);
@@ -64,12 +77,6 @@ body {
     from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
 }
-@keyframes bounceSoft {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-}
-
 .animate-fadeIn { animation: fadeIn 0.25s ease-out both; }
 .animate-slideUp { animation: slideUp 0.3s ease-out both; }
 .animate-scaleIn { animation: scaleIn 0.2s ease-out both; }
-.animate-bounceSoft { animation: bounceSoft 2s infinite ease-in-out; }

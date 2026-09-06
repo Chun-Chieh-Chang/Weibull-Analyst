@@ -2,6 +2,24 @@
 
 > **Systematic development history based on MECE principles**
 
+## 📅 2026-09-06 — Phase 13: Chart Axis Harmony & 8D-Creator Color System
+
+### Overview
+Improved probability-plot readability (anchored Y ticks, frame-safe fit line, balanced point/line weights, engineering X-axis ticks), adopted the 8D-Creator interface color logic (token bridge with navy primary), evaluated and rolled back a mono-color print palette after visual review, and ran a second hygiene pass.
+
+### Changes
+- **Chart harmony**: Y-axis tick anchors restored below 10% (0.5/1/2/5); fit-line extension clamped to F ∈ [2%, 98%] in `weibullMath.ts` (cosmetic only — β/η/MTTF/R² untouched); data points 8→10px, fit line 2→2.25px; report markers 11→12px.
+- **X-axis engineering ticks**: log-axis raw mantissa labels (2,3,4… meaning 200,300,400) replaced with explicit real values 50/100/200/300/400/500/1000 in both interactive chart and HTML report.
+- **8D-Creator color system**: `index.css` now carries a `--brand-*` SSOT constant layer bridged to runtime tokens (`--accent` → navy `#1E3A5F` light mode, `--accent-interactive` → blue `#3B82F6` for interactive elements, `--accent-hover`, `--warning`); all hardcoded indigo/blue classes removed across `App.tsx`, `ResultsPanel.tsx`, `PwaPrompt.tsx`, `WeibullChart.tsx` report CSS.
+- **mono-color evaluation & rollback**: applied a two-ink print palette (Cobalt/Terracotta on Cool-Gray substrate) per the mono-color skill; rolled back after review — the 8D-Creator look was kept. No mono-color tokens remain (verified by grep).
+- **Hygiene pass 2**: removed dead CSS (`bounceSoft` keyframes/class, `pb-safe`) and 14 dead locale keys (both en + zh, verified unreferenced including dynamic-leaf checks); locale SSOT now 51 keys, 0 unused.
+
+### Verification
+- `npm run build` → exit 0; `npx tsc --noEmit` → 0 errors.
+- Grep: zero residual mono-color hex values; zero unused locale keys; dead CSS classes absent.
+- X-tick fix and chart-harmony values verified present after rollback (surgical, zero feature regression).
+
+
 ---
 
 ## 📅 2026-09-05 — Phase 12: Typography System, Report Layout Redesign & Codebase Hygiene

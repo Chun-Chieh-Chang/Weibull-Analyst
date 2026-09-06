@@ -214,7 +214,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     y: r.linePoints.map(p => p.y),
                     mode: 'lines',
                     name: `${g.label} fit`,
-                    line: { color: g.color, width: 2 },
+                    line: { color: g.color, width: 2.25 },
                     hoverinfo: 'none'
                 });
                 // Points
@@ -224,7 +224,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     y: failPts.map(p => weibullTrans(p.rank * 100)),
                     mode: 'markers',
                     name: g.label,
-                    marker: { color: bgColor, line: { color: g.color, width: 2 }, size: 8, symbol },
+                    marker: { color: bgColor, line: { color: g.color, width: 2.25 }, size: 10, symbol },
                     hovertemplate: `<b>${g.label}</b><br>${t('chart.tooltip.time', lang)}: %{x:.2f}<br>${t('chart.tooltip.medianRank', lang)}: %{customdata[0]:.2f}%<br>${lang === 'zh' ? '擬合不靠度 F(t)' : 'Fitted F(t)'}: %{customdata[1]:.2f}%<extra></extra>`,
                     customdata: failPts.map(p => [p.rank * 100, calculateMetrics(p.time, r.beta, r.eta).cdf * 100])
                 });
@@ -265,7 +265,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     x: failureTimes,
                     y: failureY,
                     mode: 'markers',
-                    marker: { color: bgColor, line: { color: g.color, width: 2 }, size: 8, symbol },
+                    marker: { color: bgColor, line: { color: g.color, width: 2.25 }, size: 10, symbol },
                     name: `${g.label} Failures`,
                     hoverinfo: 'none'
                 });
@@ -314,7 +314,12 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 tickfont: { size: FS.tick, color: axisTextColor },
                 zeroline: false,
                 type: chartType === 'PROBABILITY' ? 'log' : 'linear',
-                rangemode: chartType === 'PROBABILITY' ? 'normal' : 'nonnegative'
+                rangemode: chartType === 'PROBABILITY' ? 'normal' : 'nonnegative',
+                // Engineering tick set: real values instead of raw decade mantissas (2,3,4...).
+                ...(chartType === 'PROBABILITY' ? {
+                    tickvals: [50, 100, 200, 300, 400, 500, 1000],
+                    ticktext: ['50', '100', '200', '300', '400', '500', '1000'],
+                } : {})
             },
             yaxis: {
                 gridcolor: gridColor,
@@ -326,9 +331,9 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         };
 
         if (chartType === 'PROBABILITY') {
-            // Curated tick set: the full 15-tick paper grid collides on short
-            // containers; the report keeps the full set on its larger canvas.
-            const probTicks = [0.1, 0.5, 1, 5, 10, 30, 50, 70, 90, 95, 99];
+            // Anchored tick set: 2/5 keep the sparse lower tail referenced (a lone
+            // sub-10% point otherwise floats outside the visual grid anchors).
+            const probTicks = [0.5, 1, 2, 5, 10, 30, 50, 70, 90, 95, 99];
             layout.yaxis.title = { text: t('chart.unreliability', lang), font: { size: FS.axis, color: axisTextColor } };
             layout.yaxis.ticktext = probTicks.map(p => p < 1 ? p.toFixed(1) + '%' : p + '%');
             layout.yaxis.tickvals = probTicks.map(p => Math.log(-Math.log(1 - p / 100)));
@@ -419,7 +424,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     const failPts = r.dataPoints.filter(p => p.status === 'F');
                     traces.push({
                         x: failPts.map(p => p.time), y: failPts.map(p => weibullTrans(p.rank * 100)),
-                        mode: 'markers', name: nm, marker: { color: bg, line: { color: clr, width: 3 }, size: 11, symbol: 'circle' },
+                        mode: 'markers', name: nm, marker: { color: bg, line: { color: clr, width: 3 }, size: 12, symbol: 'circle' },
                         hovertemplate: `<b>${nm}</b><br>${t('chart.tooltip.time', lang)}: %{x:.2f}<br>${t('chart.tooltip.medianRank', lang)}: %{customdata[0]:.2f}%<br>${lang === 'zh' ? '擬合不靠度 F(t)' : 'Fitted F(t)'}: %{customdata[1]:.2f}%<extra></extra>`,
                         customdata: failPts.map(p => [p.rank * 100, calculateMetrics(p.time, r.beta, r.eta).cdf * 100])
                     });
@@ -475,7 +480,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 paper_bgcolor: bg, plot_bgcolor: 'transparent',
                 font: { family: 'Inter, sans-serif', size: 14, color: axisC },
                 hovermode: 'closest', margin: { l: 84, r: 48, t: 60, b: 72 }, showlegend: false,
-                xaxis: { title: { text: t('chart.time', lang), font: { size: 14, color: axisC } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 13, color: axisC }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative' },
+                xaxis: { title: { text: t('chart.time', lang), font: { size: 14, color: axisC } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 13, color: axisC }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative', ...(type === 'PROBABILITY' ? { tickvals: [50, 100, 200, 300, 400, 500, 1000], ticktext: ['50', '100', '200', '300', '400', '500', '1000'] } : {}) },
                 yaxis: { title: { font: { size: 14, color: axisC } }, gridcolor: gridC, linecolor: axisC, zeroline: false, tickfont: { size: 13, color: axisC }, rangemode: type === 'PROBABILITY' ? 'normal' : 'nonnegative' }
             };
             if (type === 'PROBABILITY') {
@@ -626,7 +631,7 @@ h1{font-size:26px;font-weight:800;color:#111827;margin-bottom:4px;letter-spacing
 .chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 20px}
 .chart-cell{display:flex;flex-direction:column;min-width:0}
 .chart-caption{font-size:13.5px;font-weight:700;color:#111827;margin-top:10px;letter-spacing:.01em;text-align:left}
-.chart-caption .num{color:#3B82F6;margin-right:8px;font-family:'SF Mono',Consolas,monospace}
+.chart-caption .num{color:var(--accent-interactive);margin-right:8px;font-family:'SF Mono',Consolas,monospace}
 .chart-img{width:100%;border-radius:8px;border:1px solid #E5E7EB;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th{background:#F3F4F6;color:#6B7280;font-weight:700;text-align:left;padding:6px 10px;border-bottom:1.5px solid #D1D5DB;white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;font-size:11px}
@@ -647,7 +652,7 @@ tbody tr:nth-child(even){background:#F9FAFB}
 .ai-box .zh{color:#1D4ED8;font-weight:500}
 .summary-box{background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.8}
 .summary-box strong{color:#111827;font-size:13.5px}
-.summary-box .val{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-weight:700;color:#3B82F6}
+.summary-box .val{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-weight:700;color:var(--accent-interactive)}
 .summary-box .ctx{font-size:12px;color:#6B7280}
 .summary-box sub{font-size:9px}
 .dual-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}

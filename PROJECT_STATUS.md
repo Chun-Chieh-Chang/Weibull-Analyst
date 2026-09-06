@@ -1,10 +1,10 @@
 # Project Status — Weibull AI Analyst
 
-> **Last Updated**: 2026-09-05 (Phase 12)
+> **Last Updated**: 2026-09-06 (Phase 13)
 
 ---
 
-## Overall Progress: Feature Complete, Typography SSOT & Report 2×2 Redesign ✅
+## Overall Progress: Feature Complete, Chart Harmony & 8D-Creator Color SSOT ✅
 
 ---
 
@@ -24,7 +24,7 @@
 | Tailwind CSS v4 | ✅ Done | `@tailwindcss/vite` plugin |
 | Light-only theme | ✅ Done | SkillsBuilder Color Master Palette; dark mode fully removed |
 | Responsive layout | ✅ Done | Desktop 3-column, mobile bottom tab bar (safe area inset & >=44px touch targets) |
-| Chart (plotly.js) | ✅ Done | Probability, Reliability, PDF with R=0.95 markers, Eta η markers at R(η)=e⁻¹≈0.368; typography driven by single `FS` scale (annotation 20px, content ≥ chrome) |
+| Chart (plotly.js) | ✅ Done | Probability, Reliability, PDF with R=0.95 markers, Eta η markers; `FS` typography scale; engineering X ticks (50–1000); fit-line clamped to F 2–98% |
 | Report generation | ✅ Done | Self-contained HTML, 2×2 chart grid + "04 Key Parameters" tile (β/η/MTTF/R²/R(MTTF)/B₁₀), pinned plotly-3.3.1 CDN (async), 1200×800@2× captures, fully lang-aware (zh-TW/en-US) |
 | Mobile PWA UX | ✅ Done | Chrome/Android install prompt, iOS Safari guide modal, SW update toast, offline indicator |
 

@@ -117,7 +117,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
     const effectiveGroups = useMemo(() => {
         if (groups && groups.length > 0) return groups;
         const res: GroupDataset[] = [];
-        if (result1) res.push({ id: 'g1', label: label1 || (lang === 'zh' ? 'A 組' : 'Group A'), text: '', color: '#4f46e5', result: result1, visible: true });
+        if (result1) res.push({ id: 'g1', label: label1 || (lang === 'zh' ? 'A 組' : 'Group A'), text: '', color: '#1E3A5F', result: result1, visible: true });
         if (result2) res.push({ id: 'g2', label: label2 || (lang === 'zh' ? 'B 組' : 'Group B'), text: '', color: '#e11d48', result: result2, visible: true });
         return res;
     }, [groups, result1, result2, label1, label2, lang]);
@@ -310,9 +310,9 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                     <div className="h-full overflow-y-auto p-4 space-y-6 pb-28 lg:pb-6">
                         {!isMultiple && validGroups[0]?.result ? (
                             <div className="space-y-3">
-                                <MetricCard label={t('results.metrics.shape', lang)} value={validGroups[0].result.beta.toFixed(3)} subtext={getFailureModeLabel(validGroups[0].result.beta)} colorClass="text-indigo-600" />
+                                <MetricCard label={t('results.metrics.shape', lang)} value={validGroups[0].result.beta.toFixed(3)} subtext={getFailureModeLabel(validGroups[0].result.beta)} colorClass="text-[var(--accent-interactive)]" />
                                 <MetricCard label={t('results.metrics.scale', lang)} value={validGroups[0].result.eta.toFixed(2)} subtext={t('results.metrics.charLife', lang)} colorClass="text-emerald-600" />
-                                <MetricCard label={t('results.metrics.mttf', lang)} value={validGroups[0].result.mttf.toFixed(2)} subtext={t('results.metrics.mttfSub', lang)} colorClass="text-blue-600" />
+                                <MetricCard label={t('results.metrics.mttf', lang)} value={validGroups[0].result.mttf.toFixed(2)} subtext={t('results.metrics.mttfSub', lang)} colorClass="text-[var(--accent-interactive)]" />
                                 <MetricCard label={t('results.metrics.r2', lang)} value={validGroups[0].result.rSquared.toFixed(4)} subtext={validGroups[0].result.rSquared < 0.9 ? t('results.metrics.poorFit', lang) : t('results.metrics.excellentFit', lang)} colorClass={validGroups[0].result.rSquared < 0.9 ? "text-amber-600" : "text-purple-600"} warning={validGroups[0].result.rSquared < 0.9} tooltip={t('results.metrics.r2Tooltip', lang)} />
                             </div>
                         ) : (

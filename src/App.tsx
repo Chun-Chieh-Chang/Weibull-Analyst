@@ -18,7 +18,7 @@ import {
     WifiIcon
 } from '@heroicons/react/24/outline';
 
-const PALETTE = ['#4f46e5', '#e11d48', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
+const PALETTE = ['#1E3A5F', '#e11d48', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
 
 const App: React.FC = () => {
     const [mode, setMode] = useState<AnalysisMode>('SINGLE');
@@ -211,7 +211,7 @@ const App: React.FC = () => {
                             <ChartPieIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                         <h1 className="text-sm sm:text-lg font-bold tracking-tight whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
-                            {t('app.title', lang)} <span className="text-indigo-600">{t('app.titleSuffix', lang)}</span>
+                            {t('app.title', lang)} <span className="text-[var(--accent-interactive)]">{t('app.titleSuffix', lang)}</span>
                         </h1>
                     </div>
 
@@ -229,7 +229,7 @@ const App: React.FC = () => {
                         <button
                             onClick={() => setMode('SINGLE')}
                             className={`px-3 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all min-h-[40px] sm:min-h-0 ${mode === 'SINGLE'
-                                ? 'bg-indigo-600 text-white shadow-sm'
+                                ? 'bg-[var(--accent)] text-white shadow-sm hover:bg-[var(--accent-hover)]'
                                 : 'hover:opacity-70 transition-opacity'
                                 }`}
                             style={mode !== 'SINGLE' ? { color: 'var(--text-secondary)' } : {}}
@@ -239,7 +239,7 @@ const App: React.FC = () => {
                         <button
                             onClick={() => setMode('MULTI')}
                             className={`px-3 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all min-h-[40px] sm:min-h-0 ${mode === 'MULTI'
-                                ? 'bg-indigo-600 text-white shadow-sm'
+                                ? 'bg-[var(--accent)] text-white shadow-sm hover:bg-[var(--accent-hover)]'
                                 : 'hover:opacity-70 transition-opacity'
                                 }`}
                             style={mode !== 'MULTI' ? { color: 'var(--text-secondary)' } : {}}
@@ -325,7 +325,7 @@ const App: React.FC = () => {
                                             value={g.label}
                                             onChange={(e) => handleGroupFieldChange(g.id, 'label', e.target.value)}
                                             placeholder={lang === 'zh' ? '組別名稱' : 'Group Name'}
-                                            className="text-xs sm:text-sm font-bold uppercase tracking-wider bg-transparent outline-none border-b border-transparent hover:border-slate-300 focus:border-indigo-500 transition-colors w-full truncate"
+                                            className="text-xs sm:text-sm font-bold uppercase tracking-wider bg-transparent outline-none border-b border-transparent hover:border-[var(--border)] focus:border-[var(--accent-interactive)] transition-colors w-full truncate"
                                             style={{ color: g.color }}
                                         />
                                     </div>

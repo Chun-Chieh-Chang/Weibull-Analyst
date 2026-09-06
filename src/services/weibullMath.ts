@@ -143,12 +143,12 @@ export const calculateWeibull = (
   const rSquared = ssTot === 0 ? 0 : 1 - (ssRes / ssTot);
 
   // Regression Line Points (Extrapolate based on min/max time of ALL points)
-  const minX = dataPoints[0].x;
-  const maxX = dataPoints[n - 1].x;
-  const padding = (maxX - minX) * 0.1 || 0.1;
-
-  const lineStart = { x: minX - padding, y: slope * (minX - padding) + intercept };
-  const lineEnd = { x: maxX + padding, y: slope * (maxX + padding) + intercept };
+  // Extension clamped to F in [2%, 98%] so the fit line stops short of the
+  // plot frame corners on the Weibull probability grid (visual harmony).
+  // Purely cosmetic: beta/eta/MTTF/R2 are computed above and unaffected.
+  const yAtF = (p: number) => Math.log(-Math.log(1 - p));
+  const lineStart = { x: (yAtF(0.02) - intercept) / slope, y: yAtF(0.02) };
+  const lineEnd = { x: (yAtF(0.98) - intercept) / slope, y: yAtF(0.98) };
 
   return {
     beta,
