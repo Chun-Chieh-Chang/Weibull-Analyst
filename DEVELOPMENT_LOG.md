@@ -2,6 +2,36 @@
 
 > **Systematic development history based on MECE principles**
 
+## 📅 2026-09-23 — Phase 15: Fixed-Aspect Chart Frame (Square Weibull Grid)
+
+### Overview
+Replaced the fluid plot frame with a fixed golden-ratio aspect ratio (1.618 : 1, width > height) so the plot shape no longer drifts with the window size. Measured first: the old frame ranged from 0.74:1 (phone) to 1.34:1 (1920×1080), i.e. the same fit line appeared shallower or steeper depending on the monitor. A square frame was implemented and reviewed first, then changed to the golden ratio — which turned out to be the better match for the printed report as well: the *inner* plotting grid lands at ≈1.78:1 against the report's ≈1.75:1.
+
+### Changes
+- **Ratio SSOT**: `index.css` gains `--chart-aspect: 1.618` (golden, width > height) as a bare number for the desktop three-column layout, overridden to `0.8` (portrait 4:5) inside `@media (max-width: 1023px)` — a 1.618 landscape frame would only be ~237px tall on a 390px-wide phone. A comment records that `0.618` is the exact portrait golden ratio if that is ever preferred.
+- **Containment without JS**: new utilities `.chart-host { container-type: size }` + `.chart-frame { aspect-ratio: var(--chart-aspect); width: min(100%, calc(100cqh * var(--chart-aspect))); max-height: 100% }`. Keeping the token numeric lets it be multiplied by `100cqh`, so the frame always takes the largest width that still fits the host (container width, otherwise host height × ratio). No ResizeObserver, measurement effect or pixel math.
+- **`WeibullChart.tsx`**: plot host marked `chart-host`; Plotly wrapped in `.chart-frame` at `100% × 100%`; removed the now-redundant `maxHeight: 'calc(100vh - 170px)'` — measurement proved the surrounding chrome is 200px tall, so that cap could never bind.
+- **Overlays re-homed** inside `.chart-frame`: the draggable labels (their coordinates come from `xaxis._offset + xaxis.d2p(...)`, i.e. graph-div-relative) and the group legend (so it hugs the plot instead of floating in the new vertical gutter). This also removes the previous systematic 7px offset caused by the host's `p-2` padding (rem-based: 0.5rem × 14px root = 7px).
+- **Report deliberately unchanged**: report `.chart-wrap` stays `aspect-ratio: 3/2` (with 1200×800 PNG fallbacks) because the 2×2 chart grid plus the "04 Key Parameters" tile must still fit a single A4 page; a square grid would nearly double that section's height. A comment marks this as intentional.
+
+### Verification
+- `npm run build` → exit 0.
+- Playwright measurement of the rendered frame (`.js-plotly-plot`):
+
+| Viewport | Plot W×H | Ratio |
+| --- | --- | --- |
+| 1920×1080 | 1176×727 | 1.618 |
+| 1600×1000 | 856×529 | 1.618 |
+| 1440×900 | 696×430 | 1.619 |
+| 1366×768 | 622×384 | 1.620 |
+| 1280×800 | 536×331 | 1.619 |
+| 390×844 (phone) | 383×479 | 0.800 |
+
+- Inner plotting grid (frame minus the fixed Plotly margins `l 64 / r 28 / t 44 / b 56`) lands at ≈1.78:1 on desktop against ≈1.75:1 for the report's cells (`.chart-wrap` 3:2 minus its wider margins `84/48/60/72`) — screen and export now read the same.
+- Reliability tab verified after the re-homing: the label renders exactly on its computed base (`delta = [0, 0]`), dragging still works (`clientX` deltas are unaffected by the extra nesting), and screenshots at 1600×1000 / 390×844 confirm the legend sits in the frame's top margin band rather than in the surrounding gutter.
+
+---
+
 ## 📅 2026-09-23 — Phase 14: Inset Focus Soft-UI, Unified Type Scale & Heavier Neutral Palette
 
 ### Overview

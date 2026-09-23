@@ -33,6 +33,16 @@
     --fs-title: 16px;    /* headings */
     --fs-hero: 21px;     /* hero numbers */
 
+    /* Chart frame aspect ratio — SSOT for the plot frame (SSOT beats magic
+       numbers: the ratio is not repeated in any component). Golden ratio with
+       width > height: besides the classic proportion, it lands the *inner*
+       plotting grid at ≈1.78:1, which matches the printed report's grid
+       (≈1.75:1) almost exactly — so the same fit line reads the same on screen
+       and in the export. The value must stay a bare number: it is multiplied
+       by 100cqh below. The phone override lives in the media query that
+       follows this block. */
+    --chart-aspect: 1.618;
+
     /* Soft-UI shadow recipes — single light source at top-left, neutral gray */
     --shadow-raised: 8px 8px 16px rgba(133, 140, 152, 0.45), -8px -8px 16px rgba(255, 255, 255, 0.9);
     --shadow-raised-sm: 4px 4px 10px rgba(133, 140, 152, 0.4), -4px -4px 10px rgba(255, 255, 255, 0.85);
@@ -58,6 +68,15 @@
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
     --sar: env(safe-area-inset-right, 0px);
+}
+
+/* Portrait / single-column layout (below Tailwind's `lg`): a 1.618 landscape
+   frame would only be ~237px tall on a 390px-wide phone, so the token is
+   inverted to a portrait 4:5 (= 0.8), which fills the tall column with almost
+   no dead space. Set `0.618` here instead if you want the exact portrait
+   golden ratio. */
+@media (max-width: 1023px) {
+    :root { --chart-aspect: 0.8; }
 }
 
 html, body, #root {
@@ -126,6 +145,21 @@ body {
 }
 .soft-accent-btn:hover { background-color: var(--accent-hover); }
 .soft-accent-btn:active { box-shadow: 2px 2px 8px rgba(30, 58, 95, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.7); }
+
+/* --- Fixed-aspect chart frame --------------------------------------------
+   `chart-host` establishes a size container so `chart-frame` can cap itself
+   against the container's height with 1cqh. Because the token is a bare number
+   (1.618 = golden, 0.8 = phone portrait), the frame asks for the largest width
+   that still fits the host: min(container width, host height × ratio). The
+   aspect-ratio then derives the height, so the frame is always fully contained
+   and centered — no JS measurement and no ResizeObserver. */
+.chart-host { container-type: size; }
+.chart-frame {
+    position: relative;
+    aspect-ratio: var(--chart-aspect);
+    width: min(100%, calc(100cqh * var(--chart-aspect)));
+    max-height: 100%;
+}
 
 /* --- Unified type scale utilities (works with responsive variants) --------- */
 @utility fs-micro { font-size: var(--fs-micro); }

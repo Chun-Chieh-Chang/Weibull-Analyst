@@ -663,6 +663,11 @@ tbody tr:nth-child(even){background:#F9FAFB}
 .info-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
 .info-row .left,.info-row .right{min-width:0}
 .info-row.full{grid-template-columns:1fr}
+/* Report keeps 3:2 rather than the on-screen golden ratio: the 2x2 grid + Key
+   Parameters tile must fit one A4 page, and the pinned PNG fallbacks are
+   captured at 1200x800 (= 3:2). Its wider margins (84/48/60/72) still land the
+   printed grid at ~1.75:1, i.e. within 2% of the on-screen ~1.78:1.
+   See DEVELOPMENT_LOG Phase 15. */
 .chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid #E5E7EB;aspect-ratio:3/2;min-height:300px;background:#fff;break-inside:avoid}
 .chart-wrap .plot{position:absolute;inset:0;pointer-events:auto;border-radius:8px;overflow:hidden}
 .chart-wrap .fallback{width:100%;display:block}
@@ -911,43 +916,50 @@ drag=null;});})();
                 </div>
             </div>
 
-            <div ref={plotRef} className="flex-1 w-full relative transition-colors duration-200 overflow-hidden flex items-center justify-center p-1 sm:p-2">
-                <CustomLegend />
-                <Plot
-                    data={plotData}
-                    layout={plotLayout}
-                    config={{
-                        responsive: true,
-                        displayModeBar: 'hover',
-                        displaylogo: false,
-                        modeBarButtonsToRemove: ['select2d', 'lasso2d']
-                    }}
-                    style={{ width: '100%', height: '100%', maxHeight: 'calc(100vh - 170px)' }}
-                    onClick={(data) => {
-                        if (data.points && data.points.length > 0) {
-                            setModalData({ time: data.points[0].x as number });
-                        }
-                    }}
-                    onInitialized={(fig, gd) => { graphRef.current = gd; }}
-                />
-                {chartType === 'RELIABILITY' && labelDefs.map(def => (
-                    <div key={def.id} id={def.id}
-                        className="absolute px-2 py-0.5 rounded font-semibold whitespace-nowrap cursor-grab select-none"
-                        style={{
-                            color: def.color,
-                            backgroundColor: 'rgba(227,229,233,0.95)',
-                            border: `1px solid ${def.color}`,
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                            pointerEvents: 'auto',
-                            zIndex: 10,
-                            fontSize: FS.label,
-                            left: 0, top: 0
+            {/* Fixed-aspect plot frame (SSOT: --chart-aspect = golden, width >
+                height). The host is a size container so the frame can size
+                itself with 100cqh; the legend and the draggable labels live
+                inside the frame so they hug the plot's margins instead of
+                floating in the surrounding gutter. */}
+            <div ref={plotRef} className="flex-1 w-full relative transition-colors duration-200 overflow-hidden flex items-center justify-center p-1 sm:p-2 chart-host">
+                <div className="chart-frame">
+                    <CustomLegend />
+                    <Plot
+                        data={plotData}
+                        layout={plotLayout}
+                        config={{
+                            responsive: true,
+                            displayModeBar: 'hover',
+                            displaylogo: false,
+                            modeBarButtonsToRemove: ['select2d', 'lasso2d']
                         }}
-                        onMouseDown={(e) => handleLabelMouseDown(e, def.id)}
-                    >
-                        {def.text}
-                    </div>
-                ))}
+                        style={{ width: '100%', height: '100%' }}
+                        onClick={(data) => {
+                            if (data.points && data.points.length > 0) {
+                                setModalData({ time: data.points[0].x as number });
+                            }
+                        }}
+                        onInitialized={(fig, gd) => { graphRef.current = gd; }}
+                    />
+                    {chartType === 'RELIABILITY' && labelDefs.map(def => (
+                        <div key={def.id} id={def.id}
+                            className="absolute px-2 py-0.5 rounded font-semibold whitespace-nowrap cursor-grab select-none"
+                            style={{
+                                color: def.color,
+                                backgroundColor: 'rgba(227,229,233,0.95)',
+                                border: `1px solid ${def.color}`,
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                                pointerEvents: 'auto',
+                                zIndex: 10,
+                                fontSize: FS.label,
+                                left: 0, top: 0
+                            }}
+                            onMouseDown={(e) => handleLabelMouseDown(e, def.id)}
+                        >
+                            {def.text}
+                        </div>
+                    ))}
+                </div>
             </div>
 
             <div className="flex-none px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1" style={{ backgroundColor: 'var(--bg-surface)' }}>
