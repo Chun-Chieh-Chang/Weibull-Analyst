@@ -26,12 +26,14 @@
     --brand-error: #EF4444;
 
     /* Unified type scale — role-based, single source of truth.
-       Use the fs-* utilities below; never raw pixel font-sizes. */
+       Use the fs-* utilities below; never raw pixel font-sizes.
+       Phase 15 dropped the 21px `hero` step: KPI values use the same 16px as
+       the rest of the panel's numbers and carry their emphasis through weight
+       (font-black) instead of size. */
     --fs-micro: 10px;    /* badges, overline labels */
     --fs-small: 12px;    /* secondary text, dense UI chrome */
     --fs-body: 13.5px;   /* default reading text, buttons */
-    --fs-title: 16px;    /* headings */
-    --fs-hero: 21px;     /* hero numbers */
+    --fs-title: 16px;    /* headings, KPI values, tabular numbers */
 
     /* Chart frame aspect ratio — SSOT for the plot frame (SSOT beats magic
        numbers: the ratio is not repeated in any component). 4:3 with width >
@@ -92,9 +94,21 @@
    row); flex-shrink stays 1 so a narrow viewport still hands the whole deficit
    to the chart column. The rule is intentionally unlayered, which lets it
    override the `flex-1` utility without a specificity fight. */
+/* Desktop app shell: keeps the header/footer content edges flush with the
+   centred three-column workspace below, so the outer whitespace matches on
+   wide viewports. The cap restates the workspace content width — left panel
+   (`lg:w-80` = 20rem at the 14px root) + right panel (`lg:w-[450px]`) + the
+   chart column's aspect-derived basis — plus the 2rem of `px-4` gutters on
+   the header/footer rows so their *content* edges sit flush with the panels'
+   outer edges. Below the width threshold the cap exceeds the viewport and the
+   rows stay full-bleed, exactly like the workspace. */
 @media (min-width: 1024px) {
     .chart-column {
         flex: 0 1 calc((100vh - var(--chart-chrome-v)) * var(--chart-aspect) + var(--chart-pad));
+    }
+    .shell-inner {
+        max-width: calc(20rem + 450px + (100vh - var(--chart-chrome-v)) * var(--chart-aspect) + var(--chart-pad) + 2rem);
+        margin-inline: auto;
     }
 }
 
@@ -185,4 +199,3 @@ body {
 @utility fs-small { font-size: var(--fs-small); }
 @utility fs-body { font-size: var(--fs-body); }
 @utility fs-title { font-size: var(--fs-title); }
-@utility fs-hero { font-size: var(--fs-hero); }

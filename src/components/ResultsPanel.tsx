@@ -65,7 +65,7 @@ const MetricCard = ({
                 </div>
             )}
         </div>
-        <div className={`fs-hero font-black tracking-tight ${colorClass}`} style={{ color: warning ? undefined : 'var(--text-primary)' }}>{value}</div>
+        <div className={`fs-title font-black tracking-tight ${colorClass}`} style={{ color: warning ? undefined : 'var(--text-primary)' }}>{value}</div>
         {subtext && <div className={`fs-small mt-1 font-medium ${warning ? 'text-amber-600' : ''}`} style={{ color: warning ? undefined : 'var(--text-secondary)' }}>{subtext}</div>}
     </div>
 );

@@ -203,8 +203,11 @@ const App: React.FC = () => {
 
     return (
         <div className="flex flex-col h-screen w-screen overflow-hidden font-sans select-none transition-colors duration-300" style={{ backgroundColor: 'var(--bg-app)' }}>
-            {/* 1. Header Bar */}
-            <header className="flex-none flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 sm:py-3 z-30 transition-colors duration-200" style={{ backgroundColor: 'var(--bg-sidebar)' }}>
+            {/* 1. Header Bar — background stays full-bleed; the inner row is
+                width-capped by `.shell-inner` so its content edges sit flush
+                with the centred workspace panels below. */}
+            <header className="flex-none z-30 transition-colors duration-200" style={{ backgroundColor: 'var(--bg-sidebar)' }}>
+                <div className="shell-inner flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 sm:py-3">
                 <div className="flex items-center justify-between sm:justify-start space-x-3 mb-2 sm:mb-0">
                     <div className="flex items-center space-x-2">
                         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--accent)', boxShadow: 'var(--shadow-accent)' }}>
@@ -270,6 +273,7 @@ const App: React.FC = () => {
                             <TrashIcon className="w-5 h-5" />
                         </button>
                     </div>
+                </div>
                 </div>
             </header>
 
@@ -408,8 +412,9 @@ const App: React.FC = () => {
             {/* PWA Prompts & Notifications */}
             <PwaPrompt lang={lang} needRefresh={needRefresh} onUpdateServiceWorker={handleUpdateServiceWorker} />
 
-            {/* Footer */}
-            <div className="hidden sm:block flex-none px-4 py-1.5 fs-micro text-right uppercase tracking-widest font-bold" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-app)' }}>
+            {/* Footer — content width tracks the centred workspace via `.shell-inner`
+                (background token equals the page background, so the cap is seamless). */}
+            <div className="hidden sm:block flex-none shell-inner px-4 py-1.5 fs-micro text-right uppercase tracking-widest font-bold" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-app)' }}>
                 Developed by Wesley Chang @ Mouldex, Jan-2026. All rights reserved.
             </div>
         </div>
