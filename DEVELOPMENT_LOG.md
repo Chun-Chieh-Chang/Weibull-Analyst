@@ -2,6 +2,25 @@
 
 > **Systematic development history based on MECE principles**
 
+## 📅 2026-09-23 — Phase 16: Report Restyle to the In-App Design System
+
+### Overview
+Brought the exported HTML report onto the same Inset-Focus soft-UI language, heavy-neutral palette, navy primary and unified type scale as the app (the report previously kept its own lighter Tailwind-gray look with a dark title, 20px mono KPI numbers and a blue AI box), while deliberately keeping the 3:2 chart cells and single-A4 fit — and flattening the neumorphic shadows under `@media print` so they don't band on laser printers.
+
+### Changes
+- **Report token mirror**: the report `<style>` opens with its own self-contained `:root` (`--rpt-bg #E3E5E9 / --rpt-text #1E222B / --rpt-muted #59616E / --rpt-border rgba(30,34,43,.14) / --rpt-primary #1E3A5F / --rpt-primary-light #2C4A6E / --rpt-accent #3B82F6 / success-warning-error` plus `--rpt-shadow-raised / -sm / -inset` copied from the app recipes). It mirrors the app SSOT by value because the exported file must stand alone with no access to `index.css` — the two layers are kept in sync by convention, not by reference.
+- **Bug fix as part of the pass**: `.summary-box .val` pointed at `var(--accent-interactive)`, which was never defined inside the report (dead reference — values fell back to inherited text color). Now `var(--rpt-accent)`; `.chart-caption .num` had the same hole and is fixed likewise.
+- **KPI parity with the app**: `.metrics-tile .stat .v` 20px mono → 16px Inter `font-weight:900` (the same "weight, not size" emphasis the app adopted in Phase 15); `.grp-sub` 11.5→12px medium for the fs-small step.
+- **Soft-UI card language**: Key-Parameters tile and AI box become borderless inset wells (`12px` radius + inset shadow, background = page substrate); summary boxes become borderless raised cards (`12px` radius + raised-sm shadow); chart cells/img keep hairline borders but gain the raised-sm shadow; section `h2` dividers move to the token border; table header moves to the app's micro-step (10px uppercase) on a neutral tint, body text to 12px; `h1` becomes the navy primary at 22px; footer becomes the micro-step uppercase treatment matching the app's global footer.
+- **Print rule**: `@media print` drops the page to a white sheet, removes all neumorphic shadows, and restores a thin `#D9DCE1` hairline on the two inset wells (which would otherwise go borderless-invisible on white). Screen keeps the full soft-UI look.
+
+### Verification
+- `npx tsc --noEmit` → 0 errors; `npm run build` → exit 0 (`built in 33.11s`, PWA precache regenerated).
+- Report HTML intercepted in-browser via a `Blob` hook after clicking Report (726,153 bytes): zero occurrences of the old palette (`#111827/#6B7280/#E5E7EB/#EFF6FF`), zero `var(--accent-interactive)`, KPI rule confirmed at 16px, `h1` on `var(--rpt-primary)`, `@media print` present, `aspect-ratio:3/2` retained.
+- Source grep: report CSS now carries no raw hex outside the self-contained `:root` mirror (plus `#fff` surfaces and the white-background print/table accents) — intentional, because the exported file is standalone.
+
+---
+
 ## 📅 2026-09-23 — Phase 15: Fixed-Aspect Chart Frame (4:3) & Centered Three-Column Layout
 
 ### Overview
@@ -13,7 +32,7 @@ Replaced the fluid plot frame with a fixed 4:3 aspect ratio (1.3333 : 1, width >
 - **`WeibullChart.tsx`**: plot host marked `chart-host`; Plotly wrapped in `.chart-frame` at `100% × 100%`; removed the now-redundant `maxHeight: 'calc(100vh - 170px)'` — measurement proved the surrounding chrome is 200px tall, so that cap could never bind.
 - **Centered three-column layout**: the chart column used to be `flex-1`, so it swallowed every free pixel and pinned both side panels to the viewport edges — at 2560×1440 the column was 1830px wide while the fixed-ratio frame only needed 1653px, leaving ~88px of dead space *inside* the column with the panels marooned at the edges. `main` is now `.chart-column` (`flex: 0 1 calc((100vh - var(--chart-chrome-v)) * var(--chart-aspect) + var(--chart-pad))`, desktop-only) and the workspace row gained `lg:justify-center`: growth 0 turns the surplus into whitespace at the outer edges and pulls the panels inward; shrink 1 leaves narrow viewports behaving exactly as before.
 - **Overlays re-homed** inside `.chart-frame`: the draggable labels (their coordinates come from `xaxis._offset + xaxis.d2p(...)`, i.e. graph-div-relative) and the group legend (so it hugs the plot instead of floating in the new vertical gutter). This also removes the previous systematic 7px offset caused by the host's `p-2` padding (rem-based: 0.5rem × 14px root = 7px).
-- **Report deliberately unchanged**: report `.chart-wrap` stays `aspect-ratio: 3/2` (with 1200×800 PNG fallbacks) because the 2×2 chart grid plus the "04 Key Parameters" tile must still fit a single A4 page; a square grid would nearly double that section's height. A comment marks this as intentional.
+- **Report deliberately aligned, not frozen**: report CSS carries its own `--rpt-*` token mirror of the in-app palette/soft-UI (Phase 16 below), keeps `aspect-ratio: 3/2` cells with 1200×800 PNG fallbacks so the 2×2 chart grid plus the "04 Key Parameters" tile still fits a single A4 page, and flattens the neumorphic shadows to hairlines under `@media print`. A comment marks the 3:2-vs-4:3 difference as intentional.
 - **KPI type retune (review follow-up)**: the Insights metric-tile values were the sole user of the 21px `fs-hero` step, which made them disproportionate next to the rest of the page (labels 10px, sub-text 12px, tabular numbers 16px). They now use `fs-title` 16px with emphasis carried by the `font-black` weight instead of size. `--fs-hero` and `@utility fs-hero` were removed from the scale — it is now micro 10 / small 12 / body 13.5 / title 16, and every number in the panel lands on the same 16px step.
 - **App-shell alignment (review follow-up)**: the header row and footer used to stay full-bleed while the workspace panels moved inward, leaving the top-right controls floating 81px off the panel edge at 2560×1440. Header background stays full-bleed, but its content row (and the footer) are now `.shell-inner` — `max-width: 20rem + 450px + (100vh − chrome) × aspect + pad + 2rem`, desktop-only, `margin-inline: auto` — restating the workspace content width (14px-root left `w-80` + 450px right + chart-column basis + the rows' own 2rem of `px-4`). Below the threshold the cap exceeds the viewport, so the rows stay full-bleed exactly like the workspace.
 

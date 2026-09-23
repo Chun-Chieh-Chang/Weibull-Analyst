@@ -623,42 +623,43 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 <title>${lang === 'zh' ? '韋伯分析報告' : 'Weibull Analysis Report'}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#111827;background:#F9FAFB;padding:24px 28px;max-width:1280px;margin:0 auto;font-size:13.5px;-webkit-font-smoothing:antialiased}
-h1{font-size:26px;font-weight:800;color:#111827;margin-bottom:4px;letter-spacing:-.02em}
-.sub{color:#6B7280;font-size:13.5px;margin-bottom:24px}
+:root{--rpt-bg:#E3E5E9;--rpt-text:#1E222B;--rpt-muted:#59616E;--rpt-border:rgba(30,34,43,.14);--rpt-primary:#1E3A5F;--rpt-primary-light:#2C4A6E;--rpt-accent:#3B82F6;--rpt-success:#10B981;--rpt-warning:#F59E0B;--rpt-error:#EF4444;--rpt-shadow-raised:8px 8px 16px rgba(133,140,152,.45),-8px -8px 16px rgba(255,255,255,.9);--rpt-shadow-raised-sm:4px 4px 10px rgba(133,140,152,.4),-4px -4px 10px rgba(255,255,255,.85);--rpt-shadow-inset:inset 5px 5px 10px rgba(133,140,152,.4),inset -5px -5px 10px rgba(255,255,255,.85)}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:var(--rpt-text);background:var(--rpt-bg);padding:24px 28px;max-width:1280px;margin:0 auto;font-size:13.5px;-webkit-font-smoothing:antialiased}
+h1{font-size:22px;font-weight:800;color:var(--rpt-primary);margin-bottom:4px;letter-spacing:-.02em}
+.sub{color:var(--rpt-muted);font-size:13.5px;margin-bottom:24px}
 .section{margin-bottom:28px}
-.section h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6B7280;border-bottom:1.5px solid #E5E7EB;padding-bottom:6px;margin-bottom:14px}
+.section h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--rpt-muted);border-bottom:1.5px solid var(--rpt-border);padding-bottom:6px;margin-bottom:14px}
 .chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 20px}
 .chart-cell{display:flex;flex-direction:column;min-width:0}
-.chart-caption{font-size:13.5px;font-weight:700;color:#111827;margin-top:10px;letter-spacing:.01em;text-align:left}
-.chart-caption .num{color:var(--accent-interactive);margin-right:8px;font-family:'SF Mono',Consolas,monospace}
-.chart-img{width:100%;border-radius:8px;border:1px solid #E5E7EB;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{background:#F3F4F6;color:#6B7280;font-weight:700;text-align:left;padding:6px 10px;border-bottom:1.5px solid #D1D5DB;white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;font-size:11px}
-td{padding:6px 10px;border-bottom:1px solid #E5E7EB;color:#374151}
-tbody tr:nth-child(even){background:#F9FAFB}
-.mono{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-size:12.5px;font-weight:600;color:#6B7280}
-.metrics-tile{background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:18px 20px;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.chart-caption{font-size:13.5px;font-weight:700;color:var(--rpt-text);margin-top:10px;letter-spacing:.01em;text-align:left}
+.chart-caption .num{color:var(--rpt-accent);margin-right:8px;font-family:'SF Mono',Consolas,monospace}
+.chart-img{width:100%;border-radius:8px;border:1px solid var(--rpt-border);box-shadow:var(--rpt-shadow-raised-sm);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:rgba(30,34,43,.05);color:var(--rpt-muted);font-weight:700;text-align:left;padding:6px 10px;border-bottom:1.5px solid var(--rpt-border);white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;font-size:10px}
+td{padding:6px 10px;border-bottom:1px solid var(--rpt-border);color:var(--rpt-text)}
+tbody tr:nth-child(even){background:rgba(255,255,255,.45)}
+.mono{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-size:12px;font-weight:600;color:var(--rpt-muted)}
+.metrics-tile{background:var(--rpt-bg);border:none;border-radius:12px;padding:18px 20px;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:12px;box-shadow:var(--rpt-shadow-inset)}
 .metrics-tile .grp{display:flex;flex-direction:column;gap:10px}
-.metrics-tile .grp + .grp{border-top:1px solid #E5E7EB;padding-top:12px}
-.metrics-tile .grp-h{font-size:13px;font-weight:700;color:#111827;display:flex;align-items:center;gap:7px}
+.metrics-tile .grp + .grp{border-top:1px solid var(--rpt-border);padding-top:12px}
+.metrics-tile .grp-h{font-size:13px;font-weight:700;color:var(--rpt-text);display:flex;align-items:center;gap:7px}
 .metrics-tile .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
 .metrics-tile .stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
-.metrics-tile .stat .k{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;margin-bottom:2px}
+.metrics-tile .stat .k{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--rpt-muted);margin-bottom:2px}
 .metrics-tile .stat .k sub{font-size:8px}
-.metrics-tile .stat .v{font-size:20px;font-weight:800;font-family:'SF Mono',Consolas,'Noto Sans TC',monospace;color:#111827;letter-spacing:-.02em}
-.metrics-tile .grp-sub{font-size:11.5px;color:#6B7280}
-.ai-box{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:16px 18px;font-size:13.5px;line-height:1.75;color:#374151}
-.ai-box .zh{color:#1D4ED8;font-weight:500}
-.summary-box{background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.8}
-.summary-box strong{color:#111827;font-size:13.5px}
-.summary-box .val{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-weight:700;color:var(--accent-interactive)}
-.summary-box .ctx{font-size:12px;color:#6B7280}
+.metrics-tile .stat .v{font-size:16px;font-weight:900;font-family:'Inter','Noto Sans TC',sans-serif;color:var(--rpt-text);letter-spacing:-.02em}
+.metrics-tile .grp-sub{font-size:12px;color:var(--rpt-muted);font-weight:500}
+.ai-box{background:var(--rpt-bg);border:none;border-radius:12px;padding:16px 18px;font-size:13.5px;line-height:1.75;color:var(--rpt-text);box-shadow:var(--rpt-shadow-inset)}
+.ai-box .zh{color:var(--rpt-primary);font-weight:500}
+.summary-box{background:var(--rpt-bg);border:none;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.8;box-shadow:var(--rpt-shadow-raised-sm)}
+.summary-box strong{color:var(--rpt-text);font-size:13.5px}
+.summary-box .val{font-family:'SF Mono',Consolas,'Noto Sans Mono',monospace;font-weight:700;color:var(--rpt-accent)}
+.summary-box .ctx{font-size:12px;color:var(--rpt-muted)}
 .summary-box sub{font-size:9px}
 .dual-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.table-wrap{overflow-x:auto;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden}
+.table-wrap{border:1px solid var(--rpt-border);border-radius:8px;overflow:hidden;background:#fff}
 .table-wrap table{border:none}
-.section-footer{margin-top:24px;padding-top:16px;border-top:1.5px solid #E5E7EB;font-size:12px;color:#9CA3AF;text-align:center;letter-spacing:.02em}
+.section-footer{margin-top:24px;padding-top:16px;border-top:1.5px solid var(--rpt-border);font-size:10px;color:var(--rpt-muted);text-align:center;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
 /* dense horizontal layout: rows merge into columns where possible */
 .info-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
 .info-row .left,.info-row .right{min-width:0}
@@ -666,11 +667,15 @@ tbody tr:nth-child(even){background:#F9FAFB}
 /* Report keeps 3:2 rather than the on-screen 4:3: the 2x2 grid + Key Parameters
    tile must fit one A4 page, and the pinned PNG fallbacks are captured at
    1200x800 (= 3:2). See DEVELOPMENT_LOG Phase 15. */
-.chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid #E5E7EB;aspect-ratio:3/2;min-height:300px;background:#fff;break-inside:avoid}
+.chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid var(--rpt-border);aspect-ratio:3/2;min-height:300px;background:#fff;break-inside:avoid;box-shadow:var(--rpt-shadow-raised-sm)}
 .chart-wrap .plot{position:absolute;inset:0;pointer-events:auto;border-radius:8px;overflow:hidden}
 .chart-wrap .fallback{width:100%;display:block}
-.chart-label{position:absolute;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap;cursor:grab;user-select:none;z-index:10;pointer-events:auto;background:rgba(255,255,255,0.92);box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+.chart-label{position:absolute;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap;cursor:grab;user-select:none;z-index:10;pointer-events:auto;background:rgba(227,229,233,.95);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 @media(max-width:900px){body{padding:16px}.chart-grid{grid-template-columns:1fr;gap:12px}.info-row{grid-template-columns:1fr}.dual-grid{grid-template-columns:1fr;gap:10px}}
+/* Print: flatten the neumorphic shadows (they band on laser printers), drop the
+   page to a white sheet, and keep everything else — 3:2 cells, inset tile,
+   navy headings, 16px KPI values — identical to the screen report. */
+@media print{body{background:#fff}.chart-img,.chart-wrap,.summary-box{box-shadow:none}.metrics-tile,.ai-box{box-shadow:none;border:1px solid #D9DCE1}}
 </style>
 </head>
 <body>
@@ -688,7 +693,7 @@ ${chartTypes.map((c, idx) => {
 <div id="${id}-chart" class="plot"></div>
 ${labels.map((l: any) => `<div id="ol-${l.id}" class="chart-label" style="color:${l.color};border:1px solid ${l.color}">${l.text}</div>`).join('')}
 </div>
-<span class="chart-caption"><span class="num">${String(idx + 1).padStart(2, '0')}</span>${c.label}${c.labels ? ` <span style="color:#6B7280;font-weight:400">(${lang === 'zh' ? '拖拽標籤' : 'Drag labels'})</span>` : ''}</span>
+<span class="chart-caption"><span class="num">${String(idx + 1).padStart(2, '0')}</span>${c.label}${c.labels ? ` <span style="color:var(--rpt-muted);font-weight:400">(${lang === 'zh' ? '拖拽標籤' : 'Drag labels'})</span>` : ''}</span>
 </div>`;
 }).join('')}
 <div class="chart-cell">
