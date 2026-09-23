@@ -274,7 +274,7 @@ const App: React.FC = () => {
             </header>
 
             {/* 2. Workspace Layout */}
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+            <div className="flex-1 flex flex-col lg:flex-row lg:justify-center overflow-hidden relative">
 
                 {/* Mobile Tab Switcher */}
                 <div className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 rounded-xl flex items-center p-1.5 z-50 transition-all duration-300 mb-safe soft-raised">
@@ -376,8 +376,10 @@ const App: React.FC = () => {
                     </div>
                 </aside>
 
-                {/* CENTER COLUMN: Chart */}
-                <main className={`${activeMobileView === 'CHART' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 relative transition-all duration-300`} style={{ backgroundColor: 'var(--bg-surface)' }}>
+                {/* CENTER COLUMN: Chart — `.chart-column` caps its width to what the
+                    fixed-aspect frame needs (see index.css), so extra viewport width
+                    becomes outer whitespace and the side panels move inward. */}
+                <main className={`${activeMobileView === 'CHART' ? 'flex' : 'hidden'} lg:flex flex-1 chart-column min-w-0 relative transition-all duration-300`} style={{ backgroundColor: 'var(--bg-surface)' }}>
                     <div className="absolute inset-0 flex flex-col pt-2 lg:pt-0 pb-20 lg:pb-0">
                         <WeibullChart
                             groups={displayedGroups}

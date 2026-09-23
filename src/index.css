@@ -34,14 +34,20 @@
     --fs-hero: 21px;     /* hero numbers */
 
     /* Chart frame aspect ratio — SSOT for the plot frame (SSOT beats magic
-       numbers: the ratio is not repeated in any component). Golden ratio with
-       width > height: besides the classic proportion, it lands the *inner*
-       plotting grid at ≈1.78:1, which matches the printed report's grid
-       (≈1.75:1) almost exactly — so the same fit line reads the same on screen
-       and in the export. The value must stay a bare number: it is multiplied
-       by 100cqh below. The phone override lives in the media query that
-       follows this block. */
-    --chart-aspect: 1.618;
+       numbers: the ratio is not repeated in any component). 4:3 with width >
+       height: the classic presentation/print proportion, and it uses more of
+       the chart column on the common 16:9 / 16:10 laptops than a wider frame
+       would. The value must stay a bare number: it is multiplied by 100cqh
+       below. The phone override lives in the media query that follows. */
+    --chart-aspect: 1.3333;
+
+    /* Space the desktop layout spends outside the plot frame (measured: 200px
+       at 1600x1000, 1366x768 and 2560x1440 alike — header 65 + global footer
+       26 + chart toolbar 68 + stat strip 29, plus the host padding 7px x 2).
+       Used to derive how wide the centre column needs to be; a drift of a few
+       px only shows up as a hairline gutter or a hairline-narrower frame. */
+    --chart-chrome-v: 200px;
+    --chart-pad: 14px;   /* host padding p-2 (0.5rem x 14px root) x 2 */
 
     /* Soft-UI shadow recipes — single light source at top-left, neutral gray */
     --shadow-raised: 8px 8px 16px rgba(133, 140, 152, 0.45), -8px -8px 16px rgba(255, 255, 255, 0.9);
@@ -70,13 +76,26 @@
     --sar: env(safe-area-inset-right, 0px);
 }
 
-/* Portrait / single-column layout (below Tailwind's `lg`): a 1.618 landscape
-   frame would only be ~237px tall on a 390px-wide phone, so the token is
+/* Portrait / single-column layout (below Tailwind's `lg`): a 4:3 landscape
+   frame would only be ~287px tall on a 390px-wide phone, so the token is
    inverted to a portrait 4:5 (= 0.8), which fills the tall column with almost
-   no dead space. Set `0.618` here instead if you want the exact portrait
-   golden ratio. */
+   no dead space. */
 @media (max-width: 1023px) {
     :root { --chart-aspect: 0.8; }
+}
+
+/* Desktop three-column layout: the centre column takes only the width the
+   chart frame actually needs (host height x ratio + host padding) instead of
+   absorbing every free pixel of the row. Because flex-grow is 0, a wider
+   viewport turns the surplus into whitespace at the outer edges and both side
+   panels slide inward toward the plot (App.tsx adds `lg:justify-center` to the
+   row); flex-shrink stays 1 so a narrow viewport still hands the whole deficit
+   to the chart column. The rule is intentionally unlayered, which lets it
+   override the `flex-1` utility without a specificity fight. */
+@media (min-width: 1024px) {
+    .chart-column {
+        flex: 0 1 calc((100vh - var(--chart-chrome-v)) * var(--chart-aspect) + var(--chart-pad));
+    }
 }
 
 html, body, #root {
@@ -149,7 +168,7 @@ body {
 /* --- Fixed-aspect chart frame --------------------------------------------
    `chart-host` establishes a size container so `chart-frame` can cap itself
    against the container's height with 1cqh. Because the token is a bare number
-   (1.618 = golden, 0.8 = phone portrait), the frame asks for the largest width
+   (1.3333 = 4:3, 0.8 = phone portrait), the frame asks for the largest width
    that still fits the host: min(container width, host height × ratio). The
    aspect-ratio then derives the height, so the frame is always fully contained
    and centered — no JS measurement and no ResizeObserver. */

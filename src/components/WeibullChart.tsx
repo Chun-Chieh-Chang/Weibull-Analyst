@@ -663,11 +663,9 @@ tbody tr:nth-child(even){background:#F9FAFB}
 .info-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
 .info-row .left,.info-row .right{min-width:0}
 .info-row.full{grid-template-columns:1fr}
-/* Report keeps 3:2 rather than the on-screen golden ratio: the 2x2 grid + Key
-   Parameters tile must fit one A4 page, and the pinned PNG fallbacks are
-   captured at 1200x800 (= 3:2). Its wider margins (84/48/60/72) still land the
-   printed grid at ~1.75:1, i.e. within 2% of the on-screen ~1.78:1.
-   See DEVELOPMENT_LOG Phase 15. */
+/* Report keeps 3:2 rather than the on-screen 4:3: the 2x2 grid + Key Parameters
+   tile must fit one A4 page, and the pinned PNG fallbacks are captured at
+   1200x800 (= 3:2). See DEVELOPMENT_LOG Phase 15. */
 .chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid #E5E7EB;aspect-ratio:3/2;min-height:300px;background:#fff;break-inside:avoid}
 .chart-wrap .plot{position:absolute;inset:0;pointer-events:auto;border-radius:8px;overflow:hidden}
 .chart-wrap .fallback{width:100%;display:block}

@@ -2,15 +2,16 @@
 
 > **Systematic development history based on MECE principles**
 
-## 📅 2026-09-23 — Phase 15: Fixed-Aspect Chart Frame (Square Weibull Grid)
+## 📅 2026-09-23 — Phase 15: Fixed-Aspect Chart Frame (4:3) & Centered Three-Column Layout
 
 ### Overview
-Replaced the fluid plot frame with a fixed golden-ratio aspect ratio (1.618 : 1, width > height) so the plot shape no longer drifts with the window size. Measured first: the old frame ranged from 0.74:1 (phone) to 1.34:1 (1920×1080), i.e. the same fit line appeared shallower or steeper depending on the monitor. A square frame was implemented and reviewed first, then changed to the golden ratio — which turned out to be the better match for the printed report as well: the *inner* plotting grid lands at ≈1.78:1 against the report's ≈1.75:1.
+Replaced the fluid plot frame with a fixed 4:3 aspect ratio (1.3333 : 1, width > height) so the plot shape no longer drifts with the window size. Measured first: the old frame ranged from 0.74:1 (phone) to 1.34:1 (1920×1080), i.e. the same fit line appeared shallower or steeper depending on the monitor. A square (1:1) frame and a golden-ratio (1.618) frame were each implemented and reviewed visually before landing on 4:3, which kept the classic presentation proportion while preserving the vertical room the probability grid needs.
 
 ### Changes
-- **Ratio SSOT**: `index.css` gains `--chart-aspect: 1.618` (golden, width > height) as a bare number for the desktop three-column layout, overridden to `0.8` (portrait 4:5) inside `@media (max-width: 1023px)` — a 1.618 landscape frame would only be ~237px tall on a 390px-wide phone. A comment records that `0.618` is the exact portrait golden ratio if that is ever preferred.
+- **Ratio SSOT**: `index.css` gains `--chart-aspect: 1.3333` (4:3, width > height) as a bare number for the desktop layout plus `--chart-chrome-v: 200px` / `--chart-pad: 14px`, and the token is overridden to `0.8` (portrait 4:5) inside `@media (max-width: 1023px)` — a 4:3 landscape frame would only be ~287px tall on a 390px-wide phone.
 - **Containment without JS**: new utilities `.chart-host { container-type: size }` + `.chart-frame { aspect-ratio: var(--chart-aspect); width: min(100%, calc(100cqh * var(--chart-aspect))); max-height: 100% }`. Keeping the token numeric lets it be multiplied by `100cqh`, so the frame always takes the largest width that still fits the host (container width, otherwise host height × ratio). No ResizeObserver, measurement effect or pixel math.
 - **`WeibullChart.tsx`**: plot host marked `chart-host`; Plotly wrapped in `.chart-frame` at `100% × 100%`; removed the now-redundant `maxHeight: 'calc(100vh - 170px)'` — measurement proved the surrounding chrome is 200px tall, so that cap could never bind.
+- **Centered three-column layout**: the chart column used to be `flex-1`, so it swallowed every free pixel and pinned both side panels to the viewport edges — at 2560×1440 the column was 1830px wide while the fixed-ratio frame only needed 1653px, leaving ~88px of dead space *inside* the column with the panels marooned at the edges. `main` is now `.chart-column` (`flex: 0 1 calc((100vh - var(--chart-chrome-v)) * var(--chart-aspect) + var(--chart-pad))`, desktop-only) and the workspace row gained `lg:justify-center`: growth 0 turns the surplus into whitespace at the outer edges and pulls the panels inward; shrink 1 leaves narrow viewports behaving exactly as before.
 - **Overlays re-homed** inside `.chart-frame`: the draggable labels (their coordinates come from `xaxis._offset + xaxis.d2p(...)`, i.e. graph-div-relative) and the group legend (so it hugs the plot instead of floating in the new vertical gutter). This also removes the previous systematic 7px offset caused by the host's `p-2` padding (rem-based: 0.5rem × 14px root = 7px).
 - **Report deliberately unchanged**: report `.chart-wrap` stays `aspect-ratio: 3/2` (with 1200×800 PNG fallbacks) because the 2×2 chart grid plus the "04 Key Parameters" tile must still fit a single A4 page; a square grid would nearly double that section's height. A comment marks this as intentional.
 
@@ -20,14 +21,25 @@ Replaced the fluid plot frame with a fixed golden-ratio aspect ratio (1.618 : 1,
 
 | Viewport | Plot W×H | Ratio |
 | --- | --- | --- |
-| 1920×1080 | 1176×727 | 1.618 |
-| 1600×1000 | 856×529 | 1.618 |
-| 1440×900 | 696×430 | 1.619 |
-| 1366×768 | 622×384 | 1.620 |
-| 1280×800 | 536×331 | 1.619 |
+| 1920×1080 | 1173×879 | 1.333 |
+| 1600×1000 | 856×642 | 1.333 |
+| 1440×900 | 696×522 | 1.333 |
+| 1366×768 | 622×467 | 1.333 |
+| 1280×800 | 536×402 | 1.333 |
 | 390×844 (phone) | 383×479 | 0.800 |
 
-- Inner plotting grid (frame minus the fixed Plotly margins `l 64 / r 28 / t 44 / b 56`) lands at ≈1.78:1 on desktop against ≈1.75:1 for the report's cells (`.chart-wrap` 3:2 minus its wider margins `84/48/60/72`) — screen and export now read the same.
+- Column-centering behaviour (left panel x / centre column / right panel x / outer whitespace):
+
+| Viewport | Left panel | Centre column | Right panel | Frame | Outer L / R |
+| --- | --- | --- | --- | --- | --- |
+| 2560×1440 | 280 @81 | 1667 @361 | 450 @2029 | 1653×1239 | 81 / 81 |
+| 1920×1080 | 280 @1 | 1187 @281 | 450 @1469 | 1173×879 | 1 / 1 |
+| 1600×1000 | 280 @0 | 870 @280 | 450 @1150 | 856×642 | 0 / 0 |
+| 1024×768 | 280 @0 | 294 @280 | 450 @574 | 280×210 | 0 / 0 |
+| 390×844 (phone) | stacked | 390 | stacked | 383×479 | 0 / 0 |
+
+- `document.documentElement.scrollWidth` equals the viewport width at every size (the centering introduces no overflow), and the panel group is symmetric around the plot.
+- Inner plotting grid (frame minus the fixed Plotly margins `l 64 / r 28 / t 44 / b 56`) lands between ≈1.39:1 (1920×1080) and ≈1.47:1 (1280×800) — ≈1.43:1 typical; the report's cells stay at ≈1.75:1 (3:2 minus its wider `84/48/60/72` margins), so the exported grid is a little wider than the on-screen one.
 - Reliability tab verified after the re-homing: the label renders exactly on its computed base (`delta = [0, 0]`), dragging still works (`clientX` deltas are unaffected by the extra nesting), and screenshots at 1600×1000 / 390×844 confirm the legend sits in the frame's top margin band rather than in the surrounding gutter.
 
 ---
