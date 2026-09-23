@@ -10,10 +10,10 @@ interface SectionProps {
 
 const Section = ({ title, children }: SectionProps) => (
   <div className="mb-8 last:mb-0">
-    <h3 className="text-base font-bold uppercase tracking-wide pb-2 mb-4" style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--border)' }}>
+    <h3 className="fs-title font-bold uppercase tracking-wide pb-2 mb-4" style={{ color: 'var(--text-primary)' }}>
       {title}
     </h3>
-    <div className="text-base leading-relaxed space-y-4" style={{ color: 'var(--text-secondary)' }}>
+    <div className="fs-body leading-relaxed space-y-4" style={{ color: 'var(--text-secondary)' }}>
       {children}
     </div>
   </div>
@@ -30,7 +30,7 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
     <div className="h-full overflow-y-auto p-5 transition-colors" style={{ backgroundColor: 'var(--bg-surface)' }}>
       <div className="flex items-center space-x-2 mb-6" style={{ color: 'var(--accent)' }}>
         <BookOpenIcon className="w-6 h-6" />
-        <h2 className="text-lg font-bold">{t('guide.title', lang)}</h2>
+        <h2 className="fs-title font-bold">{t('guide.title', lang)}</h2>
       </div>
 
       <Section title={isZh ? "韋伯方程" : "The Weibull Equation"}>
@@ -39,7 +39,7 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
             ? "產品隨時間 t 的可靠度由雙參數韋伯可靠度函數建模："
             : "The reliability of a product over time t is modeled by the 2-parameter Weibull reliability function:"}
         </p>
-        <div className="p-3 rounded text-center font-mono my-2" style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+        <div className="p-3 rounded-2xl text-center font-mono my-2 soft-inset" style={{ color: 'var(--text-primary)' }}>
           R(t) = e<sup>-(t/η)<sup>β</sup></sup>
         </div>
         <p>
@@ -60,7 +60,7 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
             : "Beta (β) is the slope of the regression line on the probability plot. It is a dimensionless parameter that dictates the shape of the distribution and indicates the physics of the failure mode."}
         </p>
         <ul className="space-y-3 mt-2">
-          <li className="flex items-start p-3 rounded" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)' }}>
+          <li className="flex items-start p-3 rounded-2xl soft-raised-sm">
             <div className="font-mono font-bold w-24 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }}>β &lt; 1.0</div>
             <div>
               <strong className="block mb-1" style={{ color: 'var(--text-primary)' }}>{isZh ? "早夭期 (失效率遞減)" : "Infant Mortality (Decreasing Failure Rate)"}</strong>
@@ -69,7 +69,7 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
                 : "Failures are caused by 'early' defects such as manufacturing flaws, poor quality control, contamination, or installation errors. The population effectively gets stronger over time as the weak units fail and are removed."}
             </div>
           </li>
-          <li className="flex items-start p-3 rounded" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)' }}>
+          <li className="flex items-start p-3 rounded-2xl soft-raised-sm">
             <div className="font-mono font-bold w-24 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }}>β ≈ 1.0</div>
             <div>
               <strong className="block mb-1" style={{ color: 'var(--text-primary)' }}>{isZh ? "隨機失效 (失效率恆定)" : "Random Failures (Constant Failure Rate)"}</strong>
@@ -78,7 +78,7 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
                 : "Failures are independent of time. The component is in its 'useful life' phase. Failures typically result from random external stress events (shocks, accidents) rather than internal degradation. This is equivalent to the Exponential Distribution."}
             </div>
           </li>
-          <li className="flex items-start p-3 rounded" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)' }}>
+          <li className="flex items-start p-3 rounded-2xl soft-raised-sm">
             <div className="font-mono font-bold w-24 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }}>β &gt; 1.0</div>
             <div>
               <strong className="block mb-1" style={{ color: 'var(--text-primary)' }}>{isZh ? "耗損期 (失效率遞增)" : "Wear-out (Increasing Failure Rate)"}</strong>
@@ -96,7 +96,7 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
             ? "Eta (η)，稱為特徵壽命，代表分佈的時間尺度。在數學上，它是可靠度函數指數為 -1 時的時間 t。"
             : "Eta (η), known as the Characteristic Life, represents the time scale of the distribution. Mathematically, it is the time t at which the exponent in the reliability function is -1."}
         </p>
-        <div className="p-4 rounded-lg text-sm font-mono my-3 text-center" style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+        <div className="p-4 rounded-xl fs-body font-mono my-3 text-center soft-inset" style={{ color: 'var(--text-secondary)' }}>
           When t = η, &nbsp; R(η) = e<sup>-1</sup> ≈ 0.368
         </div>
         <p>
@@ -113,7 +113,7 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
 
       <Section title={isZh ? "3. 適配度 (R²)" : "3. Goodness of Fit (R²)"}>
         <p>
-          <strong className="text-slate-800">{isZh ? "R-Squared (決定係數)" : "R-Squared (Coefficient of Determination)"}</strong> {isZh ? "衡量數據點在機率圖上的線性程度。" : "measures the linearity of the data points on the probability plot."}
+          <strong className="text-[var(--brand-text)]">{isZh ? "R-Squared (決定係數)" : "R-Squared (Coefficient of Determination)"}</strong> {isZh ? "衡量數據點在機率圖上的線性程度。" : "measures the linearity of the data points on the probability plot."}
         </p>
         <ul className="list-disc list-inside pl-1 space-y-1 mt-2">
           <li><span className="font-bold" style={{ color: 'var(--success)' }}>&gt; 0.95</span>: {isZh ? "適配極佳。數據緊密遵循韋伯模型。" : "Excellent fit. The data closely follows the Weibull model."}</li>
@@ -142,27 +142,27 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
             : "The Weibull distribution is powerful because it can model the three distinct phases of the Bathtub Curve using a single function."}
         </p>
         <div className="space-y-4 mt-4">
-          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
-            <div className="font-bold mb-2 text-sm uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{isZh ? "階段 1: 早期失效 (β < 1)" : "Phase 1: Early Life (β < 1)"}</div>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <div className="p-4 rounded-2xl soft-raised">
+            <div className="font-bold mb-2 fs-small uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{isZh ? "階段 1: 早期失效 (β < 1)" : "Phase 1: Early Life (β < 1)"}</div>
+            <p className="fs-body" style={{ color: 'var(--text-secondary)' }}>
               {isZh
                 ? "機率密度函數 (PDF) 呈 J 形。它從高處開始迅速下降，表明大多數有缺陷的單元會立即失效。"
                 : "The Probability Density Function (PDF) is J-shaped. It starts high and drops rapidly, indicating that most defective units fail immediately."}
               <br /><span className="mt-2 block font-bold" style={{ color: 'var(--accent)' }}>{isZh ? "策略: 預燒 / 篩選" : "Strategy: Burn-in / Screening"}</span>
             </p>
           </div>
-          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
-            <div className="font-bold mb-2 text-sm uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{isZh ? "階段 2: 使用壽命 (β ≈ 1)" : "Phase 2: Useful Life (β ≈ 1)"}</div>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <div className="p-4 rounded-2xl soft-raised">
+            <div className="font-bold mb-2 fs-small uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{isZh ? "階段 2: 使用壽命 (β ≈ 1)" : "Phase 2: Useful Life (β ≈ 1)"}</div>
+            <p className="fs-body" style={{ color: 'var(--text-secondary)' }}>
               {isZh
                 ? "PDF 是指數型的。失效是隨機且「無記憶」的。"
                 : "The PDF is Exponential. Failures are random and 'memoryless'."}
               <br /><span className="mt-2 block font-bold" style={{ color: 'var(--accent)' }}>{isZh ? "策略: 備件管理" : "Strategy: Spares Management"}</span>
             </p>
           </div>
-          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
-            <div className="font-bold mb-2 text-sm uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{isZh ? "階段 3: 耗損期 (β > 1)" : "Phase 3: Wear-out (β > 1)"}</div>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <div className="p-4 rounded-2xl soft-raised">
+            <div className="font-bold mb-2 fs-small uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>{isZh ? "階段 3: 耗損期 (β > 1)" : "Phase 3: Wear-out (β > 1)"}</div>
+            <p className="fs-body" style={{ color: 'var(--text-secondary)' }}>
               {isZh
                 ? "PDF 是鐘形的（峰值）。失效集中在 Eta 附近。Beta 越高，峰值越窄，失效時間越可預測。"
                 : "The PDF is Bell-shaped (peaked). Failures cluster around Eta. The higher the Beta, the narrower the peak and the more predictable the failure time."}
@@ -172,7 +172,7 @@ const TheoreticalGuide: React.FC<Props> = ({ lang }) => {
         </div>
       </Section>
 
-      <div className="mt-8 pt-4 text-xs italic text-center" style={{ borderTop: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+      <div className="mt-8 pt-4 fs-small italic text-center" style={{ color: 'var(--text-secondary)' }}>
         {t('guide.ref', lang)}
       </div>
     </div>

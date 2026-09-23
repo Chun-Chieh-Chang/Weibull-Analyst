@@ -45,30 +45,28 @@ const MetricCard = ({
     warning?: boolean,
     tooltip?: string
 }) => (
-    <div className={`relative group p-4 rounded-xl border flex flex-col transition-all duration-200 ${warning
-        ? 'border-amber-200'
-        : 'hover:shadow-lg'}`}
+    <div className={`relative group p-4 rounded-2xl flex flex-col transition-all duration-200 ${warning ? '' : 'soft-inset'}`}
         style={warning
-            ? { backgroundColor: 'color-mix(in srgb, #F59E0B 8%, transparent)', borderColor: 'color-mix(in srgb, #F59E0B 30%, transparent)' }
-            : { backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}
+            ? { backgroundColor: 'color-mix(in srgb, #F59E0B 10%, var(--brand-bg))', boxShadow: 'var(--shadow-inset-sm)' }
+            : {}}
     >
         <div className="flex justify-between items-start">
-            <span className="text-xs font-bold uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
+            <span className="fs-micro font-bold uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
                 {label}
                 {warning && <ExclamationTriangleIcon className="w-3.5 h-3.5 text-amber-500" />}
             </span>
             {tooltip && (
                 <div className="relative ml-1">
                     <InformationCircleIcon className="w-4 h-4 cursor-help" style={{ color: 'var(--text-secondary)' }} />
-                    <div className="absolute bottom-full right-0 mb-2 w-48 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 hidden group-hover:block" style={{ backgroundColor: 'var(--text-primary)' }}>
+                    <div className="absolute bottom-full right-0 mb-2 w-48 text-white fs-small p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 hidden group-hover:block" style={{ backgroundColor: 'var(--text-primary)' }}>
                         {tooltip}
                         <div className="absolute top-full right-1 -translate-x-1/2 border-4 border-transparent" style={{ borderTopColor: 'var(--text-primary)' }}></div>
                     </div>
                 </div>
             )}
         </div>
-        <div className={`text-2xl font-black tracking-tight ${colorClass}`} style={{ color: warning ? undefined : 'var(--text-primary)' }}>{value}</div>
-        {subtext && <div className={`text-sm mt-1 font-medium ${warning ? 'text-amber-600' : ''}`} style={{ color: warning ? undefined : 'var(--text-secondary)' }}>{subtext}</div>}
+        <div className={`fs-hero font-black tracking-tight ${colorClass}`} style={{ color: warning ? undefined : 'var(--text-primary)' }}>{value}</div>
+        {subtext && <div className={`fs-small mt-1 font-medium ${warning ? 'text-amber-600' : ''}`} style={{ color: warning ? undefined : 'var(--text-secondary)' }}>{subtext}</div>}
     </div>
 );
 
@@ -195,8 +193,8 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         return (
             <div className="h-full flex flex-col items-center justify-center p-8" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--bg-app) 50%, var(--bg-surface))' }}>
                 <BeakerIcon className="w-16 h-16 mb-4 opacity-30" style={{ color: 'var(--text-secondary)' }} />
-                <p className="text-sm font-medium">{t('results.ai.awaiting', lang)}</p>
-                <p className="text-xs mt-2 text-center max-w-[200px]" style={{ color: 'var(--text-secondary)' }}>{t('results.ai.awaitingSub', lang)}</p>
+                <p className="fs-body font-medium">{t('results.ai.awaiting', lang)}</p>
+                <p className="fs-small mt-2 text-center max-w-[200px]" style={{ color: 'var(--text-secondary)' }}>{t('results.ai.awaitingSub', lang)}</p>
             </div>
         );
     }
@@ -214,7 +212,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
     return (
         <div className="flex flex-col h-full w-full transition-colors relative" style={{ backgroundColor: 'var(--bg-app)' }}>
             {/* Tabs */}
-            <div className="flex border-b transition-colors" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+            <div className="flex m-3 mb-0 p-1 rounded-2xl soft-inset transition-colors">
                 {[
                     { id: 'INSIGHTS', label: t('results.tabs.insights', lang), icon: ChartBarIcon },
                     { id: 'DATA', label: t('results.tabs.data', lang), icon: TableCellsIcon },
@@ -223,12 +221,10 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as TabType)}
-                        className={`flex-1 py-3 text-sm font-bold uppercase tracking-wider flex items-center justify-center space-x-2 border-b-2 transition-all`}
-                        style={{
-                            borderColor: activeTab === tab.id ? 'var(--accent)' : 'transparent',
-                            color: activeTab === tab.id ? 'var(--accent)' : 'var(--text-secondary)',
-                            backgroundColor: activeTab === tab.id ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'transparent'
-                        }}
+                        className={`flex-1 py-2.5 fs-small font-bold uppercase tracking-wider flex items-center justify-center space-x-2 rounded-lg transition-all cursor-pointer`}
+                        style={activeTab === tab.id
+                            ? { color: 'var(--accent)', backgroundColor: 'var(--brand-bg)', boxShadow: 'var(--shadow-raised-sm)' }
+                            : { color: 'var(--text-secondary)' }}
                     >
                         <tab.icon className="w-4 h-4" />
                         <span>{tab.label}</span>
@@ -242,17 +238,17 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
 
                 {activeTab === 'DATA' && (
                     <div className="flex flex-col h-full transition-colors" style={{ backgroundColor: 'var(--bg-surface)' }}>
-                        <div className="px-4 py-3 flex justify-between items-center shrink-0" style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'color-mix(in srgb, var(--bg-app) 50%, var(--bg-surface))' }}>
-                            <h3 className="font-bold text-sm flex items-center">
+                        <div className="px-4 py-3 flex justify-between items-center shrink-0" style={{ backgroundColor: 'var(--bg-app)' }}>
+                            <h3 className="font-bold fs-body flex items-center">
                                 <TableCellsIcon className="w-4 h-4 mr-2" style={{ color: 'var(--accent)' }} />
                                 <span style={{ color: 'var(--text-primary)' }}>{t('results.table.dataPoints', lang)}</span>
                             </h3>
-                            <span className="text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                            <span className="fs-micro uppercase font-bold tracking-widest px-3 py-1 rounded-lg soft-inset-sm" style={{ color: 'var(--text-secondary)' }}>
                                 {isDualMode ? t('results.table.comparative', lang) : t('results.table.single', lang)}
                             </span>
                         </div>
                         <div className="overflow-auto flex-1 pb-28 lg:pb-6">
-                            <table className="w-full text-sm text-left">
+                            <table className="w-full fs-body text-left">
                                 <thead className="font-bold sticky top-0 z-10" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
                                     <tr>
                                         <th className="px-3 py-2 w-10 font-mono" style={{ backgroundColor: 'var(--bg-app)' }}>#</th>
@@ -284,11 +280,11 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                                             {pt ? (
                                                                 <button
                                                                     onClick={() => onTogglePoint && onTogglePoint(groupIndexInAll, pt.id, pt.status)}
-                                                                    className={`px-2 py-1 w-full inline-flex items-center justify-center rounded text-[10px] font-bold uppercase tracking-tighter cursor-pointer transition-all`}
+                                                                    className={`px-2 py-1 w-full inline-flex items-center justify-center rounded fs-micro font-bold uppercase tracking-tighter cursor-pointer transition-all`}
                                                                     style={{
-                                                                        backgroundColor: pt.status === 'F' ? `color-mix(in srgb, ${g.color} 12%, transparent)` : 'color-mix(in srgb, #F59E0B 12%, transparent)',
+                                                                        backgroundColor: pt.status === 'F' ? `color-mix(in srgb, ${g.color} 12%, var(--brand-bg))` : 'color-mix(in srgb, #F59E0B 12%, var(--brand-bg))',
                                                                         color: pt.status === 'F' ? g.color : '#D97706',
-                                                                        border: pt.status === 'F' ? `1px solid color-mix(in srgb, ${g.color} 25%, transparent)` : '1px solid color-mix(in srgb, #F59E0B 25%, transparent)'
+                                                                        boxShadow: 'var(--shadow-inset-sm)'
                                                                     }}
                                                                 >
                                                                     {pt.status === 'F' ? t('results.table.fail', lang) : t('results.table.susp', lang)}
@@ -316,8 +312,8 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                 <MetricCard label={t('results.metrics.r2', lang)} value={validGroups[0].result.rSquared.toFixed(4)} subtext={validGroups[0].result.rSquared < 0.9 ? t('results.metrics.poorFit', lang) : t('results.metrics.excellentFit', lang)} colorClass={validGroups[0].result.rSquared < 0.9 ? "text-amber-600" : "text-purple-600"} warning={validGroups[0].result.rSquared < 0.9} tooltip={t('results.metrics.r2Tooltip', lang)} />
                             </div>
                         ) : (
-                            <div className="rounded-xl border overflow-x-auto" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
-                                <table className="w-full text-sm text-left">
+                            <div className="rounded-3xl soft-raised overflow-x-auto">
+                                <table className="w-full fs-body text-left">
                                     <thead className="font-bold" style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-app)' }}>
                                         <tr>
                                             <th className="px-4 py-3">Metric</th>
@@ -336,7 +332,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                             <tr key={idx} className="transition-colors" style={{ borderBottom: '1px solid var(--border)' }}>
                                                 <td className="px-4 py-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>{row.l}</td>
                                                 {validGroups.map(g => (
-                                                    <td key={g.id} className="px-4 py-4 font-mono font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+                                                    <td key={g.id} className="px-4 py-4 font-mono font-bold fs-title" style={{ color: 'var(--text-primary)' }}>
                                                         {g.result ? row.getV(g.result) : '-'}
                                                     </td>
                                                 ))}
@@ -347,16 +343,16 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                             </div>
                         )}
 
-                        <div className="rounded-xl p-5" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)' }}>
+                        <div className="rounded-3xl p-5 soft-raised">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-sm font-bold flex items-center tracking-tight uppercase" style={{ color: 'color-mix(in srgb, var(--accent) 70%, var(--text-primary))' }}>
+                                <h3 className="fs-body font-bold flex items-center tracking-widest uppercase" style={{ color: 'var(--accent)' }}>
                                     <SparklesIcon className="w-4 h-4 mr-2" style={{ color: 'var(--accent)' }} />
                                     {t('results.ai.title', lang)}
                                 </h3>
                                 {(geminiKey || openaiKey || agnesKey || claudeKey) && (
                                     <button
                                         onClick={() => setShowKeyModal(true)}
-                                        className="text-[10px] flex items-center gap-1 font-bold uppercase tracking-tighter transition-colors"
+                                        className="fs-micro flex items-center gap-1 font-bold uppercase tracking-tighter transition-colors"
                                         style={{ color: 'var(--accent)' }}
                                         title="Change API Key"
                                     >
@@ -365,25 +361,24 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     </button>
                                 )}
                             </div>
-                            {error && <div className="p-3 text-xs rounded mb-2" style={{ backgroundColor: 'color-mix(in srgb, var(--error) 12%, transparent)', color: 'var(--error)', border: '1px solid color-mix(in srgb, var(--error) 20%, transparent)' }}>{error}</div>}
+                            {error && <div className="p-3 fs-small rounded-lg mb-2" style={{ backgroundColor: 'color-mix(in srgb, var(--error) 10%, var(--brand-bg))', color: 'var(--error)', boxShadow: 'var(--shadow-inset-sm)' }}>{error}</div>}
                             {!aiAnalysis ? (
                                 <div className="text-center py-4">
-                                    <p className="text-xs mb-4 font-medium italic" style={{ color: 'color-mix(in srgb, var(--accent) 40%, var(--text-secondary))' }}>{t('results.ai.prompt', lang)}</p>
+                                    <p className="fs-small mb-4 font-medium italic" style={{ color: 'color-mix(in srgb, var(--accent) 40%, var(--text-secondary))' }}>{t('results.ai.prompt', lang)}</p>
                                     <button
                                         onClick={() => handleAIAnalyze()}
                                         disabled={loading || validGroups.length === 0}
-                                        className={`w-full py-3 rounded-xl text-sm font-bold uppercase tracking-widest text-white shadow-lg transition-all flex items-center justify-center space-x-2 ${loading ? 'cursor-wait' : 'active:scale-[0.97]'}`}
-                                        style={{ backgroundColor: loading ? 'color-mix(in srgb, var(--accent) 50%, transparent)' : 'var(--accent)' }}
+                                        className={`w-full py-3 rounded-xl fs-body font-bold uppercase tracking-widest text-white soft-accent-btn flex items-center justify-center space-x-2 ${loading ? 'cursor-wait opacity-60' : ''}`}
                                     >
                                         {loading ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>{t('results.ai.analyzing', lang)}</> : <><StarIcon className="w-4 h-4 mr-1" /><span>{t('results.ai.generate', lang)}</span></>}
                                     </button>
                                 </div>
                             ) : (
                                 <div className="animate-scaleIn">
-                                    <div className="p-4 rounded-lg border text-sm leading-relaxed" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--text-primary)' }}>
+                                    <div className="p-4 rounded-xl soft-inset fs-body leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                                         <div dangerouslySetInnerHTML={{ __html: formatAIResponse(aiAnalysis) }} />
                                     </div>
-                                    <button onClick={() => handleSetAiAnalysis(null)} className="mt-4 text-[10px] font-bold uppercase tracking-widest block w-full text-center transition-colors animate-fadeIn" style={{ color: 'var(--text-secondary)' }}>
+                                    <button onClick={() => handleSetAiAnalysis(null)} className="mt-4 fs-micro font-bold uppercase tracking-widest block w-full text-center transition-colors animate-fadeIn" style={{ color: 'var(--text-secondary)' }}>
                                         {t('results.ai.reset', lang)}
                                     </button>
                                 </div>
@@ -396,13 +391,13 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
             {/* API KEY MODAL */}
             {showKeyModal && (
                 <div className="absolute inset-0 z-[60] flex items-center justify-center p-4 animate-scaleIn" style={{ backgroundColor: 'color-mix(in srgb, #0F172A 60%, transparent)' }}>
-                    <div className="rounded-2xl shadow-2xl p-6 w-full max-w-md border animate-slideUp" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                    <div className="rounded-3xl p-6 w-full max-w-md animate-slideUp" style={{ backgroundColor: 'var(--brand-bg)', boxShadow: 'var(--shadow-float)' }}>
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)' }}>
+                                <div className="p-2 rounded-xl soft-inset-sm">
                                     <KeyIcon className="w-5 h-5" style={{ color: 'var(--accent)' }} />
                                 </div>
-                                <h3 className="text-lg font-bold tracking-tight uppercase" style={{ color: 'var(--text-primary)' }}>AI Settings</h3>
+                                <h3 className="fs-title font-bold tracking-tight uppercase" style={{ color: 'var(--text-primary)' }}>AI Settings</h3>
                             </div>
                             <button onClick={() => setShowKeyModal(false)} className="p-1 transition-colors" style={{ color: 'var(--text-secondary)' }}>
                                 <XMarkIcon className="w-5 h-5" />
@@ -412,13 +407,13 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                         <div className="space-y-6">
                             {/* Provider Selector */}
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Select AI Provider</label>
+                                <label className="block fs-micro font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Select AI Provider</label>
                                 <div className="relative group">
                                     <select
                                         value={activeProvider}
                                         onChange={(e) => setActiveProvider(e.target.value as AIProvider)}
-                                        className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold"
-                                        style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                        className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold soft-inset"
+                                        style={{ color: 'var(--text-primary)' }}
                                     >
                                         <option value="GEMINI">Google Gemini (Default)</option>
                                         <option value="OPENAI">OpenAI (ChatGPT)</option>
@@ -432,13 +427,13 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                             {/* Gemini Model Selector */}
                             {activeProvider === 'GEMINI' && (
                                 <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Gemini Model</label>
+                                    <label className="block fs-micro font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Gemini Model</label>
                                     <div className="relative group">
                                         <select
                                             value={geminiModel}
                                             onChange={(e) => { setGeminiModel(e.target.value as GeminiModel); localStorage.setItem('gemini_model', e.target.value); }}
-                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold"
-                                            style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold soft-inset"
+                                            style={{ color: 'var(--text-primary)' }}
                                         >
                                             <option value="gemini-3.6-flash">Gemini 3.6 Flash (最新 Latest)</option>
                                             <option value="gemini-3.5-flash">Gemini 3.5 Flash (穩定 Stable)</option>
@@ -452,13 +447,13 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                             {/* OpenAI Model Selector */}
                             {activeProvider === 'OPENAI' && (
                                 <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>OpenAI Model</label>
+                                    <label className="block fs-micro font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>OpenAI Model</label>
                                     <div className="relative group">
                                         <select
                                             value={openaiModel}
                                             onChange={(e) => { setOpenaiModel(e.target.value as OpenAIModel); localStorage.setItem('openai_model', e.target.value); }}
-                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold"
-                                            style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold soft-inset"
+                                            style={{ color: 'var(--text-primary)' }}
                                         >
                                             <option value="gpt-4o-mini">GPT-4o Mini (快速便宜 Fast & Cheap)</option>
                                         </select>
@@ -470,13 +465,13 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                             {/* Claude Model Selector */}
                             {activeProvider === 'CLAUDE' && (
                                 <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Claude Model</label>
+                                    <label className="block fs-micro font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Claude Model</label>
                                     <div className="relative group">
                                         <select
                                             value={claudeModel}
                                             onChange={(e) => { setClaudeModel(e.target.value as ClaudeModel); localStorage.setItem('claude_model', e.target.value); }}
-                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold"
-                                            style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold soft-inset"
+                                            style={{ color: 'var(--text-primary)' }}
                                         >
                                             <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (平衡 Balanced)</option>
                                             <option value="claude-haiku-4-5">Claude Haiku 4.5 (快速便宜 Fast & Cheap)</option>
@@ -488,7 +483,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
 
                             {/* API Key Input */}
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>
+                                <label className="block fs-micro font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>
                                     {activeProvider} API Key
                                 </label>
                                 <input
@@ -496,12 +491,12 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     value={apiKeyInput}
                                     onChange={(e) => setApiKeyInput(e.target.value)}
                                     placeholder={`Enter your ${activeProvider} API Key...`}
-                                    className="w-full rounded-xl px-4 py-3 outline-none transition-all font-mono text-sm"
-                                    style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                    className="w-full rounded-xl px-4 py-3 outline-none transition-all font-mono fs-body soft-inset"
+                                    style={{ color: 'var(--text-primary)' }}
                                 />
                             </div>
 
-                            <p className="text-[11px] leading-relaxed p-3 rounded-lg border italic" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--bg-app) 50%, transparent)', borderColor: 'var(--border)' }}>
+                            <p className="fs-small leading-relaxed p-3 rounded-lg soft-inset-sm italic" style={{ color: 'var(--text-secondary)' }}>
                                 {lang === 'zh'
                                     ? "您的 Key 將加密儲存於當前瀏覽器中，不會傳送至我們的伺服器。"
                                     : "Your key is stored locally in your browser and is never sent to our servers."}
@@ -511,7 +506,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                 <button
                                     onClick={handleSaveKey}
                                     disabled={!apiKeyInput.trim()}
-                                    className="w-full text-white font-bold uppercase tracking-widest py-3 rounded-xl shadow-lg transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full text-white fs-body font-bold uppercase tracking-widest py-3 rounded-xl soft-accent-btn disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{ backgroundColor: 'var(--accent)' }}
                                 >
                                     {lang === 'zh' ? "储存配置並分析" : "Save & Analyze"}
@@ -520,7 +515,7 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                     href={activeProvider === 'GEMINI' ? "https://aistudio.google.com/app/apikey" : activeProvider === 'AGNES' ? "https://apihub.agnes-ai.com" : activeProvider === 'CLAUDE' ? "https://console.anthropic.com/settings/keys" : "https://platform.openai.com/api-keys"}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-[10px] text-center font-bold transition-colors"
+                                    className="fs-micro text-center font-bold transition-colors"
                                     style={{ color: 'var(--accent)' }}
                                 >
                                     {lang === 'zh' ? `獲取 ${activeProvider} Key ？` : `Get ${activeProvider} Key ?`}

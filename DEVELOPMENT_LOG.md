@@ -2,6 +2,26 @@
 
 > **Systematic development history based on MECE principles**
 
+## 📅 2026-09-23 — Phase 14: Inset Focus Soft-UI, Unified Type Scale & Heavier Neutral Palette
+
+### Overview
+Rebuilt the interface around the "Inset Focus" soft-UI language (pressed/inset surfaces for inputs and tabs, raised surfaces for cards and actions), replaced ad-hoc pixel font sizes with a single role-based type scale, reduced border radii to a professional range, and returned the palette to heavy black-gray neutrals with the navy primary.
+
+### Changes
+- **Type scale SSOT**: `index.css` now defines `--fs-micro 10 / --fs-small 12 / --fs-body 13.5 / --fs-title 16 / --fs-hero 21` with matching `@utility fs-*` classes (variant-aware, e.g. `sm:fs-title`). Every raw `text-xs` / `text-sm` / `text-[9-13px]` / `text-lg` / `text-2xl` was removed from `App.tsx`, `ResultsPanel.tsx`, `TheoreticalGuide.tsx`, `PwaPrompt.tsx`, `WeibullChart.tsx`.
+- **Chart typography**: `FS` constant re-mapped onto the same scale (base 13.5 / tick 12 / axis 13.5 / annotation 16 / label 12 / stat 12) so chart and chrome share one hierarchy.
+- **Radius scale**: `@theme` radius tokens compacted (`xl 12→10`, `2xl 16→12`, `3xl 24→14`), and all pill-shaped buttons/toggles/chips converted from `rounded-full` to `rounded-lg/xl`; `rounded-full` now only survives on true circles (status dots, spinners, avatar-style badges).
+- **Palette**: neutral heavy gray substrate `#E3E5E9` with near-black ink `#1E222B` / muted `#59616E`, navy primary `#1E3A5F` (hover `#2C4A6E`) and `#3B82F6` interactive accent; shadows retinted to neutral `rgba(133,140,152,·)` for more depth.
+- **Soft-UI surfaces**: `--shadow-raised / -sm`, `--shadow-inset / -sm / -focus`, `--shadow-accent`, `--shadow-float` plus `.soft-raised`, `.soft-inset`, `.soft-btn`, `.soft-accent-btn` utilities; hairline borders removed app-wide (inputs are inset wells, cards/actions are raised).
+- **Chart chrome**: grid/axis colors neutralized (`rgba(110,118,132,0.25)` grid, `#9BA3AF` axis, `#59616E` labels), formula-box and draggable-label backdrops matched to the new substrate.
+
+### Verification
+- `npm run build` → exit 0 (vite + PWA precache regenerated).
+- Grep: zero residual raw text-size utilities in `src/` (report template CSS intentionally untouched); `rounded-full` only on circular elements.
+- Visual check (Playwright, 1600×1000 and 430×932): Insights / Data / Guide tabs, mobile dock, chart toolbar and modals all render on the unified scale and palette.
+
+---
+
 ## 📅 2026-09-06 — Phase 13: Chart Axis Harmony & 8D-Creator Color System
 
 ### Overview

@@ -2,21 +2,45 @@
 
 @theme {
     --color-slate-950: #0F172A;
+    /* Compact professional radius scale (SSOT for every rounded-* utility) */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 10px;
+    --radius-2xl: 12px;
+    --radius-3xl: 14px;
 }
 
 :root {
-    /* 8D-Creator brand palette (SSOT: brand-* constants) */
-    --brand-bg: #F9FAFB;
-    --brand-surface: #FFFFFF;
-    --brand-text: #111827;
-    --brand-muted: #6B7280;
-    --brand-border: #E5E7EB;
+    /* Inset Focus soft-UI palette — heavy black-gray neutrals (SSOT: brand-* constants) */
+    --brand-bg: #E3E5E9;
+    --brand-surface: #E3E5E9;
+    --brand-text: #1E222B;
+    --brand-muted: #59616E;
+    --brand-border: rgba(30, 34, 43, 0.14);
     --brand-primary: #1E3A5F;
     --brand-primary-light: #2C4A6E;
     --brand-accent: #3B82F6;
     --brand-success: #10B981;
     --brand-warning: #F59E0B;
     --brand-error: #EF4444;
+
+    /* Unified type scale — role-based, single source of truth.
+       Use the fs-* utilities below; never raw pixel font-sizes. */
+    --fs-micro: 10px;    /* badges, overline labels */
+    --fs-small: 12px;    /* secondary text, dense UI chrome */
+    --fs-body: 13.5px;   /* default reading text, buttons */
+    --fs-title: 16px;    /* headings */
+    --fs-hero: 21px;     /* hero numbers */
+
+    /* Soft-UI shadow recipes — single light source at top-left, neutral gray */
+    --shadow-raised: 8px 8px 16px rgba(133, 140, 152, 0.45), -8px -8px 16px rgba(255, 255, 255, 0.9);
+    --shadow-raised-sm: 4px 4px 10px rgba(133, 140, 152, 0.4), -4px -4px 10px rgba(255, 255, 255, 0.85);
+    --shadow-inset: inset 5px 5px 10px rgba(133, 140, 152, 0.4), inset -5px -5px 10px rgba(255, 255, 255, 0.85);
+    --shadow-inset-sm: inset 3px 3px 7px rgba(133, 140, 152, 0.35), inset -3px -3px 7px rgba(255, 255, 255, 0.8);
+    --shadow-inset-focus: inset 5px 5px 10px rgba(133, 140, 152, 0.4), inset -5px -5px 10px rgba(255, 255, 255, 0.85), 0 0 0 2px rgba(30, 58, 95, 0.5);
+    --shadow-accent: 5px 5px 14px rgba(30, 58, 95, 0.35), -4px -4px 10px rgba(255, 255, 255, 0.8);
+    --shadow-float: 14px 14px 36px rgba(133, 140, 152, 0.5), -10px -10px 26px rgba(255, 255, 255, 0.9);
     /* Runtime tokens (light mode) — same contract as 8D-Creator */
     --bg-app: var(--brand-bg);
     --bg-surface: var(--brand-surface);
@@ -62,8 +86,8 @@ body {
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+::-webkit-scrollbar-thumb { background: rgba(133, 140, 152, 0.6); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-muted); }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(6px); }
@@ -80,3 +104,32 @@ body {
 .animate-fadeIn { animation: fadeIn 0.25s ease-out both; }
 .animate-slideUp { animation: slideUp 0.3s ease-out both; }
 .animate-scaleIn { animation: scaleIn 0.2s ease-out both; }
+
+/* --- Inset Focus soft-UI utilities ---------------------------------------- */
+.soft-raised { background-color: var(--brand-bg); box-shadow: var(--shadow-raised); }
+.soft-raised-sm { background-color: var(--brand-bg); box-shadow: var(--shadow-raised-sm); }
+.soft-inset { background-color: var(--brand-bg); box-shadow: var(--shadow-inset); }
+.soft-inset-sm { background-color: var(--brand-bg); box-shadow: var(--shadow-inset-sm); }
+
+.soft-btn {
+    background-color: var(--brand-bg);
+    box-shadow: var(--shadow-raised-sm);
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+.soft-btn:hover { box-shadow: var(--shadow-raised); }
+.soft-btn:active { box-shadow: var(--shadow-inset-sm); }
+
+.soft-accent-btn {
+    background-color: var(--accent);
+    box-shadow: var(--shadow-accent);
+    transition: box-shadow 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+.soft-accent-btn:hover { background-color: var(--accent-hover); }
+.soft-accent-btn:active { box-shadow: 2px 2px 8px rgba(30, 58, 95, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.7); }
+
+/* --- Unified type scale utilities (works with responsive variants) --------- */
+@utility fs-micro { font-size: var(--fs-micro); }
+@utility fs-small { font-size: var(--fs-small); }
+@utility fs-body { font-size: var(--fs-body); }
+@utility fs-title { font-size: var(--fs-title); }
+@utility fs-hero { font-size: var(--fs-hero); }

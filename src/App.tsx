@@ -204,73 +204,69 @@ const App: React.FC = () => {
     return (
         <div className="flex flex-col h-screen w-screen overflow-hidden font-sans select-none transition-colors duration-300" style={{ backgroundColor: 'var(--bg-app)' }}>
             {/* 1. Header Bar */}
-            <header className="flex-none flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 sm:py-3 z-30 transition-colors duration-200" style={{ backgroundColor: 'var(--bg-sidebar)', borderBottom: '1px solid var(--border)' }}>
+            <header className="flex-none flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 sm:py-3 z-30 transition-colors duration-200" style={{ backgroundColor: 'var(--bg-sidebar)' }}>
                 <div className="flex items-center justify-between sm:justify-start space-x-3 mb-2 sm:mb-0">
                     <div className="flex items-center space-x-2">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shadow-inner" style={{ backgroundColor: 'var(--accent)' }}>
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--accent)', boxShadow: 'var(--shadow-accent)' }}>
                             <ChartPieIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
-                        <h1 className="text-sm sm:text-lg font-bold tracking-tight whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
+                        <h1 className="fs-body sm:fs-title font-bold tracking-tight whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
                             {t('app.title', lang)} <span className="text-[var(--accent-interactive)]">{t('app.titleSuffix', lang)}</span>
                         </h1>
                     </div>
 
                     {!isOnline && (
-                        <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 text-[11px] font-bold">
+                        <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 fs-micro font-bold">
                             <WifiIcon className="w-3.5 h-3.5" />
                             <span>{lang === 'zh' ? '離線模式' : 'Offline'}</span>
                         </div>
                     )}
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end px-2 py-1.5 sm:py-0 space-x-2 sm:space-x-3 sm:bg-transparent border-t sm:border-t-0" style={{ backgroundColor: 'var(--bg-sidebar)', borderColor: 'var(--border)' }}>
+                <div className="flex items-center justify-between sm:justify-end px-2 py-1.5 sm:py-0 space-x-2 sm:space-x-3">
                     {/* Mode Toggle */}
-                    <div className="flex p-0.5 rounded-lg border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
+                    <div className="flex p-1 rounded-xl soft-inset">
                         <button
                             onClick={() => setMode('SINGLE')}
-                            className={`px-3 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all min-h-[40px] sm:min-h-0 ${mode === 'SINGLE'
-                                ? 'bg-[var(--accent)] text-white shadow-sm hover:bg-[var(--accent-hover)]'
+                            className={`px-3 sm:px-4 py-2 sm:py-1.5 fs-small sm:fs-body font-bold uppercase tracking-wide rounded-lg transition-all min-h-[40px] sm:min-h-0 cursor-pointer ${mode === 'SINGLE'
+                                ? 'text-white'
                                 : 'hover:opacity-70 transition-opacity'
                                 }`}
-                            style={mode !== 'SINGLE' ? { color: 'var(--text-secondary)' } : {}}
+                            style={mode === 'SINGLE' ? { backgroundColor: 'var(--accent)', boxShadow: 'var(--shadow-accent)' } : { color: 'var(--text-secondary)' }}
                         >
                             {t('app.single', lang)}
                         </button>
                         <button
                             onClick={() => setMode('MULTI')}
-                            className={`px-3 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide rounded-md transition-all min-h-[40px] sm:min-h-0 ${mode === 'MULTI'
-                                ? 'bg-[var(--accent)] text-white shadow-sm hover:bg-[var(--accent-hover)]'
+                            className={`px-3 sm:px-4 py-2 sm:py-1.5 fs-small sm:fs-body font-bold uppercase tracking-wide rounded-lg transition-all min-h-[40px] sm:min-h-0 cursor-pointer ${mode === 'MULTI'
+                                ? 'text-white'
                                 : 'hover:opacity-70 transition-opacity'
                                 }`}
-                            style={mode !== 'MULTI' ? { color: 'var(--text-secondary)' } : {}}
+                            style={mode === 'MULTI' ? { backgroundColor: 'var(--accent)', boxShadow: 'var(--shadow-accent)' } : { color: 'var(--text-secondary)' }}
                         >
                             {lang === 'zh' ? '多組比較' : 'Multi-Group'}
                         </button>
                     </div>
 
-                    <div className="hidden sm:block h-4 w-px" style={{ backgroundColor: 'var(--border)' }}></div>
-
                     {/* Language */}
                     <div className="flex items-center space-x-1">
                         <button
                             onClick={toggleLanguage}
-                            className="p-2 rounded-md transition-colors flex items-center space-x-1 hover:opacity-70 min-h-[44px] min-w-[44px] justify-center"
+                            className="p-2 rounded-xl soft-btn flex items-center space-x-1 min-h-[44px] min-w-[44px] justify-center cursor-pointer"
                             style={{ color: 'var(--text-secondary)' }}
                             title="Switch Language"
                         >
                             <LanguageIcon className="w-5 h-5" />
-                            <span className="text-xs sm:text-sm font-bold">{lang.toUpperCase()}</span>
+                            <span className="fs-small sm:fs-body font-bold">{lang.toUpperCase()}</span>
                         </button>
                     </div>
 
-                    <div className="h-4 w-px" style={{ backgroundColor: 'var(--border)' }}></div>
-
                     {/* Action Buttons */}
-                    <div className="flex items-center space-x-1">
-                        <button onClick={handleExport} className="p-2 sm:p-1.5 rounded-md transition-colors hover:opacity-70 min-h-[44px] min-w-[44px] flex items-center justify-center" style={{ color: 'var(--text-secondary)' }} title={t('app.export', lang)}>
+                    <div className="flex items-center space-x-1.5">
+                        <button onClick={handleExport} className="p-2 sm:p-1.5 rounded-xl soft-btn min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer" style={{ color: 'var(--text-secondary)' }} title={t('app.export', lang)}>
                             <ArrowDownTrayIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={handleClear} className="p-2 sm:p-1.5 rounded-md transition-colors hover:opacity-70 min-h-[44px] min-w-[44px] flex items-center justify-center" style={{ color: 'var(--text-secondary)' }} title={t('app.clear', lang)}>
+                        <button onClick={handleClear} className="p-2 sm:p-1.5 rounded-xl soft-btn min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer" style={{ color: 'var(--text-secondary)' }} title={t('app.clear', lang)}>
                             <TrashIcon className="w-5 h-5" />
                         </button>
                     </div>
@@ -281,7 +277,7 @@ const App: React.FC = () => {
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
 
                 {/* Mobile Tab Switcher */}
-                <div className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 backdrop-blur-xl rounded-full shadow-2xl flex items-center p-1.5 z-50 transition-all duration-300 mb-safe" style={{ backgroundColor: 'color-mix(in srgb, var(--bg-surface) 92%, transparent)', border: '1px solid var(--border)' }}>
+                <div className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 rounded-xl flex items-center p-1.5 z-50 transition-all duration-300 mb-safe soft-raised">
                     {[
                         { id: 'INPUT', label: lang === 'zh' ? '數據' : 'Data', icon: ArrowPathIcon },
                         { id: 'CHART', label: lang === 'zh' ? '圖表' : 'Plot', icon: ChartPieIcon },
@@ -290,11 +286,11 @@ const App: React.FC = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveMobileView(tab.id as any)}
-                            className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all min-h-[44px] cursor-pointer ${activeMobileView === tab.id
-                                ? 'text-white shadow-lg'
+                            className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg fs-small font-bold uppercase tracking-wider transition-all min-h-[44px] cursor-pointer ${activeMobileView === tab.id
+                                ? 'text-white'
                                 : ''
                                 }`}
-                            style={activeMobileView === tab.id ? { backgroundColor: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
+                            style={activeMobileView === tab.id ? { backgroundColor: 'var(--accent)', boxShadow: 'var(--shadow-accent)' } : { color: 'var(--text-secondary)' }}
                         >
                             <tab.icon className="w-4 h-4" />
                             <span className={activeMobileView === tab.id ? 'block' : 'hidden'}>{tab.label}</span>
@@ -303,19 +299,19 @@ const App: React.FC = () => {
                 </div>
 
                 {/* LEFT COLUMN: Data Input Sidebar */}
-                <aside className={`${activeMobileView === 'INPUT' ? 'flex' : 'hidden'} lg:flex w-full lg:w-80 flex-none flex-col z-20 transition-all duration-300`} style={{ backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid var(--border)' }}>
+                <aside className={`${activeMobileView === 'INPUT' ? 'flex' : 'hidden'} lg:flex w-full lg:w-80 flex-none flex-col z-20 transition-all duration-300`} style={{ backgroundColor: 'var(--bg-sidebar)' }}>
                     <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 pb-28 lg:pb-4">
                         {/* Format Info Box */}
-                        <div className="p-3 rounded-lg flex gap-3 animate-fadeIn" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
+                        <div className="p-3.5 rounded-2xl flex gap-3 animate-fadeIn soft-inset">
                             <InformationCircleIcon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} />
-                            <p className="text-xs leading-normal font-medium" style={{ color: 'color-mix(in srgb, var(--accent) 70%, var(--text-primary))' }}>
+                            <p className="fs-small leading-normal font-medium" style={{ color: 'var(--text-secondary)' }}>
                                 {t('input.formatInfo', lang)}
                             </p>
                         </div>
 
                         {/* Input Groups List */}
                         {displayedGroups.map((g) => (
-                            <div key={g.id} className="flex flex-col min-h-[170px] p-3 rounded-xl border transition-all duration-200" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                            <div key={g.id} className="flex flex-col min-h-[170px] p-4 rounded-3xl soft-raised transition-all duration-200">
                                 <div className="flex justify-between items-center mb-2">
                                     <div className="flex items-center space-x-2 flex-1 mr-2 min-w-0">
                                         <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: g.color }}></div>
@@ -325,12 +321,12 @@ const App: React.FC = () => {
                                             value={g.label}
                                             onChange={(e) => handleGroupFieldChange(g.id, 'label', e.target.value)}
                                             placeholder={lang === 'zh' ? '組別名稱' : 'Group Name'}
-                                            className="text-xs sm:text-sm font-bold uppercase tracking-wider bg-transparent outline-none border-b border-transparent hover:border-[var(--border)] focus:border-[var(--accent-interactive)] transition-colors w-full truncate"
+                                            className="fs-small sm:fs-body font-bold uppercase tracking-wider bg-transparent outline-none border-b border-transparent hover:border-[var(--border)] focus:border-[var(--accent-interactive)] transition-colors w-full truncate"
                                             style={{ color: g.color }}
                                         />
                                     </div>
                                     <div className="flex items-center space-x-2 shrink-0">
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: 'var(--text-secondary)', backgroundColor: 'color-mix(in srgb, var(--text-secondary) 10%, transparent)' }}>
+                                        <span className="fs-micro font-bold px-2.5 py-1 rounded-lg soft-inset-sm" style={{ color: 'var(--text-secondary)' }}>
                                             N={parseInputData(g.text).length}
                                         </span>
                                         {mode === 'MULTI' && groups.length > 2 && (
@@ -345,13 +341,13 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
                                 <textarea
-                                    className="flex-1 w-full p-2.5 rounded-lg resize-none font-mono text-xs sm:text-[13px] outline-none transition-all leading-relaxed"
-                                    style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                                    className="flex-1 w-full p-3 rounded-xl resize-none font-mono fs-small sm:fs-body outline-none transition-all leading-relaxed soft-inset"
+                                    style={{ color: 'var(--text-primary)' }}
                                     placeholder={t('input.placeholderSingle', lang)}
                                     value={g.text}
                                     onChange={(e) => handleGroupFieldChange(g.id, 'text', e.target.value)}
-                                    onFocus={(e) => e.target.style.borderColor = g.color}
-                                    onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
+                                    onFocus={(e) => e.target.style.boxShadow = 'var(--shadow-inset-focus)'}
+                                    onBlur={(e) => e.target.style.boxShadow = ''}
                                 />
                             </div>
                         ))}
@@ -360,12 +356,8 @@ const App: React.FC = () => {
                         {mode === 'MULTI' && (
                             <button
                                 onClick={handleAddGroup}
-                                className="w-full py-3 px-4 rounded-xl border-2 border-dashed flex items-center justify-center space-x-2 font-bold text-xs uppercase tracking-wider transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer min-h-[44px]"
-                                style={{
-                                    borderColor: 'color-mix(in srgb, var(--accent) 50%, transparent)',
-                                    color: 'var(--accent)',
-                                    backgroundColor: 'color-mix(in srgb, var(--accent) 6%, transparent)'
-                                }}
+                                className="w-full py-3 px-4 rounded-xl soft-btn flex items-center justify-center space-x-2 font-bold fs-small uppercase tracking-wider cursor-pointer min-h-[44px]"
+                                style={{ color: 'var(--accent)' }}
                             >
                                 <PlusIcon className="w-4 h-4" />
                                 <span>{lang === 'zh' ? '+ 新增數據組' : '+ Add Dataset'}</span>
@@ -373,11 +365,10 @@ const App: React.FC = () => {
                         )}
                     </div>
 
-                    <div className="p-4 sticky bottom-0 z-30 pb-28 lg:pb-4" style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-sidebar)' }}>
+                    <div className="p-4 sticky bottom-0 z-30 pb-28 lg:pb-4" style={{ backgroundColor: 'var(--bg-sidebar)' }}>
                         <button
                             onClick={handleCalculate}
-                            className="w-full text-white text-sm font-bold py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 active:scale-[0.97] shadow-lg cursor-pointer min-h-[44px]"
-                            style={{ backgroundColor: 'var(--accent)' }}
+                            className="w-full text-white fs-body font-bold uppercase tracking-widest py-3.5 rounded-xl soft-accent-btn flex items-center justify-center space-x-2 cursor-pointer min-h-[44px]"
                         >
                             <ArrowPathIcon className="w-5 h-5" />
                             <span>{t('input.calculate', lang)}</span>
@@ -398,7 +389,7 @@ const App: React.FC = () => {
                 </main>
 
                 {/* RIGHT COLUMN: Analysis Panel */}
-                <aside className={`${activeMobileView === 'RESULTS' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[450px] flex-none flex flex-col z-20 transition-all duration-300`} style={{ backgroundColor: 'var(--bg-surface)', borderLeft: '1px solid var(--border)' }}>
+                <aside className={`${activeMobileView === 'RESULTS' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[450px] flex-none flex flex-col z-20 transition-all duration-300`} style={{ backgroundColor: 'var(--bg-surface)' }}>
                     <div className="flex-1 overflow-hidden relative pb-24 lg:pb-0">
                         <ResultsPanel
                             groups={displayedGroups}
@@ -416,7 +407,7 @@ const App: React.FC = () => {
             <PwaPrompt lang={lang} needRefresh={needRefresh} onUpdateServiceWorker={handleUpdateServiceWorker} />
 
             {/* Footer */}
-            <div className="hidden sm:block flex-none px-4 py-1.5 text-[9px] text-right uppercase tracking-widest font-bold" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
+            <div className="hidden sm:block flex-none px-4 py-1.5 fs-micro text-right uppercase tracking-widest font-bold" style={{ color: 'var(--text-secondary)', backgroundColor: 'var(--bg-app)' }}>
                 Developed by Wesley Chang @ Mouldex, Jan-2026. All rights reserved.
             </div>
         </div>

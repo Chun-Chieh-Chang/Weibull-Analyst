@@ -53,7 +53,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const effectiveGroups = useMemo(() => {
         if (groups && groups.length > 0) return groups;
         const res: GroupDataset[] = [];
-        if (result1) res.push({ id: 'g1', label: label1 || (lang === 'zh' ? 'A 組' : 'Group A'), text: '', color: '#4f46e5', result: result1, visible: visibleGroups.g1 });
+        if (result1) res.push({ id: 'g1', label: label1 || (lang === 'zh' ? 'A 組' : 'Group A'), text: '', color: '#1E3A5F', result: result1, visible: visibleGroups.g1 });
         if (result2) res.push({ id: 'g2', label: label2 || (lang === 'zh' ? 'B 組' : 'Group B'), text: '', color: '#e11d48', result: result2, visible: visibleGroups.g2 });
         return res;
     }, [groups, result1, result2, label1, label2, lang, visibleGroups]);
@@ -63,22 +63,22 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const labelOffsetsRef = useRef<Map<string, {x: number; y: number}>>(new Map());
     const dragRef = useRef<{active: boolean; id: string; startMX: number; startMY: number; baseLeft: number; baseTop: number} | null>(null);
 
-    const gridColor = 'rgba(0,0,0,0.06)';
-    const axisColor = '#94a3b8';
-    const axisTextColor = '#6B7280';
-    const bgColor = '#ffffff';
+    const gridColor = 'rgba(110,118,132,0.25)';
+    const axisColor = '#9BA3AF';
+    const axisTextColor = '#59616E';
+    const bgColor = '#E3E5E9';
     const plotBgColor = 'transparent';
 
     // Typography scale — single source of truth for the interactive chart.
     // Principle: content >= chrome. Axis titles and annotations carry the
     // analysis conclusion, so they rank at/above base; ticks/badges are chrome.
     const FS = {
-        base: 13,         // plotly default (hover text, fallback)
-        tick: 11.5,       // axis tick labels
-        axis: 13.5,       // axis titles (units + meaning)
-        annotation: 20,   // formula box (the analysis conclusion)
-        label: 13,        // draggable overlay labels (R=0.95, eta markers)
-        stat: 11.5,       // footer stat strip
+        base: 13.5,       // plotly default (hover text, fallback) — matches --fs-body
+        tick: 12,         // axis tick labels — matches --fs-small
+        axis: 13.5,       // axis titles (units + meaning) — matches --fs-body
+        annotation: 16,   // formula box (the analysis conclusion) — matches --fs-title
+        label: 12,        // draggable overlay labels (R=0.95, eta markers)
+        stat: 12,         // footer stat strip
     };
 
     const getFailureModeBadge = (beta: number) => {
@@ -386,7 +386,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 formulaLines.push(`<span style="color:${g.color};">${g.label}:</span> <span style="color:${g.color}">R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
             });
             if (formulaLines.length > 0) {
-                const fontSize = formulaLines.length > 2 ? 16 : FS.annotation;
+                const fontSize = formulaLines.length > 2 ? FS.base : FS.annotation;
                 layout.annotations.push({
                     text: formulaLines.join('<br>'),
                     xref: 'paper', yref: 'paper',
@@ -395,8 +395,8 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     showarrow: false,
                     font: { size: fontSize, family: 'Inter, system-ui, sans-serif' },
                     align: 'left',
-                    bgcolor: 'rgba(255,255,255,0.92)',
-                    bordercolor: 'rgba(0,0,0,0.15)',
+                    bgcolor: 'rgba(227,229,233,0.92)',
+                    bordercolor: 'rgba(133,140,152,0.5)',
                     borderwidth: 1,
                     borderpad: 6
                 });
@@ -821,16 +821,12 @@ drag=null;});})();
                                 setVisibleGroups(v => g.id === 'g1' ? { ...v, g1: !v.g1 } : { ...v, g2: !v.g2 });
                             }
                         }}
-                        className="pointer-events-auto flex items-center space-x-2 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm transition-all cursor-pointer hover:scale-105"
-                        style={{
-                            backgroundColor: 'color-mix(in srgb, var(--bg-surface) 75%, transparent)',
-                            border: `1.5px solid ${g.visible ? g.color : 'var(--border)'}`,
-                            opacity: g.visible ? 1 : 0.4
-                        }}
+                        className="pointer-events-auto flex items-center space-x-2 px-3 py-1.5 rounded-lg soft-raised-sm transition-all cursor-pointer hover:scale-105"
+                        style={{ opacity: g.visible ? 1 : 0.4 }}
                     >
                         <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: g.color }}></div>
-                        <span className="text-xs font-bold truncate max-w-[120px]" style={{ color: 'var(--text-primary)' }}>{g.label}</span>
-                        <span className="text-[9px] font-bold uppercase tracking-tighter px-1.5 py-0.5 rounded-full shrink-0" style={{ color: 'var(--text-secondary)', border: '1px solid color-mix(in srgb, var(--border) 60%, transparent)' }}>
+                        <span className="fs-small font-bold truncate max-w-[120px]" style={{ color: 'var(--text-primary)' }}>{g.label}</span>
+                        <span className="fs-micro font-bold uppercase tracking-tighter px-1.5 py-0.5 rounded shrink-0" style={{ color: 'var(--text-secondary)', boxShadow: 'var(--shadow-inset-sm)' }}>
                             {getFailureModeBadge(g.result.beta)}
                         </span>
                     </button>
@@ -853,13 +849,13 @@ drag=null;});})();
     return (
         <div className="w-full flex flex-col h-full relative transition-colors duration-300" style={{ backgroundColor: 'var(--bg-surface)' }}>
             {/* Integrated Toolbar */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3.5 z-20 gap-2 transition-colors duration-200" style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-surface)' }}>
+            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3.5 z-20 gap-2 transition-colors duration-200" style={{ backgroundColor: 'var(--bg-surface)' }}>
                 <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-6">
-                    <h3 className="text-sm sm:text-lg font-bold tracking-tight shrink-0" style={{ color: 'var(--text-primary)' }}>
+                    <h3 className="fs-body sm:fs-title font-bold tracking-tight shrink-0" style={{ color: 'var(--text-primary)' }}>
                         {chartType === 'PROBABILITY' ? (lang === 'zh' ? '機率圖' : 'Probability Plot') : (chartType === 'RELIABILITY' ? (lang === 'zh' ? '可靠度曲線' : 'Reliability Curve') : (lang === 'zh' ? '機率密度' : 'Probability Density'))}
                     </h3>
 
-                    <div className="flex p-0.5 sm:p-1 rounded-lg border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
+                    <div className="flex p-1 rounded-xl soft-inset">
                         {[
                             { id: 'PROBABILITY', label: lang === 'zh' ? '機率' : 'Prob' },
                             { id: 'RELIABILITY', label: lang === 'zh' ? '可靠度' : 'Rel' },
@@ -868,11 +864,8 @@ drag=null;});})();
                             <button
                                 key={type.id}
                                 onClick={() => setChartType(type.id as ChartType)}
-                                className={`px-2.5 sm:px-4 py-1 text-xs sm:text-sm font-bold rounded-md transition-all cursor-pointer min-h-[36px] sm:min-h-0 ${chartType === type.id
-                                    ? 'shadow-sm'
-                                    : ''
-                                    }`}
-                                style={chartType === type.id ? { backgroundColor: 'var(--bg-surface)', color: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
+                                className="px-2.5 sm:px-4 py-1.5 fs-small sm:fs-body font-bold rounded-lg transition-all cursor-pointer min-h-[36px] sm:min-h-0"
+                                style={chartType === type.id ? { backgroundColor: 'var(--brand-bg)', color: 'var(--accent)', boxShadow: 'var(--shadow-raised-sm)' } : { color: 'var(--text-secondary)' }}
                             >
                                 {type.label}
                             </button>
@@ -880,27 +873,27 @@ drag=null;});})();
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4 pt-1 sm:pt-0 border-t sm:border-t-0" style={{ borderColor: 'var(--border)' }}>
-                    <div className="flex items-center rounded-lg p-0.5 border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border)' }}>
+                <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4 pt-1 sm:pt-0">
+                    <div className="flex items-center rounded-xl p-1 soft-inset">
                         <button
                             onClick={() => setInteractionMode('ZOOM')}
-                            className={`p-1.5 rounded-md transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center ${interactionMode === 'ZOOM' ? 'shadow-sm' : ''}`}
-                            style={interactionMode === 'ZOOM' ? { backgroundColor: 'var(--bg-surface)', color: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
+                            className="p-1.5 rounded-lg transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+                            style={interactionMode === 'ZOOM' ? { backgroundColor: 'var(--brand-bg)', color: 'var(--accent)', boxShadow: 'var(--shadow-raised-sm)' } : { color: 'var(--text-secondary)' }}
                             title="Zoom Mode"
                         >
                             <MagnifyingGlassPlusIcon className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => setInteractionMode('PAN')}
-                            className={`p-1.5 rounded-md transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center ${interactionMode === 'PAN' ? 'shadow-sm' : ''}`}
-                            style={interactionMode === 'PAN' ? { backgroundColor: 'var(--bg-surface)', color: 'var(--accent)' } : { color: 'var(--text-secondary)' }}
+                            className="p-1.5 rounded-lg transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+                            style={interactionMode === 'PAN' ? { backgroundColor: 'var(--brand-bg)', color: 'var(--accent)', boxShadow: 'var(--shadow-raised-sm)' } : { color: 'var(--text-secondary)' }}
                             title="Pan Mode"
                         >
                             <HandRaisedIcon className="w-4 h-4" />
                         </button>
                     </div>
 
-                    <div className="hidden sm:flex items-center space-x-1 text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
+                    <div className="hidden sm:flex items-center space-x-1 fs-small font-bold" style={{ color: 'var(--text-secondary)' }}>
                         <ArrowPathIcon className="w-3.5 h-3.5" />
                         <span>Interactive Plotly</span>
                     </div>
@@ -908,8 +901,8 @@ drag=null;});})();
                     <button
                         onClick={generateHTMLReport}
                         disabled={effectiveGroups.filter(g => g.result !== null).length === 0}
-                        className="flex items-center space-x-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm active:scale-95"
-                        style={{ color: 'var(--accent)', borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)', backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)' }}
+                        className="flex items-center space-x-1.5 fs-small font-bold px-4 py-2 rounded-lg soft-btn disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        style={{ color: 'var(--accent)' }}
                         title={lang === 'zh' ? '生成 HTML 報告' : 'Generate HTML Report'}
                     >
                         <DocumentTextIcon className="w-4 h-4" />
@@ -942,7 +935,7 @@ drag=null;});})();
                         className="absolute px-2 py-0.5 rounded font-semibold whitespace-nowrap cursor-grab select-none"
                         style={{
                             color: def.color,
-                            backgroundColor: 'rgba(255,255,255,0.94)',
+                            backgroundColor: 'rgba(227,229,233,0.95)',
                             border: `1px solid ${def.color}`,
                             boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                             pointerEvents: 'auto',
@@ -957,7 +950,7 @@ drag=null;});})();
                 ))}
             </div>
 
-            <div className="flex-none px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1" style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-surface)' }}>
+            <div className="flex-none px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1" style={{ backgroundColor: 'var(--bg-surface)' }}>
                 <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-5 gap-y-0.5 min-w-0">
                     {effectiveGroups.filter(g => g.visible && g.result).map(g => {
                         const r = g.result!;
@@ -981,13 +974,13 @@ drag=null;});})();
             {modalData && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center p-4 animate-scaleIn" style={{ backgroundColor: 'color-mix(in srgb, #0F172A 50%, transparent)' }}>
                     <div className="absolute inset-0" onClick={() => setModalData(null)}></div>
-                    <div className="relative rounded-xl shadow-2xl p-6 w-full max-w-lg animate-slideUp" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                    <div className="relative rounded-3xl p-6 w-full max-w-lg animate-slideUp" style={{ backgroundColor: 'var(--brand-bg)', boxShadow: 'var(--shadow-float)' }}>
                         <button onClick={() => setModalData(null)} className="absolute top-4 right-4 p-1 rounded-full transition-colors" style={{ color: 'var(--text-secondary)' }}><XMarkIcon className="w-5 h-5" /></button>
-                        <h4 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{t('results.pointStats', lang)}</h4>
-                        <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>{t('results.atTime', lang)} <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{modalData.time.toFixed(2)}</span></p>
+                        <h4 className="fs-title font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{t('results.pointStats', lang)}</h4>
+                        <p className="fs-body mb-6" style={{ color: 'var(--text-secondary)' }}>{t('results.atTime', lang)} <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{modalData.time.toFixed(2)}</span></p>
 
                         <div className="space-y-4 overflow-x-auto">
-                            <table className="w-full text-sm text-left">
+                            <table className="w-full fs-body text-left">
                                 <thead className="font-bold border-b" style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}>
                                     <tr>
                                         <th className="py-2">Metric</th>
@@ -996,7 +989,7 @@ drag=null;});})();
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="font-mono text-xs">
+                                <tbody className="font-mono fs-small">
                                     {[
                                         { label: t('chart.tooltip.reliability', lang), key: 'reliability' as const, fmt: (v: number) => v.toFixed(4) },
                                         { label: t('chart.tooltip.cdf', lang), key: 'cdf' as const, fmt: (v: number) => (v * 100).toFixed(2) + '%' },

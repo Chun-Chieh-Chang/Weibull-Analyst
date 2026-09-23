@@ -82,19 +82,19 @@ const PwaPrompt: React.FC<PwaPromptProps> = ({ lang, needRefresh = false, onUpda
     <>
       {/* 1. Service Worker Update Banner */}
       {needRefresh && (
-        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:max-w-md z-50 animate-slideUp bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between space-x-3">
+        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:max-w-md z-50 animate-slideUp p-4 rounded-3xl soft-raised flex items-center justify-between space-x-3">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--accent-interactive)_20%,transparent)] flex items-center justify-center text-[var(--accent-interactive)] shrink-0">
+            <div className="w-10 h-10 rounded-xl soft-inset-sm flex items-center justify-center text-[var(--accent-interactive)] shrink-0">
               <ArrowPathIcon className="w-6 h-6 animate-spin" />
             </div>
             <div>
-              <p className="text-xs font-bold">{lang === 'zh' ? '發現新版本 Weibull AI Analyst' : 'New Version Available'}</p>
-              <p className="text-[11px] text-slate-300">{lang === 'zh' ? '點擊即可即時更新至最新版' : 'Click to refresh and apply the update'}</p>
+              <p className="fs-small font-bold">{lang === 'zh' ? '發現新版本 Weibull AI Analyst' : 'New Version Available'}</p>
+              <p className="fs-small text-[var(--brand-muted)]">{lang === 'zh' ? '點擊即可即時更新至最新版' : 'Click to refresh and apply the update'}</p>
             </div>
           </div>
           <button
             onClick={onUpdateServiceWorker}
-            className="px-3 py-1.5 bg-[var(--accent-interactive)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer shrink-0 shadow-md"
+            className="px-4 py-2 text-white fs-small font-bold rounded-lg soft-accent-btn cursor-pointer shrink-0"
           >
             {lang === 'zh' ? '立即更新' : 'Update Now'}
           </button>
@@ -103,12 +103,12 @@ const PwaPrompt: React.FC<PwaPromptProps> = ({ lang, needRefresh = false, onUpda
 
       {/* 2. PWA Install Top Floating Banner */}
       {showInstallBanner && !needRefresh && (
-        <div className="fixed top-16 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 animate-slideUp bg-white border border-slate-200 rounded-2xl shadow-2xl p-3.5 flex items-center justify-between">
+        <div className="fixed top-16 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 animate-slideUp rounded-3xl p-3.5 flex items-center justify-between soft-raised">
           <div className="flex items-center space-x-3">
-            <img src={`${import.meta.env.BASE_URL}pwa-192x192.png`} alt="App Icon" className="w-11 h-11 rounded-xl shadow-sm border border-slate-100 shrink-0" />
+            <img src={`${import.meta.env.BASE_URL}pwa-192x192.png`} alt="App Icon" className="w-11 h-11 rounded-xl soft-raised-sm shrink-0" />
             <div>
-              <h4 className="text-xs font-bold text-slate-900">{lang === 'zh' ? '安裝 Weibull AI 應用程式' : 'Install Weibull AI App'}</h4>
-              <p className="text-[11px] text-slate-500 leading-tight">
+              <h4 className="fs-small font-bold text-[var(--brand-text)]">{lang === 'zh' ? '安裝 Weibull AI 應用程式' : 'Install Weibull AI App'}</h4>
+              <p className="fs-small text-[var(--brand-muted)] leading-tight">
                 {lang === 'zh' ? '支援全螢幕與離線分析模式' : 'Offline support & native app mode'}
               </p>
             </div>
@@ -117,14 +117,14 @@ const PwaPrompt: React.FC<PwaPromptProps> = ({ lang, needRefresh = false, onUpda
           <div className="flex items-center space-x-2 shrink-0 ml-2">
             <button
               onClick={handleInstallClick}
-              className="px-3 py-2 bg-[var(--accent-interactive)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-xl transition-all shadow-md active:scale-95 flex items-center space-x-1 cursor-pointer"
+              className="px-3 py-2 text-white fs-small font-bold rounded-lg soft-accent-btn flex items-center space-x-1 cursor-pointer"
             >
               <ArrowDownTrayIcon className="w-3.5 h-3.5" />
               <span>{lang === 'zh' ? '安裝' : 'Install'}</span>
             </button>
             <button
               onClick={handleDismissInstall}
-              className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[var(--brand-muted)] hover:text-[var(--brand-text)] rounded-lg transition-colors cursor-pointer"
               title={lang === 'zh' ? '關閉' : 'Close'}
             >
               <XMarkIcon className="w-4 h-4" />
@@ -136,42 +136,42 @@ const PwaPrompt: React.FC<PwaPromptProps> = ({ lang, needRefresh = false, onUpda
       {/* 3. iOS Safari Add to Home Screen Instructions Modal */}
       {showIosGuide && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 space-y-4 animate-scaleIn mb-safe">
+          <div className="rounded-3xl p-6 max-w-sm w-full space-y-4 animate-scaleIn mb-safe soft-raised">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <img src={`${import.meta.env.BASE_URL}pwa-192x192.png`} alt="App Icon" className="w-8 h-8 rounded-lg" />
-                <h3 className="text-sm font-bold text-slate-900">{lang === 'zh' ? 'iOS 安裝至主畫面' : 'Install on iOS'}</h3>
+                <h3 className="fs-body font-bold text-[var(--brand-text)]">{lang === 'zh' ? 'iOS 安裝至主畫面' : 'Install on iOS'}</h3>
               </div>
               <button
                 onClick={() => setShowIosGuide(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                className="p-1 text-[var(--brand-muted)] hover:text-[var(--brand-text)] rounded-lg cursor-pointer"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-slate-600">
-              <div className="flex items-start space-x-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--accent-interactive)_12%,transparent)] text-[var(--accent-interactive)] flex items-center justify-center font-bold text-[11px] shrink-0">1</span>
+            <div className="space-y-3 fs-small text-[var(--brand-muted)]">
+              <div className="flex items-start space-x-3 p-2.5 rounded-2xl soft-inset">
+                <span className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--accent-interactive)_12%,transparent)] text-[var(--accent-interactive)] flex items-center justify-center font-bold fs-micro shrink-0">1</span>
                 <p>{lang === 'zh' ? '點擊 Safari 下方工具列的「分享」按鈕' : 'Tap the "Share" button in Safari toolbar'}</p>
                 <ShareIcon className="w-5 h-5 text-[var(--accent-interactive)] shrink-0" />
               </div>
 
-              <div className="flex items-start space-x-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--accent-interactive)_12%,transparent)] text-[var(--accent-interactive)] flex items-center justify-center font-bold text-[11px] shrink-0">2</span>
+              <div className="flex items-start space-x-3 p-2.5 rounded-2xl soft-inset">
+                <span className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--accent-interactive)_12%,transparent)] text-[var(--accent-interactive)] flex items-center justify-center font-bold fs-micro shrink-0">2</span>
                 <p>{lang === 'zh' ? '向下滾動並選擇「加入主畫面」' : 'Scroll down and select "Add to Home Screen"'}</p>
                 <PlusIcon className="w-5 h-5 text-[var(--accent-interactive)] shrink-0" />
               </div>
 
-              <div className="flex items-start space-x-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--accent-interactive)_12%,transparent)] text-[var(--accent-interactive)] flex items-center justify-center font-bold text-[11px] shrink-0">3</span>
+              <div className="flex items-start space-x-3 p-2.5 rounded-2xl soft-inset">
+                <span className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--accent-interactive)_12%,transparent)] text-[var(--accent-interactive)] flex items-center justify-center font-bold fs-micro shrink-0">3</span>
                 <p>{lang === 'zh' ? '點擊右上角「新增」即可開啟獨立 APP 模式' : 'Tap "Add" in top right corner to enjoy full PWA'}</p>
               </div>
             </div>
 
             <button
               onClick={() => setShowIosGuide(false)}
-              className="w-full py-3 bg-[var(--accent-interactive)] hover:bg-[var(--accent-hover)] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer"
+              className="w-full py-3 text-white fs-body font-bold uppercase tracking-widest rounded-xl soft-accent-btn cursor-pointer"
             >
               {lang === 'zh' ? '我知道了' : 'Got it'}
             </button>
