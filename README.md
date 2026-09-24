@@ -10,7 +10,7 @@
 
 - **韋伯分析引擎** — 支援單組與雙組比較分析、暫緩數據 (Suspension)、中位秩回歸
 - **三種圖表** — 機率圖 (Probability Plot)、可靠度曲線 (Reliability)、機率密度函數 (PDF)
-- **AI 分析** — 支援 Gemini / OpenAI / Agnes / Claude，可選模型，雙語分析 (繁中 + English)
+- **AI 分析** — 支援 Gemini / OpenAI / Agnes / Claude，OpenAI / Claude 可選模型，分析輸出依介面語言 (繁中 / English) 單一語言呈現
 - **HTML 報告** — 一鍵導出含 2×2 圖表網格（機率/可靠度/PDF + 參數指標卡 β·η·MTTF·R²·R(MTTF)·B₁₀）、AI 分析與原始數據的完整報告（Plotly CDN 3.3.1 釘版本），離線自動降級為 PNG 備援
 - **Light-only 主題** — 遵循 SkillsBuilder Color Master Palette
 - **雙語言** — 繁體中文 / English
@@ -44,9 +44,9 @@ npx tsc --noEmit # 型別檢查(基準 0 errors)
 
 | 供應商 | 模型選項 | API 格式 |
 |--------|---------|---------|
-| Google Gemini | gemini-3.6-flash / gemini-3.5-flash / gemini-2.5-flash | `@google/genai` SDK |
+| Google Gemini | gemini-3.8-flash（固定最新版，無須選擇）；備援鏈：gemini-3.7-flash → gemini-3.1-pro-preview → gemini-3.5-flash-lite | `@google/genai` SDK |
 | OpenAI | gpt-4o-mini | `openai` SDK |
-| Agnes | agnes-2.5-flash | REST API (`apihub.agnes-ai.com`) |
+| Agnes | agnes-3.0-flash（固定最新版） | REST API (`apihub.agnes-ai.com`) |
 | Anthropic Claude | claude-sonnet-4-6 / claude-haiku-4-5 | REST API (`api.anthropic.com`) |
 
 API Key 儲存於瀏覽器 localStorage，不會傳送至第三方伺服器。

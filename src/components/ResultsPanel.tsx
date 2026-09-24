@@ -108,7 +108,8 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
     // AI Provider & API KEY Logic
     const [showKeyModal, setShowKeyModal] = useState(false);
     const [activeProvider, setActiveProvider] = useState<AIProvider>((localStorage.getItem('ai_provider') as AIProvider) || 'GEMINI');
-    const [geminiModel, setGeminiModel] = useState<GeminiModel>((localStorage.getItem('gemini_model') as GeminiModel) || 'gemini-3.6-flash');
+    // Gemini is pinned to the latest built-in model (no user selection).
+    const geminiModel: GeminiModel = 'gemini-3.8-flash';
     const [openaiModel, setOpenaiModel] = useState<OpenAIModel>((localStorage.getItem('openai_model') as OpenAIModel) || 'gpt-4o-mini');
     const [claudeModel, setClaudeModel] = useState<ClaudeModel>((localStorage.getItem('claude_model') as ClaudeModel) || 'claude-sonnet-4-6');
     const [apiKeyInput, setApiKeyInput] = useState('');
@@ -426,34 +427,16 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
                                         className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold soft-inset"
                                         style={{ color: 'var(--text-primary)' }}
                                     >
-                                        <option value="GEMINI">Google Gemini (Default)</option>
+                                        <option value="GEMINI">Google Gemini (gemini-3.8-flash + 3 fallbacks)</option>
                                         <option value="OPENAI">OpenAI (ChatGPT)</option>
-                                        <option value="AGNES">Agnes (agnes-2.5-flash)</option>
+                                        <option value="AGNES">Agnes (agnes-3.0-flash)</option>
                                         <option value="CLAUDE">Anthropic Claude</option>
                                     </select>
                                     <ChevronDownIcon className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" style={{ color: 'var(--text-secondary)' }} />
                                 </div>
                             </div>
 
-                            {/* Gemini Model Selector */}
-                            {activeProvider === 'GEMINI' && (
-                                <div>
-                                    <label className="block fs-micro font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Gemini Model</label>
-                                    <div className="relative group">
-                                        <select
-                                            value={geminiModel}
-                                            onChange={(e) => { setGeminiModel(e.target.value as GeminiModel); localStorage.setItem('gemini_model', e.target.value); }}
-                                            className="w-full rounded-xl px-4 py-3 appearance-none outline-none transition-all cursor-pointer font-bold soft-inset"
-                                            style={{ color: 'var(--text-primary)' }}
-                                        >
-                                            <option value="gemini-3.6-flash">Gemini 3.6 Flash (最新 Latest)</option>
-                                            <option value="gemini-3.5-flash">Gemini 3.5 Flash (穩定 Stable)</option>
-                                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (經濟 Legacy)</option>
-                                        </select>
-                                        <ChevronDownIcon className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" style={{ color: 'var(--text-secondary)' }} />
-                                    </div>
-                                </div>
-                            )}
+                            {/* Gemini is pinned to the latest built-in model (gemini-3.8-flash); no selector. */}
 
                             {/* OpenAI Model Selector */}
                             {activeProvider === 'OPENAI' && (

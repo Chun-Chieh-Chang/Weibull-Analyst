@@ -29,6 +29,10 @@ export type AnalysisMode = 'SINGLE' | 'MULTI';
 export type ChartType = 'PROBABILITY' | 'PDF' | 'RELIABILITY';
 export type Language = 'en' | 'zh';
 export type AIProvider = 'GEMINI' | 'OPENAI' | 'AGNES' | 'CLAUDE';
-export type GeminiModel = 'gemini-3.6-flash' | 'gemini-3.5-flash' | 'gemini-2.5-flash';
+export type GeminiModel = 'gemini-3.8-flash';
+// Automatic backups for the pinned primary: tried in order when the primary is
+// throttled (503), retired or access-restricted (404 / 403). Ordering principle:
+// nearest same-family substitute first, then the user-specified chain.
+export type GeminiBackupModel = 'gemini-3.7-flash' | 'gemini-3.1-pro-preview' | 'gemini-3.5-flash-lite';
 export type OpenAIModel = 'gpt-4o-mini';
 export type ClaudeModel = 'claude-sonnet-4-6' | 'claude-haiku-4-5';

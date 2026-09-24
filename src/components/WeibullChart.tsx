@@ -60,6 +60,11 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const labelOffsetsRef = useRef<Map<string, {x: number; y: number}>>(new Map());
     const dragRef = useRef<{active: boolean; id: string; startMX: number; startMY: number; baseLeft: number; baseTop: number} | null>(null);
 
+    // The Weibull formula box is a draggable overlay too, so it shares the drag
+    // machinery and the offset store above (keyed by this id) — only its default
+    // anchor differs from the point labels (plot top-right, not a data point).
+    const FORMULA_BOX_ID = 'weibull-formula';
+
     const gridColor = 'rgba(110,118,132,0.25)';
     const axisColor = '#9BA3AF';
     const axisTextColor = '#59616E';
@@ -108,6 +113,13 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const labelDefsRef = useRef(labelDefs);
     labelDefsRef.current = labelDefs;
 
+    // Formula box content (Reliability only) — one line per visible group, in the
+    // same order as the curves.
+    const formulaGroups = useMemo(
+        () => chartType === 'RELIABILITY' ? effectiveGroups.filter(g => g.visible && g.result) : [],
+        [chartType, effectiveGroups]
+    );
+
     const refreshLabelPositions = useCallback(() => {
         const gd = graphRef.current;
         if (!gd || !gd._fullLayout || !gd._fullLayout.xaxis) return;
@@ -130,6 +142,25 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
             el.style.left = `${baseX + off.x}px`;
             el.style.top = `${baseY + off.y}px`;
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Default anchor for the formula box: inside the plot area's top-right corner
+    // (the exact spot the old paper x:0.98 / y:0.98 annotation occupied) plus the
+    // user's drag offset. Recomputed on every relayout so it tracks plot resizes.
+    const refreshFormulaPosition = useCallback(() => {
+        const el = document.getElementById(FORMULA_BOX_ID);
+        const gd = graphRef.current;
+        if (!el || !gd?._fullLayout?.xaxis || !gd._fullLayout?.yaxis) return;
+        const xaxis = gd._fullLayout.xaxis;
+        const yaxis = gd._fullLayout.yaxis;
+        const baseX = xaxis._offset + xaxis._length - el.offsetWidth - 10;
+        const baseY = yaxis._offset + 6;
+        el.dataset.baseX = String(baseX);
+        el.dataset.baseY = String(baseY);
+        const off = labelOffsetsRef.current.get(FORMULA_BOX_ID) || { x: 0, y: 0 };
+        el.style.left = `${baseX + off.x}px`;
+        el.style.top = `${baseY + off.y}px`;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -177,9 +208,9 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
 
     useEffect(() => {
         if (chartType !== 'RELIABILITY') return;
-        const timer = setTimeout(() => refreshLabelPositions(), 60);
+        const timer = setTimeout(() => { refreshLabelPositions(); refreshFormulaPosition(); }, 60);
         const gd = graphRef.current;
-        const onRelayout = () => refreshLabelPositions();
+        const onRelayout = () => { refreshLabelPositions(); refreshFormulaPosition(); };
         if (gd) gd.on('plotly_relayout', onRelayout);
         return () => {
             clearTimeout(timer);
@@ -189,6 +220,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 document.removeEventListener('mouseup', handleMouseUp);
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [labelDefs, chartType]);
 
     // --- Plotly Data Preparation ---
@@ -378,28 +410,11 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                 );
             });
 
-            // Weibull formula annotation with actual values and matching curve colors
-            const formulaLines: string[] = [];
-            effectiveGroups.forEach(g => {
-                if (!g.visible || !g.result) return;
-                formulaLines.push(`<span style="color:${g.color};">${g.label}:</span> <span style="color:${g.color}">R(t) = e<sup>-(t/${g.result.eta.toFixed(2)})<sup>${g.result.beta.toFixed(4)}</sup></sup></span>`);
-            });
-            if (formulaLines.length > 0) {
-                const fontSize = formulaLines.length > 2 ? FS.base : FS.annotation;
-                layout.annotations.push({
-                    text: formulaLines.join('<br>'),
-                    xref: 'paper', yref: 'paper',
-                    x: 0.98, y: 0.98,
-                    xanchor: 'right', yanchor: 'top',
-                    showarrow: false,
-                    font: { size: fontSize, family: 'Inter, system-ui, sans-serif' },
-                    align: 'left',
-                    bgcolor: 'rgba(227,229,233,0.92)',
-                    bordercolor: 'rgba(133,140,152,0.5)',
-                    borderwidth: 1,
-                    borderpad: 6
-                });
-            }
+            // The Weibull formula box ("Group A: R(t) = e^-(t/η)^β") is rendered as
+            // a draggable HTML overlay inside .chart-frame instead of a Plotly
+            // annotation: annotations are pinned to paper coordinates and cannot be
+            // moved by the user. `annotations` therefore stays empty on purpose.
+            // (The report omits the box entirely — see captureChart.)
         }
 
         return layout;
@@ -669,7 +684,7 @@ tbody tr:nth-child(even){background:rgba(255,255,255,.45)}
 .chart-wrap{position:relative;width:100%;border-radius:8px;border:1px solid var(--rpt-border);aspect-ratio:3/2;min-height:300px;background:#fff;break-inside:avoid;box-shadow:var(--rpt-shadow-raised-sm)}
 .chart-wrap .plot{position:absolute;inset:0;pointer-events:auto;border-radius:8px;overflow:hidden}
 .chart-wrap .fallback{width:100%;display:block}
-.chart-label{position:absolute;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap;cursor:grab;user-select:none;z-index:10;pointer-events:auto;background:rgba(227,229,233,.95);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.chart-label{position:absolute;font-size:12px;font-weight:600;white-space:nowrap;cursor:grab;user-select:none;z-index:10;pointer-events:auto}
 @media(max-width:900px){body{padding:16px}.chart-grid{grid-template-columns:1fr;gap:12px}.info-row{grid-template-columns:1fr}.dual-grid{grid-template-columns:1fr;gap:10px}}
 /* Print: flatten the neumorphic shadows (they band on laser printers), drop the
    page to a white sheet, and keep everything else — 3:2 cells, inset tile,
@@ -690,7 +705,7 @@ ${chartTypes.map((c, idx) => {
 <div class="chart-wrap" id="${id}-chart-wrap">
 <img id="${id}-fallback" class="chart-img fallback" src="${c.img}" alt="${c.label}">
 <div id="${id}-chart" class="plot"></div>
-${labels.map((l: any) => `<div id="ol-${l.id}" class="chart-label" style="color:${l.color};border:1px solid ${l.color}">${l.text}</div>`).join('')}
+${labels.map((l: any) => `<div id="ol-${l.id}" class="chart-label" style="color:${l.color}">${l.text}</div>`).join('')}
 </div>
 <span class="chart-caption"><span class="num">${String(idx + 1).padStart(2, '0')}</span>${c.label}${c.labels ? ` <span style="color:var(--rpt-muted);font-weight:400">(${lang === 'zh' ? '拖拽標籤' : 'Drag labels'})</span>` : ''}</span>
 </div>`;
@@ -926,16 +941,16 @@ drag=null;});})();
                                 setModalData({ time: data.points[0].x as number });
                             }
                         }}
-                        onInitialized={(fig, gd) => { graphRef.current = gd; }}
+                        onInitialized={(fig, gd) => { graphRef.current = gd; refreshFormulaPosition(); }}
                     />
+                    {/* Label chrome is intentionally absent: the R=0.95 / η markers
+                        render as plain colored text over the plot (no border box,
+                        no fill, no shadow) in both the UI and the exported report. */}
                     {chartType === 'RELIABILITY' && labelDefs.map(def => (
                         <div key={def.id} id={def.id}
-                            className="absolute px-2 py-0.5 rounded font-semibold whitespace-nowrap cursor-grab select-none"
+                            className="absolute font-semibold whitespace-nowrap cursor-grab select-none"
                             style={{
                                 color: def.color,
-                                backgroundColor: 'rgba(227,229,233,0.95)',
-                                border: `1px solid ${def.color}`,
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                                 pointerEvents: 'auto',
                                 zIndex: 10,
                                 fontSize: FS.label,
@@ -946,6 +961,40 @@ drag=null;});})();
                             {def.text}
                         </div>
                     ))}
+                    {/* Weibull formula box — draggable HTML overlay (Reliability only).
+                        Anchored top-right inside the plot area by refreshFormulaPosition
+                        and draggable through the same handler as the point labels, so the
+                        analysis conclusion can be pulled clear of the traces. It stays
+                        boxed on purpose: this is a container, not a point label, and the
+                        exported report omits it altogether (see captureChart). */}
+                    {formulaGroups.length > 0 && (
+                        <div
+                            id={FORMULA_BOX_ID}
+                            className="absolute whitespace-nowrap cursor-grab select-none"
+                            style={{
+                                backgroundColor: 'rgba(227,229,233,0.92)',
+                                border: '1px solid rgba(133,140,152,0.5)',
+                                padding: 6,
+                                fontFamily: 'Inter, system-ui, sans-serif',
+                                fontSize: formulaGroups.length > 2 ? FS.base : FS.annotation,
+                                lineHeight: 1.3,
+                                textAlign: 'left',
+                                pointerEvents: 'auto',
+                                zIndex: 10,
+                                left: 0, top: 0
+                            }}
+                            onMouseDown={(e) => handleLabelMouseDown(e, FORMULA_BOX_ID)}
+                        >
+                            {formulaGroups.map(g => (
+                                <div key={g.id}>
+                                    <span style={{ color: g.color }}>{g.label}: </span>
+                                    <span style={{ color: g.color }}>
+                                        R(t) = e<sup>-(t/{g.result!.eta.toFixed(2)})<sup>{g.result!.beta.toFixed(4)}</sup></sup>
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
