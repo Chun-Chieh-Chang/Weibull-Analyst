@@ -20,6 +20,16 @@ export const analyzeWithAI = async (
     const isZh = lang === 'zh';
     let prompt = '';
 
+    // Language gate: output must be single-language, matching the UI locale.
+    // Technical terms (Beta, Eta, MTTF, R²) may stay in English even in zh mode.
+    const languageRule = isZh
+        ? "**CRITICAL: You MUST respond entirely in Traditional Chinese (繁體中文). Do NOT append English translations or bilingual paragraphs. Technical terms (e.g. Beta, Eta, MTTF, R²) may remain in English."
+        : "**CRITICAL: You MUST respond entirely in English. Do NOT include any Chinese text.";
+
+    const systemInstruction = isZh
+        ? "你是一位資深的可靠度工程專家。請全程使用繁體中文回答，不要附中英文對照或英文翻譯段落；專有名詞（如 Beta、Eta、MTTF、R²）可保留英文。"
+        : "You are a senior Reliability Engineer. Always respond entirely in English; do not include any Chinese text.";
+
     let activeGroups: { label: string; result: WeibullResult }[] = [];
 
     if (Array.isArray(groupsOrResult1)) {
@@ -57,8 +67,7 @@ As a Senior Reliability Engineer, provide a comprehensive comparative analysis a
 
 Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. Beta) or Unicode (e.g. R²).
 
-**CRITICAL: You MUST respond in BOTH languages.** First paragraph in Traditional Chinese (繁體中文), second paragraph in English. Each point must have both languages. Example format:
-- **Beta 解讀 Beta Interpretation:** (Chinese text...) (English text...)`;
+${languageRule}`;
     } else {
         const g = activeGroups[0];
         prompt = `
@@ -77,8 +86,7 @@ Provide a technical analysis:
 
 Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. Beta) or Unicode (e.g. R²).
 
-**CRITICAL: You MUST respond in BOTH languages.** First paragraph in Traditional Chinese (繁體中文), second paragraph in English. Each point must have both languages. Example format:
-- **Beta 解讀 Beta Interpretation:** (Chinese text...) (English text...)`;
+${languageRule}`;
     }
 
     try {
@@ -88,7 +96,7 @@ Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. B
                 model: geminiModel,
                 contents: prompt,
                 config: {
-                    systemInstruction: "你是一位資深的可靠度工程專家。請務必使用繁體中文和 English 雙語回答，先中文後英文。You are a senior Reliability Engineer. Always respond bilingually in Traditional Chinese then English."
+                    systemInstruction
                 }
             });
             return response.text;
@@ -101,7 +109,7 @@ Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. B
                     messages: [
                         {
                             role: "system",
-                            content: "你是一位資深的可靠度工程專家。請務必使用繁體中文和 English 雙語回答，先中文後英文。You are a senior Reliability Engineer. Always respond bilingually in Traditional Chinese then English."
+                            content: systemInstruction
                         },
                         { role: "user", content: prompt }
                     ],
@@ -128,7 +136,7 @@ Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. B
                 messages: [
                     {
                         role: "system",
-                        content: "你是一位資深的可靠度工程專家。請務必使用繁體中文和 English 雙語回答，先中文後英文。You are a senior Reliability Engineer. Always respond bilingually in Traditional Chinese then English."
+                        content: systemInstruction
                     },
                     { role: "user", content: prompt }
                 ],
@@ -146,7 +154,7 @@ Important: Do NOT use LaTeX math symbols (e.g. $\\beta$). Use plain text (e.g. B
                 body: JSON.stringify({
                     model: claudeModel,
                     max_tokens: 1024,
-                    system: "你是一位資深的可靠度工程專家。請務必使用繁體中文和 English 雙語回答，先中文後英文。You are a senior Reliability Engineer. Always respond bilingually in Traditional Chinese then English.",
+                    system: systemInstruction,
                     messages: [{ role: "user", content: prompt }]
                 })
             });

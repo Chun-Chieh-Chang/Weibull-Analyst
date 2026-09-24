@@ -20,14 +20,20 @@ import {
 
 const PALETTE = ['#1E3A5F', '#e11d48', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
 
+// Default group names follow the active language. toggleLanguage re-localizes
+// only labels still matching a default pattern, so user-edited names survive.
+const defaultGroupLabel = (idx: number, lng: Language) =>
+    lng === 'zh' ? `${String.fromCharCode(65 + idx)} 組` : `Group ${String.fromCharCode(65 + idx)}`;
+const isDefaultGroupLabel = (label: string) => /^Group [A-Z]$/.test(label) || /^[A-Z] 組$/.test(label);
+
 const App: React.FC = () => {
     const [mode, setMode] = useState<AnalysisMode>('SINGLE');
     const [lang, setLang] = useState<Language>('en');
 
     // Multi-Group Dataset state
     const [groups, setGroups] = useState<GroupDataset[]>([
-        { id: 'g1', label: 'Group A', text: '100\n120\n135\n150\n210\n240\n300\n350\n400', color: PALETTE[0], result: null, visible: true },
-        { id: 'g2', label: 'Group B', text: '150\n180\n220\n260\n320\n350\n420\n480', color: PALETTE[1], result: null, visible: true },
+        { id: 'g1', label: defaultGroupLabel(0, 'en'), text: '100\n120\n135\n150\n210\n240\n300\n350\n400', color: PALETTE[0], result: null, visible: true },
+        { id: 'g2', label: defaultGroupLabel(1, 'en'), text: '150\n180\n220\n260\n320\n350\n420\n480', color: PALETTE[1], result: null, visible: true },
     ]);
 
     const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
@@ -82,11 +88,13 @@ const App: React.FC = () => {
     const toggleLanguage = () => {
         const nextLang = lang === 'en' ? 'zh' : 'en';
         setLang(nextLang);
+        setGroups(prev => prev.map((g, idx) =>
+            isDefaultGroupLabel(g.label) ? { ...g, label: defaultGroupLabel(idx, nextLang) } : g
+        ));
     };
 
     const handleAddGroup = () => {
-        const nextIdx = groups.length + 1;
-        const defaultLabel = lang === 'zh' ? `${String.fromCharCode(64 + nextIdx)} 組` : `Group ${String.fromCharCode(64 + nextIdx)}`;
+        const defaultLabel = defaultGroupLabel(groups.length, lang);
         const newColor = PALETTE[groups.length % PALETTE.length];
         const newGroup: GroupDataset = {
             id: `g_${Date.now()}`,
@@ -141,15 +149,18 @@ const App: React.FC = () => {
     };
 
     const handleExport = () => {
-        const timestamp = new Date().toLocaleString();
-        let content = `WEIBULL ANALYSIS REPORT\n`;
-        content += `Generated: ${timestamp}\n`;
-        content += `Mode: ${mode === 'SINGLE' ? 'Single Analysis' : 'Multi-Group Comparative Analysis'}\n\n`;
+        const isZh = lang === 'zh';
+        const timestamp = new Date().toLocaleString(isZh ? 'zh-TW' : 'en-US');
+        let content = isZh ? `韋伯分析報告\n` : `WEIBULL ANALYSIS REPORT\n`;
+        content += `${isZh ? '產出時間' : 'Generated'}: ${timestamp}\n`;
+        content += isZh
+            ? `分析模式: ${mode === 'SINGLE' ? '單一分析' : '多組比較分析'}\n\n`
+            : `Mode: ${mode === 'SINGLE' ? 'Single Analysis' : 'Multi-Group Comparative Analysis'}\n\n`;
 
         const getFailureMode = (beta: number) => {
-            if (beta < 0.9) return "Infant Mortality";
-            if (beta <= 1.1) return "Random Failures";
-            return "Wear-out Failures";
+            if (beta < 0.9) return t('results.metrics.infant', lang);
+            if (beta <= 1.1) return t('results.metrics.random', lang);
+            return t('results.metrics.wearout', lang);
         };
 
         const activeGroups = mode === 'SINGLE' ? groups.slice(0, 1) : groups;
@@ -158,24 +169,32 @@ const App: React.FC = () => {
             if (!g.result) return;
             const res = g.result;
             content += `========================================\n`;
-            content += `DATASET: ${g.label.toUpperCase()}\n`;
+            content += isZh ? `數據集: ${g.label}\n` : `DATASET: ${g.label.toUpperCase()}\n`;
             content += `========================================\n`;
-            content += `Beta (Shape Parameter) : ${res.beta.toFixed(4)} (${getFailureMode(res.beta)})\n`;
-            content += `Eta (Scale Parameter)  : ${res.eta.toFixed(4)}\n`;
-            content += `MTTF                   : ${res.mttf.toFixed(4)}\n`;
-            content += `R-Squared (Fit Quality): ${res.rSquared.toFixed(4)}\n\n`;
+            if (isZh) {
+                content += `Beta（形狀參數）: ${res.beta.toFixed(4)}（${getFailureMode(res.beta)}）\n`;
+                content += `Eta（尺度參數）: ${res.eta.toFixed(4)}\n`;
+                content += `MTTF（平均壽命）: ${res.mttf.toFixed(4)}\n`;
+                content += `R²（擬合品質）: ${res.rSquared.toFixed(4)}\n\n`;
+            } else {
+                content += `Beta (Shape Parameter) : ${res.beta.toFixed(4)} (${getFailureMode(res.beta)})\n`;
+                content += `Eta (Scale Parameter)  : ${res.eta.toFixed(4)}\n`;
+                content += `MTTF                   : ${res.mttf.toFixed(4)}\n`;
+                content += `R-Squared (Fit Quality): ${res.rSquared.toFixed(4)}\n\n`;
+            }
 
-            content += `Data Points (Total: ${res.dataPoints.length}):\n`;
-            content += `Time\tStatus\tRank (%)\n`;
+            content += isZh ? `數據點（共 ${res.dataPoints.length} 筆）:\n` : `Data Points (Total: ${res.dataPoints.length}):\n`;
+            content += isZh ? `時間\t狀態\t秩 (%)\n` : `Time\tStatus\tRank (%)\n`;
             res.dataPoints.forEach(p => {
-                content += `${p.time.toFixed(2)}\t${p.status === 'F' ? 'Failure' : 'Suspension'}\t${(p.rank * 100).toFixed(2)}%\n`;
+                const status = p.status === 'F' ? (isZh ? '失效' : 'Failure') : (isZh ? '暫緩' : 'Suspension');
+                content += `${p.time.toFixed(2)}\t${status}\t${(p.rank * 100).toFixed(2)}%\n`;
             });
             content += `\n`;
         });
 
         if (aiAnalysis) {
             content += `========================================\n`;
-            content += `AI RELIABILITY ANALYSIS REPORT\n`;
+            content += isZh ? `AI 可靠度分析報告\n` : `AI RELIABILITY ANALYSIS REPORT\n`;
             content += `========================================\n`;
             content += `${aiAnalysis}\n`;
         }
@@ -209,11 +228,15 @@ const App: React.FC = () => {
             <header className="flex-none z-30 transition-colors duration-200" style={{ backgroundColor: 'var(--bg-sidebar)' }}>
                 <div className="shell-inner flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 sm:py-3">
                 <div className="flex items-center justify-between sm:justify-start space-x-3 mb-2 sm:mb-0">
-                    <div className="flex items-center space-x-2">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--accent)', boxShadow: 'var(--shadow-accent)' }}>
-                            <ChartPieIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    <div className="flex items-center space-x-[10px]">
+                        {/* Brand block at 1.25x: fs-* has no 17px/20px steps, so the
+                            title uses explicit px here on purpose (scale exception).
+                            New header height (40px logo + py-3) ≈ the 65px already
+                            budgeted in --chart-chrome-v, so the layout stays put. */}
+                        <div className="w-[35px] h-[35px] sm:w-10 sm:h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--accent)', boxShadow: 'var(--shadow-accent)' }}>
+                            <ChartPieIcon className="w-5 h-5 sm:w-[25px] sm:h-[25px] text-white" />
                         </div>
-                        <h1 className="fs-body sm:fs-title font-bold tracking-tight whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
+                        <h1 className="text-[17px] sm:text-[20px] font-bold tracking-tight whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
                             {t('app.title', lang)} <span className="text-[var(--accent-interactive)]">{t('app.titleSuffix', lang)}</span>
                         </h1>
                     </div>

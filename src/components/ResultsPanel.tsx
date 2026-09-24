@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { WeibullResult, Language, GroupDataset, AIProvider, GeminiModel, OpenAIModel, ClaudeModel } from '../types';
 import { analyzeWithAI } from '../services/aiService';
 import TheoreticalGuide from './TheoreticalGuide';
@@ -90,6 +90,18 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         setAiAnalysis(text);
         onAiAnalysisChange?.(text);
     };
+
+    // AI output is single-language (see aiService languageRule). When the UI
+    // language changes, discard the stale analysis so in-app display and
+    // exports never mix locales — the user regenerates via the analyze button.
+    const prevLangRef = useRef(lang);
+    useEffect(() => {
+        if (prevLangRef.current !== lang) {
+            prevLangRef.current = lang;
+            handleSetAiAnalysis(null);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lang]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -137,7 +149,6 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
         setError(null);
         try {
             const text = await analyzeWithAI(effectiveGroups, null, isMultiple, lang, key, prov, geminiModel, openaiModel, claudeModel);
-            handleSetAiAnalysis(text || "No analysis returned.");
             handleSetAiAnalysis(text || "No analysis returned.");
         } catch (e: any) {
             setError(e.message || "An error occurred.");

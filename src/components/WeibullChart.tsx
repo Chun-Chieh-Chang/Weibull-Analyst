@@ -4,8 +4,6 @@ import Plotly from 'plotly.js-dist-min';
 import {
     XMarkIcon,
     ArrowPathIcon,
-    MagnifyingGlassPlusIcon,
-    HandRaisedIcon,
     DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { WeibullResult, ChartType, Language, GroupDataset } from '../types';
@@ -47,7 +45,6 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
     const [chartType, setChartType] = useState<ChartType>('PROBABILITY');
     const [modalData, setModalData] = useState<{ time: number } | null>(null);
     const [visibleGroups, setVisibleGroups] = useState<{ g1: boolean, g2: boolean }>({ g1: true, g2: true });
-    const [interactionMode, setInteractionMode] = useState<'ZOOM' | 'PAN'>('ZOOM');
 
     // Effective groups calculation
     const effectiveGroups = useMemo(() => {
@@ -213,7 +210,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     x: r.linePoints.map(p => Math.exp(p.x)),
                     y: r.linePoints.map(p => p.y),
                     mode: 'lines',
-                    name: `${g.label} fit`,
+                    name: `${g.label} ${lang === 'zh' ? '擬合線' : 'fit'}`,
                     line: { color: g.color, width: 2.25 },
                     hoverinfo: 'none'
                 });
@@ -266,7 +263,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     y: failureY,
                     mode: 'markers',
                     marker: { color: bgColor, line: { color: g.color, width: 2.25 }, size: 10, symbol },
-                    name: `${g.label} Failures`,
+                    name: `${g.label} ${lang === 'zh' ? '失效點' : 'Failures'}`,
                     hoverinfo: 'none'
                 });
             });
@@ -301,12 +298,14 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         const layout: any = {
             autosize: true,
             showlegend: false,
-            margin: { l: 64, r: 28, t: 44, b: 56 },
+            // t: 64 reserves the top gutter for the 1.25x CustomLegend overlay
+            // (legend bottom edge ≈ 50px) so it never overlaps the traces.
+            margin: { l: 64, r: 28, t: 64, b: 56 },
             paper_bgcolor: plotBgColor,
             plot_bgcolor: plotBgColor,
             font: { family: 'Inter, sans-serif', size: FS.base, color: axisTextColor },
             hovermode: 'closest',
-            dragmode: interactionMode === 'ZOOM' ? 'zoom' : 'pan',
+            dragmode: false,
             xaxis: {
                 title: { text: t('chart.time', lang), font: { size: FS.axis, color: axisTextColor } },
                 gridcolor: gridColor,
@@ -404,7 +403,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
         }
 
         return layout;
-    }, [chartType, interactionMode, gridColor, axisColor, axisTextColor, plotBgColor, effectiveGroups, lang]);
+    }, [chartType, gridColor, axisColor, axisTextColor, plotBgColor, effectiveGroups, lang]);
 
     const generateHTMLReport = async () => {
         const validGroups = effectiveGroups.filter(g => g.result !== null);
@@ -419,7 +418,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     const weibullTrans = (p: number) => Math.log(-Math.log(1 - p / 100));
                     traces.push({
                         x: r.linePoints.map(p => Math.exp(p.x)), y: r.linePoints.map(p => p.y),
-                        mode: 'lines', name: `${nm} fit`, line: { color: clr, width: 3 }, hoverinfo: 'none'
+                        mode: 'lines', name: `${nm} ${lang === 'zh' ? '擬合線' : 'fit'}`, line: { color: clr, width: 3 }, hoverinfo: 'none'
                     });
                     const failPts = r.dataPoints.filter(p => p.status === 'F');
                     traces.push({
@@ -442,7 +441,7 @@ const WeibullChart: React.FC<WeibullChartProps> = ({
                     const failY = failTimes.map(t => calculateMetrics(t, r.beta, r.eta)[type === 'RELIABILITY' ? 'reliability' : 'pdf']);
                     traces.push({
                         x: failTimes, y: failY, mode: 'markers',
-                        marker: { color: bg, line: { color: clr, width: 3 }, size: 10 }, name: `${nm} Failures`, hoverinfo: 'none'
+                        marker: { color: bg, line: { color: clr, width: 3 }, size: 10 }, name: `${nm} ${lang === 'zh' ? '失效點' : 'Failures'}`, hoverinfo: 'none'
                     });
                 }
             };
@@ -816,7 +815,11 @@ drag=null;});})();
     };
 
     const CustomLegend = () => (
-        <div className="absolute top-4 left-0 right-0 flex flex-wrap justify-center items-center gap-3 z-10 pointer-events-none select-none px-4">
+        /* Legend sized at 1.25x trial: the fs-* scale has no 15px/12.5px steps,
+           so font sizes use explicit px here on purpose (scale exception).
+           Plot top margin (t: 64) is widened so the legend sits in the margin
+           gutter above the plot area instead of overlapping the traces. */
+        <div className="absolute top-3 left-0 right-0 flex flex-wrap justify-center items-center gap-[15px] z-10 pointer-events-none select-none px-4">
             {effectiveGroups.map((g) => {
                 if (!g.result) return null;
                 return (
@@ -829,12 +832,12 @@ drag=null;});})();
                                 setVisibleGroups(v => g.id === 'g1' ? { ...v, g1: !v.g1 } : { ...v, g2: !v.g2 });
                             }
                         }}
-                        className="pointer-events-auto flex items-center space-x-2 px-3 py-1.5 rounded-lg soft-raised-sm transition-all cursor-pointer hover:scale-105"
+                        className="pointer-events-auto flex items-center space-x-[10px] px-[15px] py-[7.5px] rounded-lg soft-raised-sm transition-all cursor-pointer hover:scale-105"
                         style={{ opacity: g.visible ? 1 : 0.4 }}
                     >
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: g.color }}></div>
-                        <span className="fs-small font-bold truncate max-w-[120px]" style={{ color: 'var(--text-primary)' }}>{g.label}</span>
-                        <span className="fs-micro font-bold uppercase tracking-tighter px-1.5 py-0.5 rounded shrink-0" style={{ color: 'var(--text-secondary)', boxShadow: 'var(--shadow-inset-sm)' }}>
+                        <div className="w-[12.5px] h-[12.5px] rounded-full shrink-0" style={{ backgroundColor: g.color }}></div>
+                        <span className="font-bold truncate max-w-[150px]" style={{ color: 'var(--text-primary)', fontSize: 15 }}>{g.label}</span>
+                        <span className="font-bold uppercase tracking-tighter px-[7.5px] py-[2.5px] rounded shrink-0" style={{ color: 'var(--text-secondary)', boxShadow: 'var(--shadow-inset-sm)', fontSize: 12.5 }}>
                             {getFailureModeBadge(g.result.beta)}
                         </span>
                     </button>
@@ -882,25 +885,6 @@ drag=null;});})();
                 </div>
 
                 <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4 pt-1 sm:pt-0">
-                    <div className="flex items-center rounded-xl p-1 soft-inset">
-                        <button
-                            onClick={() => setInteractionMode('ZOOM')}
-                            className="p-1.5 rounded-lg transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
-                            style={interactionMode === 'ZOOM' ? { backgroundColor: 'var(--brand-bg)', color: 'var(--accent)', boxShadow: 'var(--shadow-raised-sm)' } : { color: 'var(--text-secondary)' }}
-                            title="Zoom Mode"
-                        >
-                            <MagnifyingGlassPlusIcon className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setInteractionMode('PAN')}
-                            className="p-1.5 rounded-lg transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
-                            style={interactionMode === 'PAN' ? { backgroundColor: 'var(--brand-bg)', color: 'var(--accent)', boxShadow: 'var(--shadow-raised-sm)' } : { color: 'var(--text-secondary)' }}
-                            title="Pan Mode"
-                        >
-                            <HandRaisedIcon className="w-4 h-4" />
-                        </button>
-                    </div>
-
                     <div className="hidden sm:flex items-center space-x-1 fs-small font-bold" style={{ color: 'var(--text-secondary)' }}>
                         <ArrowPathIcon className="w-3.5 h-3.5" />
                         <span>Interactive Plotly</span>
@@ -934,7 +918,7 @@ drag=null;});})();
                             responsive: true,
                             displayModeBar: 'hover',
                             displaylogo: false,
-                            modeBarButtonsToRemove: ['select2d', 'lasso2d']
+                            modeBarButtonsToRemove: ['select2d', 'lasso2d', 'zoom2d', 'pan2d']
                         }}
                         style={{ width: '100%', height: '100%' }}
                         onClick={(data) => {
